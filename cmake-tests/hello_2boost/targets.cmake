@@ -5,7 +5,7 @@ set(DEFINE_MODIFIERS
 set(ENUM_TEMPLATES HELLO_2BOOST)
 
 function(declare_dependencies TEMPLATE_NAME)
-	build_target(Boost::program_options VERSION "${PAR}")
+	build_target(Boost::program_options )
 endfunction()
 
 function(generate_targets TEMPLATE_NAME)

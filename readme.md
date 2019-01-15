@@ -29,6 +29,10 @@ set(DEFINE_MODIFIERS
 	PRECISION	SCALAR	INTEGER 4
 	ARCH	SCALAR	CHOICE(GPU;CPU) CPU
 )
+
+set(TEMPLATE_OPTIONS
+)
+
 set(ENUM_TEMPLATES <UNIQUE NAME OF TARGET_TEMPLATE>)
 # Or optional, if for some reasons the target name must be fixed: 
 #set(ENUM_TARGETS <UNIQUE NAME OF TARGET_TEMPLATE>) #the set of actual target names we are capable of providing

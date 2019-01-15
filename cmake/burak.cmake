@@ -10,6 +10,7 @@
 #
 include(burak_variables)
 include(burak_global_storage)
+include(burak_global_storage_misc)
 include(burak_dependency_processing)
 include(build_install_prefix)
 _set_behavior_outside_defining_targets()
@@ -67,10 +68,13 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	endif()
 	
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "" __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED ${__ARGS})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "" __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS ${__ARGS})
 #	if("${__TEMPLATE_NAME}" STREQUAL "SerialboxStatic")
 #		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
 #	endif()
+	if("${__VARIABLE_DIC_VERSION}" STREQUAL "KUC")
+		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
+	endif()
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC __INSTANCE_ID)
 #	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
@@ -93,8 +97,9 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 			 ${__TEMPLATE_NAME} 
 			 ${__TARGETS_CMAKE_PATH} 
 			 ${__IS_TARGET_FIXED}
-			 "${__EXTERNAL_PROJECT_INFO}"
+			"${__EXTERNAL_PROJECT_INFO}"
 			 ${__TARGET_REQUIRED}
+			"${__TEMPLATE_OPTIONS}"
 			 )
 	elseif("${__GET_TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
@@ -159,7 +164,7 @@ function(_get_target_internal __INSTANCE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
 	_retrieve_instance_args(${__INSTANCE_ID} __ARGS)
 	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __ARGS__LIST_MODIFIERS)
-	_retrieve_instance_data(${__INSTANCE_ID} DEP_LIST __DEP_ID_LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} DEPS __DEP_ID_LIST)
 	
 	if(NOT __TARGETS_CMAKE_PATH)
 		message(FATAL_ERROR "Internal error: Empty __TARGETS_CMAKE_PATH")
@@ -308,10 +313,11 @@ function(finalizer)
 	_set_behavior_defining_targets() #To make sure we never call declare_dependencies()
 	
 	#Now we need to instantiate all the targets
-	_get_all_instances(__INSTANCE_ID_LIST)
+	_get_all_instance_ids(__INSTANCE_ID_LIST)
 #	message(STATUS "finalizer: __INSTANCE_ID_LIST: ${__INSTANCE_ID_LIST}")
 	if(__INSTANCE_ID_LIST)
 		foreach(__DEP_ID IN LISTS __INSTANCE_ID_LIST)
+#			message(STATUS "finalizer(): Going to instantiate ${__DEP_ID}")
 			_instantiate_target(${__DEP_ID})
 		endforeach()
 		if(NOT __NOT_SUPERBUILD)
