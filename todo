@@ -1,9 +1,12 @@
 TODO:
 
-0. Dodać obsługę globalnych opcji targetu TEMPLATE_OPTIONS, działającą podobnie do definicji zewnętrznego projektu
-1. Dodać globalne zmienne opisujące wszystko to, co wczytano z targets.cmake.
-2. __get_variables(): Wszystko od razu ma wpisywać do zmiennych globalnych, pod kluczem INSTANCE_ID. Dodatkowo ma dodać pod kluczem TEMPLATE_NAME ścieżkę do nas, deklarację parametrów (bez wartości domyślnych) oraz listę instance_id, które są przez nas zdefiniowane.
-3. _read_functions(): Niech po prostu wczyta plik, bez importowania zmiennych.
+DONE 0. Dodać obsługę globalnych opcji targetu TEMPLATE_OPTIONS, działającą podobnie do definicji zewnętrznego projektu
+DONE 1. Dodać globalne zmienne opisujące wszystko to, co wczytano z targets.cmake.
+DONE 2. __get_variables(): Wszystko od razu ma wpisywać do zmiennych globalnych, pod kluczem INSTANCE_ID. Dodatkowo ma dodać pod kluczem TEMPLATE_NAME ścieżkę do nas, deklarację parametrów (bez wartości domyślnych) oraz listę instance_id, które są przez nas zdefiniowane.
+DONE 3. _read_functions(): Niech po prostu wczyta plik, bez importowania zmiennych.
+
+# Zamień DEFINE_PARAMETERS -> TARGET_PARAMETERS, DEFINE_MODIFIERS -> LINK_PARAMETERS i wprowadź TARGET_FEATURES
+
 4. Dodaj funkcję dla użytkownika `append_modifier_to_target(TEMPLATE_NAME ...)`, która zadziała tak samo, jak get_target, z tą różnicą, że:
    1. Będzie możliwa tylko gdy TEMPLATE_NAME ma statyczne targety (tj. jest singletonem)
    2. Podobnie do get_target, będzie tworzyła INSTANCE_ID na podstawie TEMPLATE_NAME i args, ale dodatkowo doda jakąś sól, aby na pewno być rozróżnialne, oraz

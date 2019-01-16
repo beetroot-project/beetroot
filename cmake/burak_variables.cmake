@@ -12,7 +12,7 @@
 #
 # Moreover, the mentioned algorithm is run several times, as long as the names of the variables stabilise. That means, that variable defined as 
 #
-# set(DEFINE_PARAMETERS 
+# set(LINK_PARAMETERS 
 #	NEVER_ENDING_INTEGER	SCALAR	INTEGER "${NEVER_ENDING_INTEGET}+1")
 #
 # Will never parse, because on each run of the algorithm the value for NEVER_ENDING_INTEGET will be different. 
@@ -25,7 +25,7 @@
 #	set(TMP "PLURAL")
 # endif()
 #
-# set(DEFINE_PARAMETERS 
+# set(LINK_PARAMETERS 
 #	MY_OTHER_ARG	SCALAR	INTEGER 1
 #	ARG	SCALAR	CHOICE(SINGULAR;PLURAL) ${TMP}
 # )
@@ -92,7 +92,7 @@ macro(_pass_arguments_higher __IN_PREFIX __OUT_PREFIX)
 		set(${__OUT_PREFIX}_${__VAR} "${${__IN_PREFIX}_${__VAR}}" PARENT_SCOPE)
 	endforeach()
 	set(${__OUT_PREFIX}__LIST "${${__IN_PREFIX}__LIST}" PARENT_SCOPE)
-	set(${__OUT_PREFIX}__LIST_MODIFIERS "${${__IN_PREFIX}__LIST_MODIFIERS}" PARENT_SCOPE)
+#	set(${__OUT_PREFIX}__LIST_MODIFIERS "${${__IN_PREFIX}__LIST_MODIFIERS}" PARENT_SCOPE)
 endmacro()
 
 macro(_pass_parameters_higher __IN_PREFIX __OUT_PREFIX)
@@ -102,15 +102,16 @@ macro(_pass_parameters_higher __IN_PREFIX __OUT_PREFIX)
 	endforeach()
 	set(${__OUT_PREFIX}__LIST "${${__IN_PREFIX}__LIST}" PARENT_SCOPE)
 	set(${__OUT_PREFIX}__LIST_MODIFIERS "${${__IN_PREFIX}__LIST_MODIFIERS}" PARENT_SCOPE)
+	set(${__OUT_PREFIX}__LIST_FEATURES "${${__IN_PREFIX}__LIST_FEATURES}" PARENT_SCOPE)
 endmacro()
 
-macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH)
+macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH __BOOL_FEATURES)
 	set(__DEFINITIONS ${__DEFINITIONS})
 	list(LENGTH __DEFINITIONS __TMP)
 	math(EXPR __PARS_LENGTH "${__TMP} / 4 - 1")
 	math(EXPR __PARS_CHECK "${__TMP} % 4")
 	if(NOT "${__PARS_CHECK}" STREQUAL "0")
-		message(FATAL_ERROR "Wrong number of elements in the DEFINE_PARAMETERS variable defined in ${__TARGETS_CMAKE_PATH}. Expected number of elements divisible by 4, but got ${__TMP} elements: ${__DEFINITIONS}")
+		message(FATAL_ERROR "Wrong number of elements in the PARAMETERS/FEATURES variable defined in ${__TARGETS_CMAKE_PATH}. Expected number of elements divisible by 4, but got ${__TMP} elements: ${__DEFINITIONS}")
 	endif()
 	if(NOT "${__TMP}" STREQUAL 0)
 		set(__LIST)
@@ -136,7 +137,7 @@ macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH
 			if("${${__OUT_PARAMETERS_PREFIX}_${__VAR_NAME}__CONTAINER}" STREQUAL "VECTOR")
 				string(REPLACE ":" ";" __VAR_DEFAULT "${__VAR_DEFAULT}")
 			endif()
-			_verify_parameter("${__VAR_NAME}" "as default parameter in ${__TARGETS_CMAKE_PATH}" "${${__OUT_PARS}_${__VAR_NAME}__CONTAINER}" "${${__OUT_PARS}_${__VAR_NAME}__TYPE}" "${__VAR_DEFAULT}")
+			_verify_parameter("${__VAR_NAME}" "as default parameter in ${__TARGETS_CMAKE_PATH}" "${${__OUT_PARS}_${__VAR_NAME}__CONTAINER}" "${${__OUT_PARS}_${__VAR_NAME}__TYPE}" "${__VAR_DEFAULT}" ${__BOOL_FEATURES})
 			set(${__OUT_ARGS}_${__VAR_NAME} "${__VAR_DEFAULT}")
 			list(APPEND ${__OUT_ARGS}__LIST "${__VAR_NAME}")
 			list(APPEND ${__OUT_PARS}__LIST "${__VAR_NAME}")
@@ -154,15 +155,16 @@ function(_read_parameters __TARGETS_CMAKE_PATH __EXISTING_ARGS __OUT_PARAMETERS_
 	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ_PREFIX __IS_TARGET_FIXED)
 	set(${__OUT_ARGUMENTS_PREFIX}__LIST)
 	set(${__OUT_PARAMETERS_PREFIX}__LIST)
-	set(${__OUT_ARGUMENTS_PREFIX}__LIST_MODIFIERS)
 	set(${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS)
-	_parse_parameters("${__READ_PREFIX_DEFINE_MODIFIERS}" ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}")
-#	message(STATUS "__READ_PREFIX_DEFINE_MODIFIERS: ${__READ_PREFIX_DEFINE_MODIFIERS}")
+	set(${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES)
+	_parse_parameters("${__READ_PREFIX_TARGET_PARAMETERS}" ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 0)
 #	message(FATAL_ERROR "${__OUT_ARGUMENTS_PREFIX}__LIST: ${${__OUT_ARGUMENTS_PREFIX}__LIST}")
+	set(${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES "${${__OUT_PARAMETERS_PREFIX}__LIST}")
 	set(${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS "${${__OUT_PARAMETERS_PREFIX}__LIST}")
-	set(${__OUT_ARGUMENTS_PREFIX}__LIST_MODIFIERS "${${__OUT_ARGUMENTS_PREFIX}__LIST}")
-	_parse_parameters("${__READ_PREFIX_DEFINE_PARAMETERS}" ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}")
-#	message(FATAL_ERROR "${__OUT_PARAMETERS_PREFIX}_WYBOR__CONTAINER: ${${__OUT_PARAMETERS_PREFIX}_WYBOR__CONTAINER}")
+	_parse_parameters("${__READ_PREFIX_TARGET_FEATURES}" ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 1)
+	set(${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS "${${__OUT_PARAMETERS_PREFIX}__LIST}")
+
+	_parse_parameters("${__READ_PREFIX_LINK_PARAMETERS}" ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 0)
 	_pass_arguments_higher(${__OUT_ARGUMENTS_PREFIX} ${__OUT_ARGUMENTS_PREFIX})
 	_pass_parameters_higher(${__OUT_PARAMETERS_PREFIX} ${__OUT_PARAMETERS_PREFIX})
 	
@@ -208,7 +210,12 @@ function(_read_variables_from_cache __PARS __ARGS __VALUES __OUT_ARGS)
 		endif()
 		if(DEFINED ${__EXT_VARNAME})
 			if(__PARS)
-				_verify_parameter("${__VAR}" "as defined value ${__EXT_VARNAME}" "${${__PARS}_${__VAR}__CONTAINER}" "${${__PARS}_${__VAR}__TYPE}" "${${__EXT_VARNAME}}")
+				if("${__VAR}" IN_LIST ${__PARS}__LIST_FEATURES)
+					set(__FEATURE 1)
+				else()
+					set(__FEATURE 0)
+				endif()
+				_verify_parameter("${__VAR}" "as defined value ${__EXT_VARNAME}" "${${__PARS}_${__VAR}__CONTAINER}" "${${__PARS}_${__VAR}__TYPE}" "${${__EXT_VARNAME}}" __FEATURE)
 			endif()
 			set(${__OUT_ARGS}_${__VAR} "${${__EXT_VARNAME}}" PARENT_SCOPE)
 		else()
@@ -220,7 +227,8 @@ function(_read_variables_from_cache __PARS __ARGS __VALUES __OUT_ARGS)
 	
 endfunction()
 
-function(_verify_parameter NAME CONTEXT CONTAINER TYPE VALUE)
+function(_verify_parameter NAME CONTEXT CONTAINER TYPE VALUE IS_FEATURE)
+#When IS_FEATURE is set, there is smaller set of valid type+container combinations
 	set(VALID_CONTAINERS OPTION SCALAR VECTOR)
 	set(VALID_TYPES INTEGER PATH STRING BOOL)
 	if(NOT "${TYPE}" MATCHES "^CHOICE\(.+\)$" AND NOT "${TYPE}" IN_LIST VALID_TYPES)

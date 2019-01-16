@@ -1,8 +1,8 @@
-set(DEFINE_PARAMETERS 
+set(TARGET_PARAMETERS 
 	FUSION_MAX_VECTOR_SIZE	SCALAR	"CHOICE(20:40:60)" 20
 )
 
-set(DEFINE_MODIFIERS 
+set(LINK_PARAMETERS 
 	VERSION SCALAR "STRING" "1.68"
 	COMPONENTS VECTOR STRING "filesystem:system:log:date_time:thread:chrono:atomic:program_options"
 )
