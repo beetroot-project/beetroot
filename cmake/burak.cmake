@@ -76,7 +76,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	if("${__VARIABLE_DIC_VERSION}" STREQUAL "KUC")
 		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
 	endif()
-	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC __INSTANCE_ID)
+	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID)
 #	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
@@ -284,7 +284,7 @@ function(_get_target_external __TEMPLATE_NAME __INSTANCE_NAME __TEMPLATE_DIR __P
 			set(__PATHS)
 		endif()
 		if(__PARSED_COMPONENTS)
-#			message(FATAL_ERROR "__PARSED_COMPONENTS: ${__PARSED_COMPONENTS}")
+			message(FATAL_ERROR "__PARSED_COMPONENTS: ${__PARSED_COMPONENTS}")
 			set(__COMPONENTS COMPONENTS ${__PARSED_COMPONENTS})
 		endif()
 		find_package(${__EXTERNAL_BARE_NAME}
