@@ -137,6 +137,7 @@ function(_invoke_apply_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_
 	_instantiate_variables(__ARGS "${__ARGS__LIST}")
 	unset(__NO_OP)
 	apply_to_target(${__INSTANCE_NAME} ${__DEP_INSTANCE_NAME})
+#	message(STATUS "_invoke_apply_to_target(): __NO_OP: ${__NO_OP}")
 	if(__NO_OP)
 		set(${__OUT_FUNCTION_EXISTS} 0 PARENT_SCOPE)
 	else()
@@ -279,14 +280,16 @@ function(_get_target_external __TEMPLATE_NAME __INSTANCE_NAME __TEMPLATE_DIR __P
 		if(NOT __PARSED_ASSUME_INSTALLED)
 			set(${__EXTERNAL_BARE_NAME}_ROOT ${__INSTALL_DIR})
 			set(${__EXTERNAL_BARE_NAME}_DIR ${__INSTALL_DIR})
-			set(__PATHS "PATHS \"${__INSTALL_DIR}/cmake\" NO_CMAKE_FIND_ROOT_PATH")
+			set(__PATHS "HINTS \"${__INSTALL_DIR}/cmake\" NO_CMAKE_FIND_ROOT_PATH")
+			set(__PATHS "NO_CMAKE_FIND_ROOT_PATH")
 		else()
 			set(__PATHS)
 		endif()
 		if(__PARSED_COMPONENTS)
-			message(FATAL_ERROR "__PARSED_COMPONENTS: ${__PARSED_COMPONENTS}")
+#			message(FATAL_ERROR "__PARSED_COMPONENTS: ${__PARSED_COMPONENTS}")
 			set(__COMPONENTS COMPONENTS ${__PARSED_COMPONENTS})
 		endif()
+		message(STATUS "find_package(${__EXTERNAL_BARE_NAME} ${__PATHS} ${__COMPONENTS} REQUIRED)")
 		find_package(${__EXTERNAL_BARE_NAME}
 			${__PATHS}
 			${__COMPONENTS}
@@ -380,6 +383,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __OUT_READ_PREFIX __OUT_IS_TARG
 	function(apply_to_target INSTANCE_NAME DEP_INSTANCE_NAME)
 #		target_link_libraries(${INSTANCE_NAME} ${DEP_INSTANCE_NAME})  <- For dependencies that do not define targets this call does not make sense.
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined, only the default version was used
+#		message(STATUS "default apply_to_target(): calling with INSTANCE_NAME: ${INSTANCE_NAME} and DEP_INSTANCE_NAME: ${DEP_INSTANCE_NAME}")
 	endfunction()
 
 	unset(DEFINE_PARAMETERS)
