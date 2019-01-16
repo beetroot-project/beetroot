@@ -1,23 +1,24 @@
 TODO:
 
-0. Dodać obsługę globalnych opcji targetu TEMPLATE_OPTIONS, działającą podobnie do definicji zewnętrznego projektu
-1. Dodać globalne zmienne opisujące wszystko to, co wczytano z targets.cmake.
-2. __get_variables(): Wszystko od razu ma wpisywać do zmiennych globalnych, pod kluczem INSTANCE_ID. Dodatkowo ma dodać pod kluczem TEMPLATE_NAME ścieżkę do nas, deklarację parametrów (bez wartości domyślnych) oraz listę instance_id, które są przez nas zdefiniowane.
-3. _read_functions(): Niech po prostu wczyta plik, bez importowania zmiennych.
-4. Dodaj funkcję dla użytkownika `append_modifier_to_target(TEMPLATE_NAME ...)`, która zadziała tak samo, jak get_target, z tą różnicą, że:
+0. Dodać obsługę globalnych opcji targetu TEMPLATE_OPTIONS, działającą podobnie do definicji zewnętrznego projektu # Done
+1. Dodać globalne zmienne opisujące wszystko to, co wczytano z targets.cmake. # DONE
+2. __get_variables(): Wszystko od razu ma wpisywać do zmiennych globalnych, pod kluczem INSTANCE_ID. Dodatkowo ma dodać pod kluczem TEMPLATE_NAME ścieżkę do nas, deklarację parametrów (bez wartości domyślnych) oraz listę instance_id, które są przez nas zdefiniowane. # DONE
+3. _read_functions(): Niech po prostu wczyta plik, bez importowania zmiennych. # DONE
+
+4. Dodaj funkcję dla użytkownika `append_modifier_to_target(TEMPLATE_NAME ...)`, która zadziała tak samo, jak get_target, z tą różnicą, że: # DONE
    1. Będzie możliwa tylko gdy TEMPLATE_NAME ma statyczne targety (tj. jest singletonem)
    2. Podobnie do get_target, będzie tworzyła INSTANCE_ID na podstawie TEMPLATE_NAME i args, ale dodatkowo doda jakąś sól, aby na pewno być rozróżnialne, oraz
-      doda tylko dwie informacje globalne: TEMPLATE_NAME, ARGS i INSTANCE_ID wywoływanego właśnie targetu (czyli tego, który chce nas dodać jako zależność)
+      doda tylko trzy informacje globalne: TEMPLATE_NAME, ARGS i INSTANCE_ID wywoływanego właśnie targetu (czyli tego, który chce nas dodać jako zależność)
    3. Dodatkowo doda do globalnej listy __BURAK_SINGLETON_TARGETS_MODIFICATIONS swój INSTANCE_ID
-5. Do funkcji _make_instance_id() dodaj kod, który będzie dodawał instance_id do listy wszystkich instance_id danego template_name (_INSTANCE_IDS).
-6. finalize(): Niech najpierw wczyta __BURAK_SINGLETON_TARGETS_MODIFICATIONS i przeiteruje się po każdym INSTANCE_ID tam znalezionym 1-4:
+5. Do funkcji _make_instance_id() dodaj kod, który będzie dodawał instance_id do listy wszystkich instance_id danego template_name (_INSTANCE_IDS). # DONE
+6. finalize(): Niech najpierw wczyta __BURAK_SINGLETON_TARGETS_MODIFICATIONS i przeiteruje się po każdym INSTANCE_ID tam znalezionym 1-4: 
    1. Niech znajdzie TEMPLATE_NAME dotyczący tego instance
    2. Znajdzie _INSTANCE_IDS właściwość danego TEMPLATE_NAME i upewni się, że jest dokładnie jedna taka instancja i że ona jest singletonem
    3. Doda do lokalnej listy o nazwie __${TEMPLATE_NAME}__MODS (czyli oddzielnej dla każdego template) bierzący instance id
    4. Upewni się, że w lokalnej liście TEMPLATE_MODS dodany jest bierzący template_name
    
-   5. Znajdź ORIGINAL_INSTANCE_ID z pierwotną definicją danego template
-   6. Nowa pętla, po każdym TEMPLATE_NAME wewnątrz lokalnej listy TEMPLATE_MODS: 7-14
+   5. Nowa pętla, po każdym TEMPLATE_NAME wewnątrz lokalnej listy TEMPLATE_MODS: 6-14
+   6. Znajdź ORIGINAL_INSTANCE_ID z pierwotną definicją danego template
    7. Wewnętrzna pętla po każdej INSTANCE_ID wewnątrz __${TEMPLATE_NAME}__MODS. 8-14
    8. Jeśli jesteśmy w pierwszej iteracji, po prostu załaduj zmienne z aktualnego INSTANCE_ID.
    9. Jeśli jesteśmy w drugiej iteracji, przeiteruj się po wszystkich zmiennych ARG_NAME z aktualnego INSTANCE_ID 10-11:

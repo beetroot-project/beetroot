@@ -13,6 +13,7 @@ include(burak_global_storage)
 include(burak_global_storage_misc)
 include(burak_dependency_processing)
 include(build_install_prefix)
+include(set_operations)
 _set_behavior_outside_defining_targets()
 if(NOT __NOT_SUPERBUILD)
 	set_property(GLOBAL PROPERTY __BURAK_EXTERNAL_DEPENDENCIES "")
@@ -36,12 +37,8 @@ function(build_target __TEMPLATE_NAME)
 	get_target(${__TEMPLATE_NAME} __TMP_INSTANCE_NAME ${ARGN})
 endfunction()
 
-function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME) 
-	_get_target_behavior(__GET_TARGET_BEHAVIOR)
-#	message(STATUS "Called get_target(${__TEMPLATE_NAME}) on phase ${__GET_TARGET_BEHAVIOR}")
-	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "INSIDE_GENERATE_TARGETS")
-		message(FATAL_ERROR "Calling get_target from inside generate_targets is disallowed. To call dependency use declare_dependencies() (in which you cannot define targets).")
-	endif()
+#Simple macro that parses the optional argument PATH. Maybe removed in future realeses
+macro(_parse_TARGETS_PATH __TEMPLATE_NAME)
 	if(NOT __TEMPLATE_NAME)
 		message(FATAL_ERROR "get_error was called without any arguments")
 	endif()
@@ -67,6 +64,36 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 		endif()
 	endif()
 	
+endmacro()
+
+function(append_modifier_to_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "INSIDE_GENERATE_TARGETS")
+		message(FATAL_ERROR "Calling append_modifier_to_target from inside generate_targets is disallowed. To call dependency use declare_dependencies() (in which you cannot define targets).")
+	endif()
+	
+	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
+
+	_read_parameters("${__TARGETS_CMAKE_PATH}" __PARS __NO_ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
+	set(__NO_ARGS__LIST "")
+	set(__NO_ARGS__LIST_MODIFIERS "")
+	_read_variables_from_args(__PARS __NO_ARGS __ARGS ${ARGN})
+	_make_instance_id(__${__TEMPLATE_NAME} __ARGS "TARGET_MODIFICATION" __INSTANCE_ID)
+	_store_target_modification_data(
+		 ${__INSTANCE_ID}
+		__ARGS 
+		 ${__TEMPLATE_NAME} 
+		 )
+	_put_dependencies_into_stack("${__INSTANCE_ID}")
+endfunction()
+
+function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME) 
+	_get_target_behavior(__GET_TARGET_BEHAVIOR)
+#	message(STATUS "Called get_target(${__TEMPLATE_NAME}) on phase ${__GET_TARGET_BEHAVIOR}")
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "INSIDE_GENERATE_TARGETS")
+		message(FATAL_ERROR "Calling get_target from inside generate_targets is disallowed. To call dependency use declare_dependencies() (in which you cannot define targets).")
+	endif()
+	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
+	
 	
 	_get_variables("${__TARGETS_CMAKE_PATH}" "" __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS ${__ARGS})
 #	if("${__TEMPLATE_NAME}" STREQUAL "SerialboxStatic")
@@ -75,7 +102,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	if("${__VARIABLE_DIC_VERSION}" STREQUAL "KUC")
 		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
 	endif()
-	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC __INSTANCE_ID)
+	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID)
 #	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
@@ -120,6 +147,41 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 		endif()
 	else()
 		message(FATAL_ERROR "Unknown global state __GET_TARGET_BEHAVIOR = \"${__GET_TARGET_BEHAVIOR}\"")
+	endif()
+	if(__OUT_INSTANCE_NAME)
+		set(${__OUT_INSTANCE_NAME} "${__INSTANCE_NAME}" PARENT_SCOPE)
+	endif()
+endfunction()
+
+#Function re-reads all variables, overriding 
+function(_discover_target_by_instance __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS __ARGS_OVERRIDE __OUT_INSTANCE_NAME )
+	_get_target_behavior(__GET_TARGET_BEHAVIOR)
+	_re_read_variables("${__TARGETS_CMAKE_PATH}" ${__ARGS} __NEW_ARGS __EXTERNAL_PROJECT_INFO)
+#	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
+		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
+		_put_dependencies_into_stack("${__INSTANCE_ID}")
+		_discover_dependencies(${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __NEW_ARGS "${${__PARS}__LIST_MODIFIERS}" __DEP_INSTANCE_ID_LIST)
+		if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
+			set(__TARGET_REQUIRED 1)
+		else()
+			set(__TARGET_REQUIRED 0)
+		endif()
+		_store_instance_data(
+			 ${__INSTANCE_ID}
+			   __NEW_ARGS 
+			"${__PARS}"
+			"${${__PARS}__LIST_MODIFIERS}"
+			"${__DEP_INSTANCE_ID_LIST}" 
+			 ${__TEMPLATE_NAME} 
+			 ${__TARGETS_CMAKE_PATH} 
+			 ${__IS_TARGET_FIXED}
+			"${__EXTERNAL_PROJECT_INFO}"
+			 ${__TARGET_REQUIRED}
+			"${__TEMPLATE_OPTIONS}"
+			 )
+	else()
+		message(FATAL_ERROR "Illegal global state __GET_TARGET_BEHAVIOR = \"${__GET_TARGET_BEHAVIOR}\"")
 	endif()
 	if(__OUT_INSTANCE_NAME)
 		set(${__OUT_INSTANCE_NAME} "${__INSTANCE_NAME}" PARENT_SCOPE)
@@ -212,7 +274,6 @@ function(_get_target_external __TEMPLATE_NAME __INSTANCE_NAME __TEMPLATE_DIR __P
 	set(__OPTIONS EXPORTS_TARGETS ASSUME_INSTALLED)
 	set(__oneValueArgs PATH NAME)
 	set(__multiValueArgs WHAT_COMPONENTS_NAME_DEPENDS_ON COMPONENTS)
-	
 	
 	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${__EXTERNAL_PROJECT_ARGS})
 	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
@@ -311,6 +372,49 @@ function(finalizer)
 	endif()
 	message("")
 	_set_behavior_defining_targets() #To make sure we never call declare_dependencies()
+	
+	#First we try to concretize all instance modifications
+	_get_all_instance_ids(__INSTANCE_ID_LIST)
+	set(__TEMPLATE_MODS)
+	if(__INSTANCE_ID_LIST)
+		foreach(__INSTANCE_MOD_ID IN LISTS __INSTANCE_ID_LIST)
+			_retrieve_instance_data(${__INSTANCE_MOD_ID} TEMPLATE __MOD_TEMPLATE_NAME)
+			_retrieve_instance_data(${__INSTANCE_MOD_ID} FILE_INSTANCES __FILE_INSTANCES_LIST)
+			list(LENGTH __FILE_INSTANCES_LIST __FILE_INSTANCES_LENGTH)
+			if("${__FILE_INSTANCES_LENGTH}" GREATER "1")
+				message(FATAL_ERROR "Cannot use append_modifier_to_target() when there is already more than one instance of the target described in the targets.cmake")
+			endif()
+			if("${__FILE_INSTANCES_LENGTH}" EQUAL "0")
+				message(FATAL_ERROR "Internal beetroot error: no instances found for ${__MOD_TEMPLATE_NAME}. There should be at least one.")
+			endif()
+			list(APPEND __${__MOD_TEMPLATE_NAME}__MODS ${__INSTANCE_ID_LIST})
+			list(APPEND __TEMPLATE_MODS ${__MOD_TEMPLATE_NAME})
+		endforeach()
+	endif()
+	list(REMOVE_DUPLICATES __TEMPLATE_MODS)
+	foreach(__TEMPLATE IN LISTS __TEMPLATE_MODS)
+		_retrieve_template_data(${__TEMPLATE} FILE_INSTANCES __FILE_INSTANCE_ID)
+		_retrieve_template_data(${__TEMPLATE} PATH __TARGETS_CMAKE_PATH)
+		_retrieve_instance_args(${__FILE_INSTANCE_ID} __ORIGARGS)
+		set(__FIRST 1)
+		foreach(__MOD_INSTANCE_ID IN LISTS __${__TEMPLATE}__MODS)
+			if(__FIRST)
+				set(__FIRST 0)
+				_retrieve_instance_args(${__MOD_INSTANCE_ID} __OLDARGS)
+			else()
+				_retrieve_instance_args(${__MOD_INSTANCE_ID} __NEWARGS)
+				_join_variables(__OLDARGS __NEWARGS "Error: ambiguous overridden variables when instantiating singleton template ${__TEMPLATE} from ${__TARGETS_CMAKE_PATH}. " __OLDARGS)
+			endif()
+		endforeach()
+		_read_variables_from_cache("" __ORIGARGS __OLDARGS __ARGS)
+		#Now we have updated variables' values, we need to iterate again, this time store the full instance ids
+		_get_variables("${__TARGETS_CMAKE_PATH}" __ARGS __ARGS_DUMMY __PARS __TEMPLATE_NAMES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __GLOBAL_OPTIONS)
+		_instantiate_variables(__ARGS "${__PARS__LIST_MODIFIERS}")
+		foreach(__MOD_INSTANCE_ID IN LISTS __${__TEMPLATE}__MODS)
+			get_target(${__MOD_INSTANCE_ID})
+		endforeach()
+		
+	endforeach()
 	
 	#Now we need to instantiate all the targets
 	_get_all_instance_ids(__INSTANCE_ID_LIST)

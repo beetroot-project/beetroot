@@ -12,7 +12,7 @@ set(ENUM_TARGETS Boost::boost Boost::filesystem Boost::system Boost::log Boost::
 set(DEFINE_EXTERNAL_PROJECT 
 	ASSUME_INSTALLED
 	NAME Boost
-	COMPONENTS "filesystem;system;log;date_time;thread;chrono;atomic;program_options"
+	COMPONENTS "${COMPONENTS}"
 )
 
 function(generate_targets TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefined, the Beetroot will use the following definition
