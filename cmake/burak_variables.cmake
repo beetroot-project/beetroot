@@ -29,16 +29,21 @@
 #	MY_OTHER_ARG	SCALAR	INTEGER 1
 #	ARG	SCALAR	CHOICE(SINGULAR;PLURAL) ${TMP}
 # )
-function(_get_variables __TARGETS_CMAKE_PATH __EXISTING_VARIABLES_PREFIX __OUT_VARIABLE_DIC __OUT_PARAMETERS_DIC __OUT_TEMPLATE_NAMES __OUT_EXTERNAL_PROJECT_INFO __OUT_IS_TARGET_FIXED __OUT_GLOBAL_OPTIONS)
+function(_get_variables __TARGETS_CMAKE_PATH __ARGS_IN __OUT_VARIABLE_DIC __OUT_PARAMETERS_DIC __OUT_TEMPLATE_NAMES __OUT_EXTERNAL_PROJECT_INFO __OUT_IS_TARGET_FIXED __OUT_GLOBAL_OPTIONS)
 	set(__ARGUMENT_HASH)
 	set(__ITERATION_COUNT 0)
 
 	set(__ARGUMENT_HASH_OLD "")
+
 	foreach(__ITERATION RANGE 10)
 #		if(__ARGS_VERSION)
 #			message(STATUS "_get_variables(): __ITERATION: ${__ITERATION}, phase 1, __ARGS_VERSION: ${__ARGS_VERSION}")
 #		endif()
-		_read_parameters("${__TARGETS_CMAKE_PATH}" __PARS __ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
+		if(${__ITERATION} EQUAL 0)
+			_read_parameters("${__TARGETS_CMAKE_PATH}" "${__ARGS_IN}" __PARS __ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
+		else()
+			_read_parameters("${__TARGETS_CMAKE_PATH}" __ARGS __PARS __ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
+		endif()
 #		if(__ARGS_VERSION)
 #			message(STATUS "_get_variables(): __ITERATION: ${__ITERATION}, phase 2, __ARGS_VERSION: ${__ARGS_VERSION}")
 #		endif()
@@ -54,6 +59,8 @@ function(_get_variables __TARGETS_CMAKE_PATH __EXISTING_VARIABLES_PREFIX __OUT_V
 #			message(STATUS "_get_variables(): __ITERATION: ${__ITERATION}, phase 4, __ARGS_VERSION: ${__ARGS_VERSION}")
 #		endif()
 		_calculate_hash(__ARGS "${__ARGS__LIST}" "_getvars_" __ARGUMENT_HASH_NEW)
+		
+		message(STATUS "_get_variables(): __ARGUMENT_HASH_OLD: ${__ARGUMENT_HASH_OLD}, __ARGUMENT_HASH_NEW: ${__ARGUMENT_HASH_NEW}, __IN_EXTERNAL_PROJECT_INFO: ${__IN_EXTERNAL_PROJECT_INFO}")
 		if("${__ARGUMENT_HASH_NEW}" STREQUAL "${__ARGUMENT_HASH_OLD}")
 			break()
 		endif()
@@ -140,7 +147,10 @@ endmacro()
 
 # Reads, parses and checks parameter definition from targets.cmake.
 # Also initializes argument list with the default value of each parameter.
-function(_read_parameters __TARGETS_CMAKE_PATH __OUT_PARAMETERS_PREFIX __OUT_ARGUMENTS_PREFIX __OUT_TEMPLATE_NAMES __OUT_EXTERNAL_PROJECT_INFO __OUT_IS_TARGET_FIXED __OUT_GLOBAL_OPTIONS)
+function(_read_parameters __TARGETS_CMAKE_PATH __EXISTING_ARGS __OUT_PARAMETERS_PREFIX __OUT_ARGUMENTS_PREFIX __OUT_TEMPLATE_NAMES __OUT_EXTERNAL_PROJECT_INFO __OUT_IS_TARGET_FIXED __OUT_GLOBAL_OPTIONS)
+	if(__EXISTING_ARGS)
+		_instantiate_variables(${__EXISTING_ARGS} "${${__EXISTING_ARGS}__LIST}" )
+	endif()
 	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ_PREFIX __IS_TARGET_FIXED)
 	set(${__OUT_ARGUMENTS_PREFIX}__LIST)
 	set(${__OUT_PARAMETERS_PREFIX}__LIST)
@@ -188,7 +198,7 @@ endfunction()
 #
 # Iterates over all variables in __PARS, and combines the values taken from __ARGS with overrides taken as the same name, but with optional prefix __VALUES.
 #
-# It also validates the variable, if it is taken from __VALUES
+# It also validates the variable, if it is taken from __VALUES and __PARS is not equal ""
 function(_read_variables_from_cache __PARS __ARGS __VALUES __OUT_ARGS)
 	foreach(__VAR IN LISTS ${__ARGS}__LIST)
 		if(NOT "${${__VAR}}" STREQUAL "")
@@ -197,8 +207,9 @@ function(_read_variables_from_cache __PARS __ARGS __VALUES __OUT_ARGS)
 			set(__EXT_VARNAME ${__VALUES}_${__VAR})
 		endif()
 		if(DEFINED ${__EXT_VARNAME})
-#			message(FATAL_ERROR "_verify_parameter(\"${__VAR}\" \"as defined value ${__EXT_VARNAME}\" ${__PARS}_${__VAR}__CONTAINER=\"${${__PARS}_${__VAR}__CONTAINER}\" \"${${__PARS}_${__VAR}__TYPE}\" \"${${__EXT_VARNAME}}\"")
-			_verify_parameter("${__VAR}" "as defined value ${__EXT_VARNAME}" "${${__PARS}_${__VAR}__CONTAINER}" "${${__PARS}_${__VAR}__TYPE}" "${${__EXT_VARNAME}}")
+			if(__PARS)
+				_verify_parameter("${__VAR}" "as defined value ${__EXT_VARNAME}" "${${__PARS}_${__VAR}__CONTAINER}" "${${__PARS}_${__VAR}__TYPE}" "${${__EXT_VARNAME}}")
+			endif()
 			set(${__OUT_ARGS}_${__VAR} "${${__EXT_VARNAME}}" PARENT_SCOPE)
 		else()
 			set(${__OUT_ARGS}_${__VAR} "${${__ARGS}_${__VAR}}" PARENT_SCOPE)
@@ -308,9 +319,9 @@ function(_instantiate_variables __ARGS __ARGS_LIST)
 	endforeach()
 endfunction()
 
-function(_make_instance_id __TEMPLATE_NAME __ARGS __OUT)
+function(_make_instance_id __TEMPLATE_NAME __ARGS __SALT __OUT)
 	get_property(__TEMPLATE_NAMES GLOBAL PROPERTY __TEMPLATE_NAMES_${__TEMPLATE_NAME})
-	_calculate_hash(${__ARGS} "${${__ARGS}__LIST}" "" __HASH)
+	_calculate_hash(${__ARGS} "${${__ARGS}__LIST}" "${__SALT}" __HASH)
 	if("${__HASH}" STREQUAL "")
 		set(${__OUT} "${__TEMPLATE_NAME}")
 	else()

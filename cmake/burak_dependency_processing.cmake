@@ -2,7 +2,7 @@
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
 function(_discover_dependencies __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __ARGS_LIST __OUT_INSTANCE_IDS )
 	message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME}...")
-	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ __IS_TARGET_FIXED)
+#	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ __IS_TARGET_FIXED)
 	_instantiate_variables(${__ARGS} "${__ARGS_LIST}")
 
 	_descend_dependencies_stack()
