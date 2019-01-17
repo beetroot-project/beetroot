@@ -11,6 +11,10 @@
 # __TEMPLATEDB_<TEMPLATE_NAME>_MODIFIERS_HASHES   - List of all unique hashes of modifiers. Used to get the number of unique targets for each template.
 # __TEMPLATEDB_<TEMPLATE_NAME>_TEMPLATE_INSTANCES - List of all unique instances gathered for this template.
 # 
+# __TARGETDB_<MODIFIERS_HASH>_TARGET_INSTANCES  - List of all instances that point to this target
+# __TARGETDB_<MODIFIERS_HASH>_TARGET_TEMPLATE   - Template of this target
+# __TARGETDB_<MODIFIERS_HASH>_FEATURES          - Serialized values of features of this target
+#
 # __FILEDB_<PATH_HASH>_PATH           - Path to the file that defines this template
 # __FILEDB_<PATH_HASH>_TARGET_FIXED   - Boolean. True means that there is only on target name for this template
 # __FILEDB_<PATH_HASH>_PARS           - Serialized list of definitions of variables (without their default values)
@@ -28,6 +32,9 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_DEPS               INSTANCEDB )
 	set(${__COLS}_TEMPLATE           INSTANCEDB )
 	set(${__COLS}_INSTANCE_NAME      INSTANCEDB )
+	set(${__COLS}_TARGET_INSTANCES   TARGETDB )
+	set(${__COLS}_TARGET_TEMPLATE    TARGETDB )
+	set(${__COLS}_FEATURES           TARGETDB )
 	set(${__COLS}_PATH               TEMPLATEDB )
 	set(${__COLS}_MODIFIERS_HASHES   TEMPLATEDB )
 	set(${__COLS}_TEMPLATE_INSTANCES TEMPLATEDB )
@@ -50,15 +57,31 @@ function(_make_path_hash __TARGETS_CMAKE_PATH __OUT_HASH)
 	set(${__OUT_HASH} ${__TMP} PARENT_SCOPE)
 endfunction()
 
+function(_make_modifiers_hash __SERIALIZED_MODIFIERS __TARGET_TEMPLATE __OUT_HASH)
+	if(NOT __SERIALIZED_MODIFIERS)
+		message(FATAL_ERROR "Internal Beetroot error: __SERIALIZED_MODIFIERS should not be empty")
+	endif()
+	set(__TMP "${__TARGET_TEMPLATE}|${__SERIALIZED_MODIFIERS}")
+	string(MD5 __TMP ${__TMP})
+	string(SUBSTRING ${__TMP} 1 8 __TMP)
+	set(${__OUT_HASH} ${__TMP} PARENT_SCOPE)
+endfunction()
+
 function(_store_instance_data __INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS __ARGS_LIST_FEATURES __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 #	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
 #	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
 #		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
 #	endif()
-	_serialize_variables(${__ARGS} __SERIALIZED_VARIABLES)
+	_serialize_variables(${__ARGS} "${${__ARGS}__LIST}" __SERIALIZED_VARIABLES)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} VARS                  "${__SERIALIZED_VARIABLES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TEMPLATE              "${__TEMPLATE_NAME}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} DEPS                  "${__DEP_LIST}")
+	
+	_serialize_variables(${__ARGS} "${${__ARGS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
+	_make_modifiers_hash(__SERIALIZED_FEATURES ${__TEMPLATE_NAME} __FEATURE_HASH)
+	_add_property_to_db(TARGETDB ${__FEATURE_HASH} TARGET_INSTANCES       "${__INSTANCE_ID}")
+	_set_property_to_db(TARGETDB ${__FEATURE_HASH} TARGET_TEMPLATE        "${__TEMPLATE_NAME}")
+	_set_property_to_db(TARGETDB ${__FEATURE_HASH} FEATURES               "${__SERIALIZED_FEATURES}")
 	
 	_calculate_hash(${__ARGS} "${__ARGS_LIST_MODIFIERS}" "" __MODIFIERS_HASH)
 #	message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} got __MODIFIERS_HASH ${__MODIFIERS_HASH} based on __ARGS_LIST_MODIFIERS ${__ARGS_LIST_MODIFIERS}")
@@ -87,7 +110,7 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS 
 endfunction()
 
 function(_store_target_modification_data __INSTANCE_ID __ARGS __TEMPLATE_NAME)
-	_serialize_variables(${__ARGS} __SERIALIZED_VARIABLES)
+	_serialize_variables(${__ARGS} "${${__ARGS}__LIST}" __SERIALIZED_VARIABLES)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} VARS               "${__SERIALIZED_VARIABLES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TEMPLATE           "${__TEMPLATE_NAME}")
 	_add_property_to_db(BURAK ALL MODIFICATIONS "${__INSTANCE_ID}")
