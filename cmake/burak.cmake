@@ -89,8 +89,10 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 		else()
 			set(__TARGET_REQUIRED 0)
 		endif()
+		_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 		_store_instance_data(
 			 ${__INSTANCE_ID}
+			"${__PARENT_INSTANCE_ID}"
 			__VARIABLE_DIC 
 			__PARAMETERS_DIC
 			"${__PARAMETERS_DIC__LIST_MODIFIERS}"

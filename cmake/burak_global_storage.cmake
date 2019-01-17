@@ -1,10 +1,13 @@
 #     Global variables:
 #
 #
-# __INSTANCEDB_<INSTANCE_ID>_VARS          - Serialized list of variables with their values that are passed to that instance
-# __INSTANCEDB_<INSTANCE_ID>_DEPS          - List of dependencies id of that instance
-# __INSTANCEDB_<INSTANCE_ID>_INSTANCE_NAME - Assigned name of the target. Applies only for those instances that produce targets. Instances get target name only in second phase (DEFINING_TARGETS)
-# __INSTANCEDB_<INSTANCE_ID>_TEMPLATE      - Base template name. Can be used for lookup in templatedb
+# __INSTANCEDB_<INSTANCE_ID>_VARS            - Serialized list of variables with their values that are passed to that instance
+# __INSTANCEDB_<INSTANCE_ID>_DEPS            - List of dependencies id of that instance
+# __INSTANCEDB_<INSTANCE_ID>_PARENTS         - List of instances that require this instance as their dependency
+# __INSTANCEDB_<INSTANCE_ID>_INSTANCE_NAME   - Assigned name of the target. Applies only for those instances that produce targets. Instances get target name only in second phase (DEFINING_TARGETS)
+# __INSTANCEDB_<INSTANCE_ID>_TEMPLATE        - Base template name. Can be used for lookup in templatedb
+# __INSTANCEDB_<INSTANCE_ID>_IS_MODIFICATION - Boolean. True means that this instance is incapable of spawning a target alone. It only holds features, but the system must
+#                                              find the single full instance this instance can use (and perhaps expand)
 #
 # __TEMPLATEDB_<TEMPLATE_NAME>_PATH               - Path to the file that defines this template. Can be used as a key to the FILEDB database
 # __TEMPLATEDB_<TEMPLATE_NAME>_INSTANCES          - List of all instance ids of the template
@@ -32,6 +35,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_DEPS               INSTANCEDB )
 	set(${__COLS}_TEMPLATE           INSTANCEDB )
 	set(${__COLS}_INSTANCE_NAME      INSTANCEDB )
+	set(${__COLS}_IS_MODIFICATION    INSTANCEDB )
 	set(${__COLS}_TARGET_INSTANCES   TARGETDB )
 	set(${__COLS}_TARGET_TEMPLATE    TARGETDB )
 	set(${__COLS}_FEATURES           TARGETDB )
@@ -67,7 +71,7 @@ function(_make_modifiers_hash __SERIALIZED_MODIFIERS __TARGET_TEMPLATE __OUT_HAS
 	set(${__OUT_HASH} ${__TMP} PARENT_SCOPE)
 endfunction()
 
-function(_store_instance_data __INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS __ARGS_LIST_FEATURES __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
+function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS __ARGS_LIST_FEATURES __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 #	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
 #	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
 #		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
@@ -76,7 +80,9 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS 
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} VARS                  "${__SERIALIZED_VARIABLES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TEMPLATE              "${__TEMPLATE_NAME}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} DEPS                  "${__DEP_LIST}")
-	
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_MODIFICATION       "0")
+	_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} PARENTS               "${__PARENT_INSTANCE_ID}")
+
 	_serialize_variables(${__ARGS} "${${__ARGS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_make_modifiers_hash(__SERIALIZED_FEATURES ${__TEMPLATE_NAME} __FEATURE_HASH)
 	_add_property_to_db(TARGETDB ${__FEATURE_HASH} TARGET_INSTANCES       "${__INSTANCE_ID}")
@@ -109,10 +115,12 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __ARGS_LIST_MODIFIERS 
 #	_append_instance_modifiers_hash(${__INSTANCE_ID} ${__TEMPLATE_NAME} ${__ARGS} "${__ARGS_LIST_MODIFIERS}")
 endfunction()
 
-function(_store_target_modification_data __INSTANCE_ID __ARGS __TEMPLATE_NAME)
-	_serialize_variables(${__ARGS} "${${__ARGS}__LIST}" __SERIALIZED_VARIABLES)
+function(_store_target_modification_data __INSTANCE_ID __PARENT_INSTANCE_ID __FEATURES __FEATURES_LIST __TEMPLATE_NAME)
+	_serialize_variables(${__FEATURES} "${__FEATURES__LIST}" __SERIALIZED_VARIABLES)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} VARS               "${__SERIALIZED_VARIABLES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TEMPLATE           "${__TEMPLATE_NAME}")
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_MODIFICATION    "1")
+	_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} PARENTS            "${__PARENT_INSTANCE_ID}")
 	_add_property_to_db(BURAK ALL MODIFICATIONS "${__INSTANCE_ID}")
 endfunction()
 
