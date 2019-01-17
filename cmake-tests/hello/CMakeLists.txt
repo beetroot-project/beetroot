@@ -34,12 +34,12 @@ get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
 get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
 get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama NONSIGINIFICANT boo)
 get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Sofia NONSIGINIFICANT boo)
-get_target(fiksik __OUT_INSTANCE_NAME)
-#get_target(fiksik __OUT_INSTANCE_NAME NONSIGINIFICANT X LIBKTO Mik )  #generates error
-build_target(HELLO_BOOST)
-build_target(HELLO_2BOOST)
-build_target(HELLO_2BOOST PAR KUC)
-build_target(SERIALBOX_C_TEST)
+#get_target(fiksik __OUT_INSTANCE_NAME)
+##get_target(fiksik __OUT_INSTANCE_NAME NONSIGINIFICANT X LIBKTO Mik )  #generates error
+#build_target(HELLO_BOOST)
+#build_target(HELLO_2BOOST)
+#build_target(HELLO_2BOOST PAR KUC)
+#build_target(SERIALBOX_C_TEST)
 
 
 # Folder-specific configuration. Don't use relative paths and  CMAKE_CURRENT_SOURCE_DIR - use prefix paths with ${CMAKE_CURRENT_LIST_FILE}/ instead. 

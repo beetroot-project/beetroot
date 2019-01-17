@@ -34,6 +34,8 @@ set(TARGET_FEATURES
 )
 
 set(TEMPLATE_OPTIONS
+	SINGLETON_TARGETS  #If set requires TARGET_TEMPLATE and generates error if ENUM_TEMPLATES is specified
+	NO_TARGETS #If set it declares that no targets will be generated. Generates error if `generate_targets()` is defined by the user.
 )
 
 set(ENUM_TEMPLATES <UNIQUE NAME OF TARGET_TEMPLATE>)
