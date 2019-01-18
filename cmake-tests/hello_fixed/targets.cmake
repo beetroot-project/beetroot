@@ -19,7 +19,7 @@ set(ENUM_TARGETS fiksik)
 #endfunction()
 
 function(generate_targets TEMPLATE_NAME)
-	message(WARNING "Inside fiksik generate_targets trying to define ${HELLO_TARGET_NAME} with BLA=${BLA}")
+	message(STATUS "Inside fiksik generate_targets() trying to define ${TARGET_NAME} with BLA=${BLA}")
 	add_executable(fiksik "${CMAKE_CURRENT_SOURCE_DIR}/source.cpp")
 	target_compile_definitions(fiksik PRIVATE "BLA=${BLA}")
 endfunction()

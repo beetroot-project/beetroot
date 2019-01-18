@@ -7,7 +7,7 @@
 # __BURAK_GET_TARGET_BEHAVIOR - One of the <DEFINING_TARGETS, OUTSIDE_DEFINING_TARGETS>, used to indicate the behavior of the user-facing beetroot functions, in particular get_targets()
 #                               Together with the stack depth (used when OUTSIDE_DEFINING_TARGETS) it allows to query the behavior using _get_target_behavior().
 #
-# __
+# __BURAK_EXTERNAL_DEPENDENCIES - list of all external projects that must be built before our project.
 
 
 function(_descend_dependencies_stack )
@@ -82,4 +82,10 @@ function(_set_behavior_outside_defining_targets)
 	set_property(GLOBAL PROPERTY __BURAK_GET_TARGET_BEHAVIOR "OUTSIDE_DEFINING_TARGETS")
 endfunction()
 
+function(_add_target_to_superbuild_dependencies __TARGET_NAME)
+	set_property(GLOBAL APPEND PROPERTY __BURAK_EXTERNAL_DEPENDENCIES "${__TARGET_NAME}")
+endfunction()
 
+macro(_get_target_names_of_all_superbuild_dependencies __OUT_TARGET_NAMES)
+	get_property(${__OUT_TARGET_NAMES} GLOBAL PROPERTY __BURAK_EXTERNAL_DEPENDENCIES)
+endmacro()

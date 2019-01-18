@@ -1,6 +1,7 @@
 set(ENUM_TEMPLATES SERIALBOX_C_TEST)
 
 function(declare_dependencies TEMPLATE_NAME)
+	message(STATUS "Inside declare_dependencies() for SERIALBOX_C_TEST.")
 	build_target(Serialbox::SerialboxCStatic)
 endfunction()
 
