@@ -244,7 +244,7 @@ endfunction()
 function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 # __TEMPLATE_NAME __INSTANCE_NAME __TEMPLATE_DIR __PARS_PREFIX __ARGS_PREFIX __ARGS_LIST __EXTERNAL_PROJECT_ARGS __DEPENDENCIES_ID __HASH __NO_TARGETS
 	set(__OPTIONS ASSUME_INSTALLED)
-	set(__oneValueArgs PATH NAME)
+	set(__oneValueArgs SOURCE_PATH INSTALL_PATH NAME)
 	set(__multiValueArgs WHAT_COMPONENTS_NAME_DEPENDS_ON COMPONENTS BUILD_PARAMETERS)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO) 
@@ -254,8 +254,10 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 		message(FATAL_ERROR "Undefined options for external project: ${__unparsed}")
 	endif()
 	
-	if(NOT __PARSED_PATH AND NOT __PARSED_ASSUME_INSTALLED)
+	if(NOT __PARSED_SOURCE_PATH AND NOT __PARSED_ASSUME_INSTALLED)
 		message(FATAL_ERROR "External project must name PATH or be ASSUME_INSTALLED")
+	else()
+		get_filename_component(__PARSED_SOURCE_PATH "${__PARSED_SOURCE_PATH}" REALPATH BASE_DIR "${SUPERBUILD_ROOT}"])
 	endif()
 	
 	if(__DEP_TARGETS)
@@ -278,7 +280,13 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	set(__EXTERNAL_NAME "${__EXTERNAL_NAME}/${__FEATUREBASE}")
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
-	set(__INSTALL_DIR "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}")
+	if(__PARSED_INSTALL_PATH)
+		get_filename_component(__INSTALL_DIR "${__PARSED_INSTALL_PATH}" REALPATH BASE_DIR "${SUPERBUILD_ROOT}"])
+		
+	else()
+		set(__INSTALL_DIR "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}")
+	endif()
+	
 #	message(STATUS "_get_target_external(): Going to add external project for ${__TEMPLATE_NAME} defined in the path ${__TEMPLATE_DIR}. We expect it will generate a target ${__INSTANCE_NAME}. The project will be installed in ${__INSTALL_DIR}")
 	if(NOT __NOT_SUPERBUILD)
 		if(NOT __PARSED_ASSUME_INSTALLED)
@@ -304,8 +312,8 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	#		list(APPEND __CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR})
 			ExternalProject_Add("${__INSTANCE_NAME_FIXED}" 
 				${__DEP_STR}
-				PREFIX ${__PARSED_PATH}
-				SOURCE_DIR ${__PARSED_PATH}
+				PREFIX ${__PARSED_SOURCE_PATH}
+				SOURCE_DIR ${__PARSED_SOURCE_PATH}
 				TMP_DIR ${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/tmp
 				STAMP_DIR ${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/timestamps
 				DOWNLOAD_DIR ${SUPERBUILD_ROOT}/build/download
@@ -313,8 +321,6 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 				INSTALL_DIR ${__INSTALL_DIR}
 				CMAKE_ARGS ${__CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR}
 			)
-#			message(STATUS "_get_target_external(): ExternalProject_Add(\"${__INSTANCE_NAME_FIXED}\" PREFIX ${__PARSED_PATH} SOURCE_DIR ${__PARSED_PATH} TMP_DIR ${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/tmp STAMP_DIR ${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/timestamps DOWNLOAD_DIR ${SUPERBUILD_ROOT}/build/download BINARY_DIR ${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME} INSTALL_DIR ${__INSTALL_DIR} CMAKE_ARGS ${__CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR} ${__DEP_STR} )")
-
 #			message(STATUS "_get_target_external(): Setting external project ${__INSTANCE_NAME_FIXED} with the following arguments: ${__CMAKE_ARGS}")
 			set_property(GLOBAL APPEND PROPERTY __BURAK_EXTERNAL_DEPENDENCIES "${__INSTANCE_NAME}")
 			_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
@@ -323,7 +329,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	else()
 		
 #		message(STATUS "_get_target_external(): __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME} __INSTANCE_NAME: ${__INSTANCE_NAME} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ${__INSTANCE_NAME}_DIR: ${${__INSTANCE_NAME}_DIR}")
-		if(NOT __PARSED_ASSUME_INSTALLED)
+		if(__PARSED_INSTALL_PATH OR NOT __PARSED_ASSUME_INSTALLED)
 			set(${__EXTERNAL_BARE_NAME}_ROOT ${__INSTALL_DIR})
 			set(${__EXTERNAL_BARE_NAME}_DIR ${__INSTALL_DIR})
 			set(__PATHS "HINTS \"${__INSTALL_DIR}/cmake\" NO_CMAKE_FIND_ROOT_PATH")

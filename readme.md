@@ -36,6 +36,7 @@ set(TARGET_FEATURES
 set(TEMPLATE_OPTIONS
 	SINGLETON_TARGETS  #If set requires TARGET_TEMPLATE and generates error if ENUM_TEMPLATES is specified
 	NO_TARGETS #If set it declares that no targets will be generated. Generates error if `generate_targets()` is defined by the user.
+	LANGUAGES CUDA CXX
 )
 
 set(ENUM_TEMPLATES <UNIQUE NAME OF TARGET_TEMPLATE>)
@@ -44,8 +45,14 @@ set(ENUM_TEMPLATES <UNIQUE NAME OF TARGET_TEMPLATE>)
 
 #optional:
 set(DEFINE_EXTERNAL_PROJECT 
-	PATH "${SUPERBUILD_ROOT}/gridtools"
+	SOURCE_PATH gridtools
+	ASSUME_INSTALLED
+	INSTALL_PATH /usr/lib/gridtools
+	WHAT_COMPONENTS_NAME_DEPENDS_ON boost compiler
+	COMPONENTS SerialboxC
+	BUILD_PARAMETERS USE_GPU ARCH
 )
+
 
 ```
 Jeśli projekt nie jest external (tj. nie zdefiniowano DEFINE_EXTERNAL_PROJECT), definicję funkcji `generate_targets()` przyjmującej jako argument listę wartości zadeklarowanych w ENUM_TEMPLATES. Ta funkcja jest odpowiedzialna za tworzenie targetu o nazwie ${TEMPLATE_NAME}. Alternatywnie, jeśli dana część projektu nie jest w stanie generować targetu (np. starego typu dependency), to należy pominąć definicję `generate_targets()`, a zamiast napisać funkcję `apply_dependency_to_target(DEPENDEE_TARGET_NAME OUR_TARGET_NAME)` która aplikuje nasz projekt na istniejący target. Oczywiście nie można otrzymać dla takiego template targetu, więc wywołanie `get_targets()` z poziomu `CMakeLists.txt` dla template używającego `apply_dependency_to_target()` zakończy się niepowodzeniem. Za to można używać `get_targets()` z poziomu funkcji `declare_dependencies()`.

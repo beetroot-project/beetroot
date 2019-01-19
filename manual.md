@@ -1,3 +1,67 @@
+### List of implicitely defined variables available for generate_targets() and apply_dependency_to_target()
+
+* All variables defined in `TARGET_PARAMETERS` and `TARGET_FEATURES`
+* `apply_dependency_to_target()` can also gets variables defined in `LINK_PARAMETERS`
+* `TARGET_NAME` that names the current target
+* (external projects only in `apply_dependency_to_target`) `INSTALL_PATH` path where the external dependency is already installed
+* (external projects only in `apply_dependency_to_target`) `SOURCE_PATH` source path of the dependency (if available)
+
+
+### Template global options
+
+All options affect the way all targets defined in the `targets.cmake` get intepreted. 
+
+#### SINGLETON_TARGETS 
+
+Option. By setting this option we declare that all targets defined in this file can only be defined in one go, all using the same set of target parameters and features. It also forces only one instance of each target and forces the user to declare the targets using `ENUM_TARGETS` rather than `ENUM_TEMPLATES`. 
+
+If there is only one target defined in this file, the only impact of this option is to force use `ENUM_TARGETS` rather than `ENUM_TEMPLATES`. 
+
+#### NO_TARGETS
+
+Option. By setting this option we declare that this file does not define any targets at all. Such "no targets" templates still are internally named by their template/target name for resolving the dependencies. The targets will never be built - in fact defining `generate_targets()` function is illegal with this option set, and user must define `apply_dependency_to_target(DEPENDEE_TARGET_NAME OUR_TARGET_NAME)` function instead, that applies whathever there is to apply to already existing dependee, (which will be guaranteed to be the actual target). 
+
+Targets declared with `NO_TARGETS` cannot have their own dependency, because it is unknown how to force CMake to respect dependencies with something that is not a target.
+
+Such option is usefull for old-style header only libraries (that do not use `INTERFACE` targets) or pieces of CMake code that only produce CMake variables; in such case the relevant code that produces the variables must be placed either in global scope of the `targets.cmake` or inside the `apply_dependency_to_target`. Remember, that only declared variables will be passed to the `apply_dependency_to_target`.
+
+Note that for `NO_TARGETS` files, there is no difference whether a parameter gets declared inside `TARGET_PARAMETERS`, `LINK_PARAMETERS` or `TARGET_FEATURES` block.
+
+#### LANGUAGES
+
+List of languages required by the targets. User cannot set the languages himself, because `enable_language()` function requires to be run in the global context, while none of the user code is run, except for the CMakeLists.txt. CMake 3.13 supports the following languages: `CXX`, `C`, `CUDA`, `Fortran`, and `ASM`. This option can depend on the parameters.
+
+### External project options
+
+At the moment the beetroot does not allow the user to call the `ExternalProject_Add` directly. Instead it allowd for several customizations, that are passed through `DEFINE_EXTERNAL_PROJECT` variable defined in `targets.cmake`. Defining this structure is the only way to force the `targets.cmake` to describe an external project.
+
+`DEFINE_EXTERNAL_PROJECT` accepts the following parameters:
+
+#### `ASSUME_INSTALLED`. 
+
+An option. If set, the beetroot would not call `ExternalProject_Add` at all and assume the external project is already installed, either in the default system folder or in the folder specified by `PATH`
+
+#### `SOURCE_PATH`
+
+Path with the source of the project. Not relevant if `ASSUME_INSTALLED`. If relative it will be based on `${SUPERBUILD_ROOT}`
+
+#### `INSTALL_PATH`
+
+Optional. Path where the project will be installed during build. If there are two or more incompatible with each other variants of this target required, this path will be suffixed by the hash of the build options passed to the `ExternalProject_Add`. If relative it will be based on `${SUPERBUILD_ROOT}`
+
+#### `WHAT_COMPONENTS_NAME_DEPENDS_ON`
+
+Optional vector of strings. Specify extra infixes to the automatic install path. Elements are named after names of .cmake plugin files in the folder `build_install_prefix_plugins`. Each file describes the process of derriving a name of the given dependency. Note, that this setting is purely aestetic, it does not imply any actual dependencies - for those you need to define declare_dependencies() function and put them there. Also note, that this setting will get ignored if `INSTALL_PATH` is specified or `ASSUME_INSTALLED`.
+
+#### `COMPONENTS`
+
+Optional vector of strings. Each element of this parameter will get passed to the `find_package` call during the project build run. 
+
+#### `BUILD_PARAMETERS`
+
+Optional vector of strings. Names parameters defined in either `TARGET_PARAMETERS` or `TARGET_FEATURES` to pass to the `ExternalProject_Add` during build. Ignored when `ASSUME_INSTALLED`. If missing, all parameters from `TARGET_PARAMETERS` and `TARGET_FEATURES` will be forwarded to the external project.
+
+
 ### Parameter specification
 
 Parameters that can be passed to the template (e.g. target) are distinguished by their container type (`OPTION`, `SCALAR` and `VECTOR`) and their type (`STRING` `INTEGER` `BOOL` and `CHOICE`). Type `CHOICE` is further parametrized by the individual allowed values.
