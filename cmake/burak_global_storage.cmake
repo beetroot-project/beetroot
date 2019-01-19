@@ -39,8 +39,10 @@
 # __FILEDB_<PATH_HASH>_PARS                - Serialized list of all parameters' definitions. 
 # __FILEDB_<PATH_HASH>_EXTERNAL_INFO       - Serialized external project info
 # __FILEDB_<PATH_HASH>_TARGETS_REQUIRED    - True means that we require this instance to generate a CMake target
+# __FILEDB_<PATH_HASH>_LANGUAGES           - List of the languages required
 # 
 # __BURAK_ALL_INSTANCES - list of all instance ID that are required by the top level
+# __BURAK_ALL_LANGUAGES - list of all languages required by the built instances
 # __BURAK_ALL_FEATUREBASES - list of all featurebases that still need to be processed to make sure they agree with the instances' features.
 
 # __TEMPLATEDB_<TEMPLATE_NAME>_TEMPLATE_FEATUREBASES - List of all distinct featurebase IDs for that template name. 
@@ -71,6 +73,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_PARS                FILEDB )
 	set(${__COLS}_EXTERNAL_INFO       FILEDB )
 	set(${__COLS}_TARGETS_REQUIRED    FILEDB )
+	set(${__COLS}_LANGUAGES           FILEDB )
 	
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )
 endmacro()
@@ -112,7 +115,7 @@ endfunction()
 
 function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 
-	_get_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS)
+	_get_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
@@ -167,6 +170,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_set_property_to_db(FILEDB     ${__PATH_HASH} PARS                 "${__SERIALIZED_PARAMETERS}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXTERNAL_INFO        "${__EXTERNAL_PROJECT_INFO}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGETS_REQUIRED      ${__TARGET_REQUIRED})
+	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES             ${__LANGUAGES})
 
 	_get_stack_depth(__STACK_DEPTH)
 	if("${__STACK_DEPTH}" STREQUAL "0")
@@ -177,12 +181,14 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 #	_append_instance_modifiers_hash(${__INSTANCE_ID} ${__TEMPLATE_NAME} ${__ARGS} "${__ARGS_LIST_MODIFIERS}")
 endfunction()
 
-function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS)
+function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES)
 	set(__OPTIONS SINGLETON_TARGETS NO_TARGETS)
-	set(__oneValueArgs PATH )
-	set(__multiValueArgs )
+	set(__oneValueArgs )
+	set(__multiValueArgs LANGUAGES)
 	
-	
+	set(__PARSED_LANGUAGES)
+	set(__PARSED_SINGLETON_TARGETS)
+	set(__PARSED_NO_TARGETS)
 	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${__TEMPLATE_OPTIONS})
 	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
 	if(__unparsed)
@@ -204,7 +210,9 @@ function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED 
 	else()
 		set(${__OUT_NO_TARGETS} 0 PARENT_SCOPE)
 	endif()
-	
+	if(__PARSED_LANGUAGES)
+		set(${__OUT_LANGUAGES} ${__PARSED_LANGUAGES} PARENT_SCOPE)
+	endif()
 endfunction()
 
 function(_store_target_modification_data __INSTANCE_ID __PARENT_INSTANCE_ID __FEATURES __FEATURES_LIST __TEMPLATE_NAME)
