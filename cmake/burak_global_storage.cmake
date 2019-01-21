@@ -170,7 +170,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_set_property_to_db(FILEDB     ${__PATH_HASH} PARS                 "${__SERIALIZED_PARAMETERS}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXTERNAL_INFO        "${__EXTERNAL_PROJECT_INFO}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGETS_REQUIRED      ${__TARGET_REQUIRED})
-	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES             ${__LANGUAGES})
+	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES            "${__LANGUAGES}")
 
 	_get_stack_depth(__STACK_DEPTH)
 	if("${__STACK_DEPTH}" STREQUAL "0")
@@ -195,6 +195,18 @@ function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED 
 		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH}: ${__unparsed}")
 	endif()
 	
+	if(__PARSED_LANGUAGES)
+		set(__CMAKE_LANGUAGES CXX C CUDA Fortran ASM)
+		foreach(__LANGUAGE IN LISTS __PARSED_LANGUAGES)
+			if(NOT __LANGUAGE IN_LIST __CMAKE_LANGUAGES)
+				message(FATAL_ERROR "Option LANGUAGES in TEMPLATE_OPTIONS defined in ${__TARGETS_CMAKE_PATH} contains unknown language \"__LANGUAGE\".")
+			endif()
+		endforeach()
+		set(${__OUT_LANGUAGES} ${__PARSED_LANGUAGES} PARENT_SCOPE)
+	else()
+		set(${__OUT_LANGUAGES} "" PARENT_SCOPE)
+	endif()
+	
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
 	if(__PARSED_SINGLETON_TARGETS)
 		set(${__OUT_SINGLETON_TARGETS} 1 PARENT_SCOPE)
@@ -209,9 +221,6 @@ function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED 
 		set(${__OUT_NO_TARGETS} 1 PARENT_SCOPE)
 	else()
 		set(${__OUT_NO_TARGETS} 0 PARENT_SCOPE)
-	endif()
-	if(__PARSED_LANGUAGES)
-		set(${__OUT_LANGUAGES} ${__PARSED_LANGUAGES} PARENT_SCOPE)
 	endif()
 endfunction()
 
