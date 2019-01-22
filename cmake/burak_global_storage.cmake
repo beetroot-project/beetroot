@@ -19,16 +19,18 @@
 #
 # Featurebase is a common part of all targets that are mutually compatible with each other, but differ in their feature set.
 # There is one-to-one mapping between featurebase and distinct built target (which might be the actual target, or the whole set of targets in case of singleton targets).
-# Featurebase_ID is a hash of all modifiers + current set of all features + salt of either template name (for non-singleton targets) or path to the targets.cmake (for singleton targets).
+# Featurebase_ID is a hash of all modifiers + salt of either template name (for non-singleton targets) or path to the targets.cmake (for singleton targets).
 # The purpose of feature resolution is to make sure all requested features by each instance are covered by the associated featurebase.
-# __FEATUREBASEDB_<FEATURESET_ID>_F_INSTANCES     - List of all instances that are poiting to this featurebase. Before instantiating all targets algorithm will iterate
-#                                                 over all instances to find a common superset of features, if one exists (if it doesn't it will return an error)
-# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES   - List of all the dependencies id of the featureset.
-# __FEATUREBASEDB_<FEATURESET_ID>_FEATURES        - Serialized list of features that are incorporated in this featureset.
-# __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS       - Serialized values of all the modifiers' values
-# __FEATUREBASEDB_<FEATURESET_ID>_F_TEMPLATE_NAME - Name of the template. Makes sense only for non-singleton targets.
-# __FEATUREBASEDB_<FEATURESET_ID>_F_PATH          - Path to the file that describes the template. For singleton targets this path is used to build FEATURESET_ID.
-# __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT    - Boolean indicating that this particular FEATUREBASE has been defined in CMake, and perhaps (if no NO_TARGETS) targets already exist
+# __FEATUREBASEDB_<FEATURESET_ID>_F_INSTANCES      - List of all instances that are poiting to this featurebase. Before instantiating all targets algorithm will iterate
+#                                                    over all instances to find a common superset of features, if one exists (if it doesn't it will return an error)
+# __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES - List of all instances that already have list of features fully compatible with that of FEATUREBASE. 
+#                                                    At the beginning the list is empty.
+# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES    - List of all the dependencies id of the featureset.
+# __FEATUREBASEDB_<FEATURESET_ID>_FEATURES         - Serialized list of features that are incorporated in this featureset.
+# __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS        - Serialized values of all the modifiers' values
+# __FEATUREBASEDB_<FEATURESET_ID>_F_TEMPLATE_NAME  - Name of the template. Makes sense only for non-singleton targets.
+# __FEATUREBASEDB_<FEATURESET_ID>_F_PATH           - Path to the file that describes the template. For singleton targets this path is used to build FEATURESET_ID.
+# __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT     - Boolean indicating that this particular FEATUREBASE has been defined in CMake, and perhaps (if no NO_TARGETS) targets already exist
 #
 # __FILEDB_<PATH_HASH>_PATH                - Path to the file that defines this template
 # __FILEDB_<PATH_HASH>_SINGLETON_TARGETS   - Boolean. TRUE means that all parameters to individual targets concern whole file (i.e. all the other targets). It implies TARGET_FIXED.
@@ -40,12 +42,15 @@
 # __FILEDB_<PATH_HASH>_EXTERNAL_INFO       - Serialized external project info
 # __FILEDB_<PATH_HASH>_TARGETS_REQUIRED    - True means that we require this instance to generate a CMake target
 # __FILEDB_<PATH_HASH>_LANGUAGES           - List of the languages required
+# __FILEDB_<PATH_HASH>_ASSUME_INSTALLED    - Option relevant only if file describes external project. If true, it will be assumed that the project is already built
+#                                            and no attempt will be made to build it.
 # 
 # __BURAK_ALL_INSTANCES - list of all instance ID that are required by the top level
 # __BURAK_ALL_LANGUAGES - list of all languages required by the built instances
 # __BURAK_ALL_FEATUREBASES - list of all featurebases that still need to be processed to make sure they agree with the instances' features.
 
 # __TEMPLATEDB_<TEMPLATE_NAME>_TEMPLATE_FEATUREBASES - List of all distinct featurebase IDs for that template name. 
+# __TEMPLATEDB_<TEMPLATE_NAME>_VIRTUAL_INSTANCES - List of all virtual (i.e. created using get_existing_target()) for that template
 #
 macro(_get_db_columns __COLS)
 	set(${__COLS}_I_FEATURES          INSTANCEDB )
@@ -57,6 +62,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_TARGET_NAME         INSTANCEDB )
 	
 	set(${__COLS}_F_INSTANCES         FEATUREBASEDB )
+	set(${__COLS}_COMPAT_INSTANCES    FEATUREBASEDB )
 	set(${__COLS}_DEP_INSTANCES       FEATUREBASEDB )
 	set(${__COLS}_F_FEATURES          FEATUREBASEDB )
 	set(${__COLS}_MODIFIERS           FEATUREBASEDB )
@@ -74,8 +80,10 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_EXTERNAL_INFO       FILEDB )
 	set(${__COLS}_TARGETS_REQUIRED    FILEDB )
 	set(${__COLS}_LANGUAGES           FILEDB )
+	set(${__COLS}_ASSUME_INSTALLED    FILEDB )
 	
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )
+	set(${__COLS}_VIRTUAL_INSTANCES      TEMPLATEDB )
 endmacro()
 
 function(_make_path_hash __TARGETS_CMAKE_PATH __OUT_HASH)
@@ -109,13 +117,13 @@ endfunction()
 function(_make_featurebase_hash_1 __MODS __MODS_LIST __FEATS __FEATS__LIST __TEMPLATE_NAME __PATH __SINGLETON_TARGETS __OUT_HASH)
 	_serialize_variables(${__MODS} "${__MODS__LIST}" __SERIALIZED_MODIFIERS)
 	_serialize_variables(${__FEATS} "${__FEATS__LIST}" __SERIALIZED_FEATURES)
-	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" ${__SERIALIZED_FEATURES} ${__TEMPLATE_NAME} "${__PATH}" ${__SINGLETON_TARGETS} __OUT)
+#	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__PATH}" ${__SINGLETON_TARGETS} __OUT) We remove features from featurebase hash
+	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "" ${__TEMPLATE_NAME} "${__PATH}" ${__SINGLETON_TARGETS} __OUT)
 	set(${__OUT_HASH} "${__OUT}" PARENT_SCOPE)
 endfunction()
 
 function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
-
-	_get_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES)
+	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
@@ -161,6 +169,11 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 
 	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} TEMPLATE_FEATUREBASES        ${__FEATUREBASE_ID})
 
+	if(__EXTERNAL_PROJECT_INFO)
+		_parse_external_target_options(${__INSTANCE_ID} ${__TARGETS_CMAKE_PATH} "${__EXTERNAL_PROJECT_INFO}" __ASSUME_INSTALLED)
+	else()
+		set(__ASSUME_INSTALLED)
+	endif()
 	_set_property_to_db(FILEDB     ${__PATH_HASH} PATH                 "${__TARGETS_CMAKE_PATH}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} SINGLETON_TARGETS    "${__SINGLETON_TARGETS}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGET_FIXED         "${__IS_TARGET_FIXED}")
@@ -171,6 +184,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXTERNAL_INFO        "${__EXTERNAL_PROJECT_INFO}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGETS_REQUIRED      ${__TARGET_REQUIRED})
 	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES            "${__LANGUAGES}")
+	_set_property_to_db(FILEDB     ${__PATH_HASH} ASSUME_INSTALLED     "${__ASSUME_INSTALLED}")
 
 	_get_stack_depth(__STACK_DEPTH)
 	if("${__STACK_DEPTH}" STREQUAL "0")
@@ -181,47 +195,59 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 #	_append_instance_modifiers_hash(${__INSTANCE_ID} ${__TEMPLATE_NAME} ${__ARGS} "${__ARGS_LIST_MODIFIERS}")
 endfunction()
 
-function(_get_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES)
-	set(__OPTIONS SINGLETON_TARGETS NO_TARGETS)
-	set(__oneValueArgs )
-	set(__multiValueArgs LANGUAGES)
-	
-	set(__PARSED_LANGUAGES)
-	set(__PARSED_SINGLETON_TARGETS)
-	set(__PARSED_NO_TARGETS)
-	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${__TEMPLATE_OPTIONS})
-	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
-	if(__unparsed)
-		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH}: ${__unparsed}")
-	endif()
-	
-	if(__PARSED_LANGUAGES)
-		set(__CMAKE_LANGUAGES CXX C CUDA Fortran ASM)
-		foreach(__LANGUAGE IN LISTS __PARSED_LANGUAGES)
-			if(NOT __LANGUAGE IN_LIST __CMAKE_LANGUAGES)
-				message(FATAL_ERROR "Option LANGUAGES in TEMPLATE_OPTIONS defined in ${__TARGETS_CMAKE_PATH} contains unknown language \"__LANGUAGE\".")
-			endif()
-		endforeach()
-		set(${__OUT_LANGUAGES} ${__PARSED_LANGUAGES} PARENT_SCOPE)
-	else()
-		set(${__OUT_LANGUAGES} "" PARENT_SCOPE)
-	endif()
-	
+#Stores just enough information to store template id, features and target parameters (modifiers). Essentially enough to set a link to the existing FILEDB and FEATUREBASEDB.
+#It excludes dependencies. 
+function(_store_instance_link_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
+
+	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES)
+	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
+	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
+	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
+#	message(STATUS "_store_instance_data(): __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
+#	message(STATUS "_store_instance_data(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
+#	message(STATUS "_store_instance_data(): __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
+	_serialize_parameters(${__PARS} __SERIALIZED_PARAMETERS)
+	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__SINGLETON_TARGETS} __FEATUREBASE_ID)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
-	if(__PARSED_SINGLETON_TARGETS)
-		set(${__OUT_SINGLETON_TARGETS} 1 PARENT_SCOPE)
-		if(NOT __IS_TARGET_FIXED)
-			message(FATAL_ERROR "When using SINGLETON_TARGETS option, please list all targets using ENUM_TARGETS rather than ENUM_TEMPLATES.")
-		endif()
+
+#	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
+#	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
+#		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
+ #	endif()
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_FEATURES            "${__SERIALIZED_FEATURES}")
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
+	_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_PARENTS             "${__PARENT_INSTANCE_ID}")
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE            "0")
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} FEATUREBASE            ${__FEATUREBASE_ID})
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __TMP)
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_TEMPLATE_NAME        ${__TEMPLATE_NAME})
+	if(__IS_TARGET_FIXED)
+#		message(STATUS "_store_instance_data(): Storing fixed target name for ${__INSTANCE_ID}: ${__TEMPLATE_NAME}")
+		_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TARGET_NAME  ${__TEMPLATE_NAME})
+	endif()
+	
+#	message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __PATH_HASH: ${__PATH_HASH}")
+	unset(__FOUND_TMP)
+	_retrieve_instance_data(${__INSTANCE_ID} F_INSTANCES __FOUND_TMP)
+	if(NOT "${__FOUND_TMP}" STREQUAL "")
+#		message(STATUS "_store_instance_data(): Featurebase ${__FEATUREBASE_ID} already defined for instances ${__FOUND_TMP}. Adding another instance: ${__INSTANCE_ID} ")
 	else()
-		set(${__OUT_SINGLETON_TARGETS} 0 PARENT_SCOPE)
+		_add_property_to_db(BURAK ALL FEATUREBASES ${__FEATUREBASE_ID})
+	endif()
+	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES           ${__INSTANCE_ID})
+	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
+
+	_add_property_to_db(FILEDB     ${__PATH_HASH} G_INSTANCES           ${__INSTANCE_ID})
+
+	_get_stack_depth(__STACK_DEPTH)
+
+	if("${__STACK_DEPTH}" STREQUAL "0")
+#		message(STATUS "_store_instance_data(): ADDING GLOBAL INSTANCE: ${__INSTANCE_ID}")
+		_add_property_to_db(BURAK ALL INSTANCES "${__INSTANCE_ID}")
 	endif()
 
-	if(__PARSED_NO_TARGETS)
-		set(${__OUT_NO_TARGETS} 1 PARENT_SCOPE)
-	else()
-		set(${__OUT_NO_TARGETS} 0 PARENT_SCOPE)
-	endif()
+	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} VIRTUAL_INSTANCES        ${__INSTANCE_ID})
+
 endfunction()
 
 function(_store_target_modification_data __INSTANCE_ID __PARENT_INSTANCE_ID __FEATURES __FEATURES_LIST __TEMPLATE_NAME)

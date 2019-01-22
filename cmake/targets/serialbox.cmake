@@ -16,7 +16,7 @@ set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic ${SERIAL
 set(DEFINE_EXTERNAL_PROJECT 
 	NAME Serialbox
 	SOURCE_PATH "${SUPERBUILD_ROOT}/serialbox2"
-	WHAT_COMPONENTS_NAME_DEPENDS_ON boost;compiler
+	WHAT_COMPONENTS_NAME_DEPENDS_ON boost;compiler;serialbox
 )
 
 function(declare_dependencies TEMPLATE_NAME)

@@ -1,3 +1,13 @@
+### apply_dependency_to_target()
+
+Optional function that is called in Project build everytime, when there is an internal dependee that requires this template. The file is called after both targets are defined. Function gets two positional arguments: first is the dependee target name (the target that needs us), and the second is the name of our target, even if our template does not define targets (in case the file we describe allows only one singleton target, this second argument is always fixed to our target name).
+
+The function role is to apply extra modifications to the dependee, and finaly to call (or not) `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`, where `DEPENDEE_TARGET_NAME` and `TARGET_NAME` are respectively first and second parameters to the function and `KEYWORD` is defined as either `INTERFACE` or `PRIVATE` depending on whether the `${DEPENDEE_TARGET_NAME}`'s type is `INTERFACE_LIBRARY` or not.
+
+If the function is not defined, it is defined automatically with a single line `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`.
+
+
+
 ### List of implicitely defined variables available for generate_targets() and apply_dependency_to_target()
 
 * All variables defined in `TARGET_PARAMETERS` and `TARGET_FEATURES`
@@ -48,6 +58,10 @@ Path with the source of the project. Not relevant if `ASSUME_INSTALLED`. If rela
 #### `INSTALL_PATH`
 
 Optional. Path where the project will be installed during build. If there are two or more incompatible with each other variants of this target required, this path will be suffixed by the hash of the build options passed to the `ExternalProject_Add`. If relative it will be based on `${SUPERBUILD_ROOT}`
+
+#### `EXPORTED_TARGETS_PATH`
+
+Optional. Relative path to the INSTALL_PATH (either automatic or manual) where the exported targets will be searched for. This is the directory where CMake expects to find <Name>Config.cmake file. By default the Beetroot will look in the directories `cmake` and the root of the installation folder.
 
 #### `WHAT_COMPONENTS_NAME_DEPENDS_ON`
 

@@ -1,0 +1,30 @@
+Szkic programu:
+
+1. W CMakeLists wszystkie wołania do get_target ZAWSZE są tylko obietnicą i nigdy faktycznie nie tworzą FEATUREBASE.
+2. Biorę listę wszystkich FEATUREBASE_ID (F_INSTANCES) które nie są zawarte w liście COMPAT_INSTANCES(FEATUREBASE) 
+   i upewniam się, że wszystkie FEATURES są zgodne z listą FEATURES zapamiętaną w FEATUREBASE:
+   1. Biorę kolejny INSTANCE_ID. 
+   2. Wywołuję PROMUJ(INSTANCE_ID FEATUREBASE_ID)
+   2. Czy features wymagane dla naszego INSTANCE_ID są takie same, jak te z FEATUREBASE? Jeśli tak -> 5
+   3. Czy I_FEATURES(INSTANCE_ID) są większe niż F_FEATURES(FEATUREBASE)? Jeśli tak, to iteruję się po wszystkich dotychczasowych kompatybilnych instancjach COMPAT_INSTANCES i je promuję do I_FEATURES(INSTANCE_ID)
+   4. Czy features INSTANCE_ID są mniejsze niż FEATUREBASE? Jeśli tak, to promuję INSTANCE_ID do F_FEATURES(FEATUREBASE)
+   5. Dodaję INSTANCE_ID do listy COMPAT_INSTANCES(FEATUREBASE)
+
+PROMUJ(INSTANCE_ID FEATUREBASE_ID):
+   0. set(PROMUJ_INSTANCE=0)
+   0. set(PROMUJ_FEATUREBASE=0)
+   1. Zbieram listę wszystkich features w INSTANCE_ID (_retrieve_instance_args(INSTANCE_ID I_FEATURES I_ARGS))
+   2. Zbieram listę wszystkich features w FEATUREBASE_ID (_retrieve_featurebase_args(FEATUREBASE_ID F_FEATURES F_ARGS))
+   3. Biorę listę wszystkich features: PARS(FEATUREBASE_ID)__LIST_FEATURES i iteruję się po nich
+   3. Mam kolejną VAR (nazwa feature)
+   4. Biorę wartość z I_ARGS_${VAR} i wywołuję FEATURE_RELATION(I_ARGS_${VAR} F_ARGS_${VAR} PARS_${VAR}__CONTAINER PARS_${VAR}__TYPE RELATION)
+   5. RELATION == 1 -> PROMUJ_INSTANCE:=1
+   6. RELATION == 2 -> PROMUJ_FEATUREBASE:=1
+   7. RELATION == 3 -> zwróć błąd
+   
+FEATURE_RELATION(ARG1 ARG2 CONTAINER TYPE OUT_RELATION):
+funkcja, która dla features ARG1 i ARG2 sprawdza, w którą stronę zachodzi relacja:
+0 - ARG1 === ARG2
+1 - ARG1 jest większe od ARG2
+2 - ARG1 < ARG2
+3 - ARG1 != ARG2 (brak kompatybilności)
