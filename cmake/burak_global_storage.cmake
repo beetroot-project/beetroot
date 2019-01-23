@@ -122,7 +122,7 @@ function(_make_featurebase_hash_1 __MODS __MODS_LIST __FEATS __FEATS__LIST __TEM
 	set(${__OUT_HASH} "${__OUT}" PARENT_SCOPE)
 endfunction()
 
-function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __DEP_LIST __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
+function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
@@ -158,9 +158,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	else()
 		_add_property_to_db(BURAK ALL FEATUREBASES ${__FEATUREBASE_ID})
 	endif()
-#	message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_LIST: ${__DEP_LIST}")
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES           ${__INSTANCE_ID})
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} DEP_INSTANCES        "${__DEP_LIST}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} MODIFIERS            "${__SERIALIZED_MODIFIERS}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
@@ -193,6 +191,12 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	endif()
 	
 #	_append_instance_modifiers_hash(${__INSTANCE_ID} ${__TEMPLATE_NAME} ${__ARGS} "${__ARGS_LIST_MODIFIERS}")
+endfunction()
+
+function(_store_instance_dependencies __INSTANCE_ID __DEP_LIST)
+#	message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_LIST: ${__DEP_LIST}")
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
+	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} DEP_INSTANCES        "${__DEP_LIST}")
 endfunction()
 
 #Stores just enough information to store template id, features and target parameters (modifiers). Essentially enough to set a link to the existing FILEDB and FEATUREBASEDB.

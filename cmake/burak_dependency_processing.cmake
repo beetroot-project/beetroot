@@ -1,17 +1,53 @@
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
-function(_discover_dependencies __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __ARGS_LIST __OUT_INSTANCE_IDS )
-	message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME}...")
-#	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ __IS_TARGET_FIXED)
-	_instantiate_variables(${__ARGS} "${__ARGS_LIST}")
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS )
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID )
+#	if(__FEATUREBASE_ID)
+#		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
+#		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __FEATUREBASE_DEFINED )
+#		message(STATUS "_discover_dependencies(): DEP_INSTANCES: ${__FEATUREBASE_DEFINED} for __INSTANCE_ID: ${__INSTANCE_ID}")
+#	else()
+#		set(__FEATUREBASE_DEFINED)
+#	endif()
+	_put_dependencies_into_stack("${__INSTANCE_ID}")
+	if(NOT __FEATUREBASE_ID)
+		set(__LIST ${${__PARS}__LIST_MODIFIERS})
+		list(APPEND __LIST ${__${__PARS}__LIST_LINKPARS} )
 
-	_descend_dependencies_stack()
-	declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
-#	message(FATAL_ERROR "__ARGS_LIST: ${__ARGS_LIST}")
-	_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
-#	message(STATUS "_discover_dependencies(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __DEP_INSTANCE_IDS: ${__DEP_INSTANCE_IDS}")
-	_ascend_dependencies_stack()
-	set(${__OUT_INSTANCE_IDS} "${__DEP_INSTANCE_IDS}" PARENT_SCOPE)
+		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
+	#	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ __IS_TARGET_FIXED)
+		_instantiate_variables(${__ARGS} "${__LIST}")
+
+		_descend_dependencies_stack()
+		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
+	#	message(FATAL_ERROR "__LIST: ${__LIST}")
+		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
+	#	message(STATUS "_discover_dependencies(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __DEP_INSTANCE_IDS: ${__DEP_INSTANCE_IDS}")
+		_ascend_dependencies_stack()
+	
+	endif()
+	_get_target_behavior(__GET_TARGET_BEHAVIOR)
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
+		set(__TARGET_REQUIRED 1)
+	else()
+		set(__TARGET_REQUIRED 0)
+	endif()
+	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
+	_store_instance_data(
+		 ${__INSTANCE_ID}
+		"${__PARENT_INSTANCE_ID}"
+		${__ARGS} 
+		${__PARS}
+		 ${__TEMPLATE_NAME} 
+		 ${__TARGETS_CMAKE_PATH} 
+		 ${__IS_TARGET_FIXED}
+		"${__EXTERNAL_PROJECT_INFO}"
+		 ${__TARGET_REQUIRED}
+		"${__TEMPLATE_OPTIONS}"
+		 )
+	if(NOT __FEATUREBASE_ID)
+		_store_instance_dependencies(${__INSTANCE_ID} "${__DEP_INSTANCE_IDS}")
+	endif()
 endfunction()
 
 #Instantiates target. The function is called during the target building phase. Behavior is different on SUPERBUILD and in the project build.

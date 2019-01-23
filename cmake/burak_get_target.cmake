@@ -79,29 +79,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 #	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
-		_put_dependencies_into_stack("${__INSTANCE_ID}")
-		set(__LIST ${__PARAMETERS_DIC__LIST_MODIFIERS})
-		list(APPEND __LIST ${__PARAMETERS_DIC__LIST_LINKPARS} )
-		_discover_dependencies(${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC "${__LIST}" __DEP_INSTANCE_ID_LIST)
-		if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
-			set(__TARGET_REQUIRED 1)
-		else()
-			set(__TARGET_REQUIRED 0)
-		endif()
-		_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
-		_store_instance_data(
-			 ${__INSTANCE_ID}
-			"${__PARENT_INSTANCE_ID}"
-			__VARIABLE_DIC 
-			__PARAMETERS_DIC
-			"${__DEP_INSTANCE_ID_LIST}" 
-			 ${__TEMPLATE_NAME} 
-			 ${__TARGETS_CMAKE_PATH} 
-			 ${__IS_TARGET_FIXED}
-			"${__EXTERNAL_PROJECT_INFO}"
-			 ${__TARGET_REQUIRED}
-			"${__TEMPLATE_OPTIONS}"
-			 )
+		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC "${__EXTERNAL_PROJECT_INFO}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}")
 	elseif("${__GET_TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 		if(NOT TARGET "${__INSTANCE_NAME}")

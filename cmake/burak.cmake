@@ -61,7 +61,7 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 	if("${__TYPE}" STREQUAL "INTERFACE_LIBRARY" )
 		set(KEYWORD "INTERFACE")
 	else()
-		set(KEYWORD "PRIVATE")
+		set(KEYWORD "PUBLIC")
 	endif()
 
 

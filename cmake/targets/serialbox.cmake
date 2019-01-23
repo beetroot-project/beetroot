@@ -1,3 +1,5 @@
+set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic ${SERIALBOX_FORTRAN})
+
 set(TARGET_PARAMETERS 
 	SERIALBOX_ENABLE_FORTRAN SCALAR	"BOOL" "YES"
 	SERIALBOX_USE_NETCDF	SCALAR	"BOOL" "NO"
@@ -10,8 +12,6 @@ if(SUPPORT_FORTRAN)
 else()
 	set(SERIALBOX_FORTRAN )
 endif()
-
-set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic ${SERIALBOX_FORTRAN})
 
 set(DEFINE_EXTERNAL_PROJECT 
 	NAME Serialbox
