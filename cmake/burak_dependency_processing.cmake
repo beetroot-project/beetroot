@@ -1,6 +1,6 @@
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
-function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS )
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID )
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
@@ -45,6 +45,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__TARGET_REQUIRED}
 		"${__TEMPLATE_OPTIONS}"
 		 )
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_HASH_SOURCE "${__HASH_SOURCE}")
 	if(NOT __FEATUREBASE_ID)
 		_store_instance_dependencies(${__INSTANCE_ID} "${__DEP_INSTANCE_IDS}")
 	endif()

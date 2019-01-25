@@ -1,4 +1,4 @@
-set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic ${SERIALBOX_FORTRAN})
+set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic Serialbox::SerialboxFortranStatic)
 
 set(TARGET_PARAMETERS 
 	SERIALBOX_ENABLE_FORTRAN SCALAR	"BOOL" "YES"
@@ -6,12 +6,6 @@ set(TARGET_PARAMETERS
 	SERIALBOX_ENABLE_EXPERIMENTAL_FILESYSTEM	SCALAR	BOOL	"YES"
 	SERIALBOX_EXAMPLES	SCALAR	BOOL	"NO"
 )
-
-if(SUPPORT_FORTRAN)
-	set(SERIALBOX_FORTRAN Serialbox::SerialboxFortranStatic)
-else()
-	set(SERIALBOX_FORTRAN )
-endif()
 
 set(DEFINE_EXTERNAL_PROJECT 
 	NAME Serialbox
@@ -26,8 +20,9 @@ function(declare_dependencies TEMPLATE_NAME)
 	endif()
 endfunction()
 
-#function(apply_to_target TARGET_NAME)
-#	target_compile_definitions(${TARGET_NAME} PRIVATE "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
-#	target_compile_definitions(${TARGET_NAME} PRIVATE "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
-#endfunction()
+function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
+	if("${TARGET_NAME}" STREQUAL "Serialbox::SerialboxFortranStatic" AND NOT SERIALBOX_ENABLE_FORTRAN)
+		message(FATAL_ERROR "To use Fortran, you must first pass target option SERIALBOX_ENABLE_FORTRAN")
+	endif()
+endfunction()
 

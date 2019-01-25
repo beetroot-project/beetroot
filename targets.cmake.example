@@ -1,0 +1,20 @@
+set(ENUM_TEMPLATES MY_TEMPLATE_NAME)
+# or
+set(ENUM_TARGETS MY_TARGETS_NAME)
+
+set(LINK_PARAMETERS 
+	LOG_LEVEL	SCALAR	"CHOICE(trace:debug:warning:error)" warning
+)
+
+function(declare_dependencies TARGET_NAME)
+#	build_target(Boost::boost 
+#		COMPONENTS filesystem log VERSION 1.67.0)
+	
+endfunction()
+
+function(generate_targets TEMPLATE_NAME)
+endfunction()
+
+function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
+	target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME}) 
+endfunction()

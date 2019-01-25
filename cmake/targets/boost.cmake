@@ -9,10 +9,17 @@ set(LINK_PARAMETERS
 
 set(ENUM_TARGETS Boost::boost Boost::filesystem Boost::system Boost::log Boost::date_time Boost::thread Boost::chrono Boost::atomic Boost::program_options)
 
+set(TEMPLATE_OPTIONS
+	NICE_NAME "Boost libraries version ${BOOST_VERSION}"
+)
+
 set(DEFINE_EXTERNAL_PROJECT 
 	ASSUME_INSTALLED
 	NAME Boost
 	COMPONENTS "filesystem;system;log;date_time;thread;chrono;atomic;program_options"
+#	APT_PACKAGES libboost-all-dev
+	APT_PACKAGES "libboost-filesystem-dev;libboost-system-dev;libboost-log-dev;libboost-date_time-dev;libboost-thread-dev;libboost-chrono-dev;libboost-atomic-dev;libboost-program_options-dev"
+	SPACK_PACKAGES boost
 )
 
 function(generate_targets TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefined, the Beetroot will use the following definition
@@ -21,7 +28,7 @@ function(generate_targets TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefine
 	find_package(Boost  COMPONENTS ${COMPONENTS} REQUIRED)
 endfunction()
 
-function(apply_to_target TARGET_NAME)
-	target_compile_definitions(${TARGET_NAME} PRIVATE "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
-	target_compile_definitions(${TARGET_NAME} PRIVATE "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
+function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
+	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
+	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
 endfunction()
