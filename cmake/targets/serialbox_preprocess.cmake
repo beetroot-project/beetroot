@@ -16,7 +16,7 @@ function(declare_dependencies TEMPLATE_NAME)
 endfunction()
 
 function(generate_targets TEMPLATE_NAME)
-	
+	set(SERIALBOX2PP_PPSER_LOCATION "${Serialbox_SerialboxFortranStatic_INSTALL_DIR}/python/pp_ser/pp_ser.py")
 	
 	message(FATAL_ERROR "LOCATION: ${LOCATION}")
 	if("${SOURCE}" STREQUAL "")
