@@ -6,6 +6,9 @@ function(declare_dependencies TEMPLATE_NAME)
 endfunction()
 
 function(generate_targets TEMPLATE_NAME)
+	if(NOT Serialbox_SerialboxCStatic_INSTALL_DIR)
+		message(FATAL_ERROR "Passing INSTALL_DIR of the dependency does not work")
+	endif()
 	add_executable(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/example-01-laplacian.c")
 endfunction()
 

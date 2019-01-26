@@ -1,5 +1,3 @@
-include(missing_dependency)
-include(beetroot/burak)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE "Debug" CACHE STRING

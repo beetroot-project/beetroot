@@ -24,5 +24,6 @@ function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
 	if("${TARGET_NAME}" STREQUAL "Serialbox::SerialboxFortranStatic" AND NOT SERIALBOX_ENABLE_FORTRAN)
 		message(FATAL_ERROR "To use Fortran, you must first pass target option SERIALBOX_ENABLE_FORTRAN")
 	endif()
+	target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME}) 
 endfunction()
 

@@ -38,7 +38,7 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_F_PATH               - Path to the file that describes the template.
 #                                                        For singleton targets this path is used to build FEATURESET_ID.
 # __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT         - Boolean indicating that this particular FEATUREBASE has been defined in CMake, 
-#                                                        and perhaps (if no NO_TARGETS) targets already exist
+#                                                        and perhaps (if no NO_TARGETS) targets already exist. Empty for featurebase promises.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_HASH_SOURCE        - String used to get an FEATURESET_ID (by hashing)
 # __FEATUREBASEDB_<FEATURESET_ID>_COMPATIBLE_INSTANCES - List of all instances that are guaranteed to have the same features as this featureset.
 #                                                        At the beginning this list is empty, and it grows during the phase of
@@ -59,6 +59,8 @@
 #                                            and no attempt will be made to build it.
 # __FILEDB_<PATH_HASH>_NICE_NAME           - Nicely formatted name of the template. 
 # __FILEDB_<PATH_HASH>_EXPORTED_VARS       - List of variables that will be embedded to the dependee of this template
+# __FILEDB_<PATH_HASH>_INSTALL_DIR         - Installation directory. Makes sense only for external projects.
+# __FILEDB_<PATH_HASH>_SOURCE_DIR          - Source directory. Does not makes sense if external project and ASSUME_INSTALLED
 # 
 # __BURAK_ALL_INSTANCES - list of all instance ID that are required by the top level
 # __BURAK_ALL_LANGUAGES - list of all languages required by the built instances
@@ -103,6 +105,9 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_ASSUME_INSTALLED     FILEDB )
 	set(${__COLS}_NICE_NAME            FILEDB )
 	set(${__COLS}_EXPORTED_VARS        FILEDB )
+	set(${__COLS}_INSTALL_DIR          FILEDB )
+	set(${__COLS}_SOURCE_DIR           FILEDB )
+	
 	
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )
 	set(${__COLS}_VIRTUAL_INSTANCES      TEMPLATEDB )
@@ -130,7 +135,7 @@ function(_make_featurebase_hash_2 __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES _
 	set(${__OUT_HASH_SOURCE} "${__TMP}" PARENT_SCOPE)
 	string(MD5 __HASH "${__TMP}")
 	string(SUBSTRING ${__HASH} 1 8 __OUT)
-	message(STATUS "_make_featurebase_hash_2(): __TMP (ID|MODIFIERS|FEATURES): ${__TMP} got hash ${__OUT}")
+#	message(STATUS "_make_featurebase_hash_2(): __TMP (ID|MODIFIERS|FEATURES): ${__TMP} got hash ${__OUT}")
 	if("${__TMP}" STREQUAL "")
 		meesage(FATAL_ERROR "featurebase hash cannot come up empty")
 	endif()
@@ -155,7 +160,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 			endif()
 		endforeach()
 	endif()
-	message(STATUS "_store_instance_data(): __LANGUAGES: ${__LANGUAGES}")
+#	message(STATUS "_store_instance_data(): __LANGUAGES: ${__LANGUAGES}")
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
@@ -163,8 +168,8 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 #	message(STATUS "_store_instance_data(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 #	message(STATUS "_store_instance_data(): __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
 	_serialize_parameters(${__PARS} __SERIALIZED_PARAMETERS)
-	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__SINGLETON_TARGETS} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
-	message(STATUS "_store_instance_data(): __INSTANCE_ID ${__INSTANCE_ID} got __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
+	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
+#	message(STATUS "_store_instance_data(): __INSTANCE_ID ${__INSTANCE_ID} got __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
 
 #	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
@@ -194,7 +199,9 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES           ${__INSTANCE_ID})
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} MODIFIERS            "${__SERIALIZED_MODIFIERS}")
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
+	if(NOT __IS_TARGET_FIXED)
+		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
+	endif()
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT          0)
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE         "${__FEATUREBASE_HASH_SOURCE}")
@@ -331,7 +338,9 @@ endfunction()
 
 function(_retrieve_instance_data __INSTANCE_ID __PROPERTY __OUT)
 	_get_db_columns(__COLS)
-#	message(STATUS "_retrieve_instance_data(): trying to get property ${__PROPERTY} using __INSTANCE_ID ${__INSTANCE_ID}...")
+#	if("${__PROPERTY}" STREQUAL "INSTALL_DIR")
+#		message(STATUS "_retrieve_instance_data(): trying to get property ${__PROPERTY} using __INSTANCE_ID ${__INSTANCE_ID}...")
+#	endif()
 	if(NOT __COLS_${__PROPERTY})
 		message(FATAL_ERROR "Internal Beetroot error: Cannot find the property ${__PROPERTY}")
 	endif()
@@ -351,6 +360,9 @@ function(_retrieve_instance_data __INSTANCE_ID __PROPERTY __OUT)
 	if("${__KEY}" STREQUAL "")
 		message(FATAL_ERROR "Internal beetroot error: missing key ${__KEY} for db ${__COLS_${__PROPERTY}}")
 	endif()
+#	if("${__PROPERTY}" STREQUAL "INSTALL_DIR")
+#		message(STATUS "_retrieve_instance_data(): trying to get property ${__PROPERTY} using KEY ${__KEY}...")
+#	endif()
 	get_property(__TMP GLOBAL PROPERTY __${__COLS_${__PROPERTY}}_${__KEY}_${__PROPERTY})
 	if("${__TMP}" STREQUAL "")
 #		message(WARNING "__${__COLS_${__PROPERTY}}_${__KEY}_${__PROPERTY} is not defined")
