@@ -135,4 +135,9 @@ function(_resolve_features)
 	endwhile()
 endfunction()
 
-
+function(_get_list_of_instances_that_need_to_be_resolved __FEATUREBASE_ID __OUT_INSTANCES )
+	_retrieve_featurebase_args(${__FEATUREBASE_ID} COMPATIBLE_INSTANCES __COMPAT_INSTANCES)
+	_retrieve_featurebase_args(${__FEATUREBASE_ID} F_INSTANCES __ALL_INSTANCES)
+	list_diff(__OUT __ALL_INSTANCES __COMPAT_INSTANCES)
+	set(${__OUT_INSTANCES} ${__OUT} PARENT_SCOPE)
+endfunction()

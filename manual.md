@@ -1,3 +1,7 @@
+### What is target?
+
+TODO
+
 ### apply_dependency_to_target()
 
 Optional function that is called in Project build everytime, when there is an internal dependee that requires this template. The file is called after both targets are defined. Function gets two positional arguments: first is the dependee target name (the target that needs us), and the second is the name of our target, even if our template does not define targets (in case the file we describe allows only one singleton target, this second argument is always fixed to our target name).
@@ -40,6 +44,10 @@ Note that for `NO_TARGETS` files, there is no difference whether a parameter get
 #### LANGUAGES
 
 List of languages required by the targets. User cannot set the languages himself, because `enable_language()` function requires to be run in the global context, while none of the user code is run, except for the CMakeLists.txt. CMake 3.13 supports the following languages: `CXX`, `C`, `CUDA`, `Fortran`, and `ASM`. This option can depend on the parameters.
+
+#### EXPORTED_VARIABLES
+
+List of variables (`TARGET_PARAMETER`, `LINK_PARAMETER` or `FEATURE`) that can be embedded into the set of variables available when calling `generate_targets()`. These variables and their values will not participate in the definition of the targets' identities and will get instantiated only when calling those two functions. In order to actually use the variable, the dependee must explicitely declare then when defining dependencies.
 
 ### External project options
 

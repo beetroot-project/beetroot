@@ -28,17 +28,19 @@ project(hello)
 
 set(WYBOR "BLU")
 
-get_target(HELLO __OUT_INSTANCE_NAME)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO from_arg_CMakeLists)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama NONSIGINIFICANT boo)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Sofia NONSIGINIFICANT boo)
-#get_target(fiksik __OUT_INSTANCE_NAME)
-##get_target(fiksik __OUT_INSTANCE_NAME NONSIGINIFICANT X LIBKTO Mik )  #generates error
-#build_target(HELLO_BOOST)
-#build_target(HELLO_2BOOST)
-#build_target(HELLO_2BOOST PAR KUC)
-#build_target(SERIALBOX_C_TEST)
+build_target(HELLO_SIMPLE)
+build_target(HELLO )
+build_target(HELLO LIBKTO from_arg_CMakeLists)
+build_target(HELLO LIBKTO Mama)
+build_target(HELLO LIBKTO Mama NONSIGINIFICANT boo)
+build_target(HELLO LIBKTO Sofia NONSIGINIFICANT boo)
+build_target(fiksik)
+#build_target(fiksik NONSIGINIFICANT X LIBKTO Mik )  #generates error
+build_target(HELLO_BOOST)
+build_target(HELLO_2BOOST)
+build_target(HELLO_2BOOST PAR KUC)
+build_target(SERIALBOX_C_TEST)
+build_target(HEADER_CONSUMER)
 
 
 finalizer()

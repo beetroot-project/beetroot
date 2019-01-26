@@ -11,14 +11,13 @@ set(ENUM_TEMPLATES PPSER)
 set(PROJECT_OPTIONS SHARED_FOLDER ON)
 
 function(declare_dependencies TEMPLATE_NAME)
-	build_target(SERIALBOX 
-		SERIALBOX_ENABLE_FORTRAN "${SERIALBOX_ENABLE_FORTRAN}"
-		SERIALBOX_USE_NETCDF "${SERIALBOX_USE_NETCDF}"
-	)
+	build_target(Serialbox::SerialboxFortranStatic)
+	build_target(Python::Interpreter PYTHON_FAMILY 2.x)
 endfunction()
 
 function(generate_targets TEMPLATE_NAME)
-	get_property(LOCATION TARGET ${SERIALBOX_TARGET_NAME} PROPERTY LOCATION)
+	
+	
 	message(FATAL_ERROR "LOCATION: ${LOCATION}")
 	if("${SOURCE}" STREQUAL "")
 		message(FATAL_ERROR "SOURCE cannot be empty")

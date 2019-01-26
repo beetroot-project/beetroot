@@ -1,9 +1,17 @@
+set(ENUM_TEMPLATES LIBHELLO)
+
 set(TARGET_PARAMETERS 
 	KTO	SCALAR	STRING	"from_targets_lib"
 	FUNNAME SCALAR STRING "get_string"
 )
 
-set(ENUM_TEMPLATES LIBHELLO)
+set(LINK_PARAMETERS 
+	LIB_MYVAR	SCALAR	STRING	"Variable_from_lib"
+)
+
+set(TEMPLATE_OPTIONS
+	EXPORTED_VARIABLES LIB_MYVAR
+)
 
 function(generate_targets TEMPLATE_NAME)
 	message(STATUS "LibHello: inside generate_targets trying to define ${TARGET_NAME} in ${CMAKE_CURRENT_SOURCE_DIR}/include")
