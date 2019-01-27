@@ -1,6 +1,6 @@
 Szkic programu:
 
-1. W CMakeLists wszystkie wołania do get_target ZAWSZE są tylko obietnicą i nigdy faktycznie nie tworzą FEATUREBASE.
+1. W CMakeLists wszystkie wołania do get_target mogą być tylko obietnicą i nigdy faktycznie nie tworzą FEATUREBASE.
 2. Biorę listę wszystkich FEATUREBASE_ID (F_INSTANCES) które nie są zawarte w liście COMPAT_INSTANCES(FEATUREBASE) 
    i upewniam się, że wszystkie FEATURES są zgodne z listą FEATURES zapamiętaną w FEATUREBASE:
    1. Biorę kolejny INSTANCE_ID. 

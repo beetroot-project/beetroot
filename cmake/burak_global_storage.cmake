@@ -52,6 +52,7 @@
 # __FILEDB_<PATH_HASH>_G_INSTANCES         - List of all instance ids that are built using this file. 
 # __FILEDB_<PATH_HASH>_G_FEATUREBASES      - List of all featurebases that are built using this file. If SINGLETON_TARGETS it will be exactly one FEATUREBASE.
 # __FILEDB_<PATH_HASH>_PARS                - Serialized list of all parameters' definitions. 
+# __FILEDB_<PATH_HASH>_DEFAULTS            - Serialized list of all parameters' actual default values.
 # __FILEDB_<PATH_HASH>_EXTERNAL_INFO       - Serialized external project info
 # __FILEDB_<PATH_HASH>_TARGETS_REQUIRED    - True means that we require this instance to generate a CMake target
 # __FILEDB_<PATH_HASH>_LANGUAGES           - List of the languages required
@@ -99,6 +100,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_G_INSTANCES          FILEDB )
 	set(${__COLS}_G_FEATUREBASES       FILEDB )
 	set(${__COLS}_PARS                 FILEDB )
+	set(${__COLS}_DEFAULTS             FILEDB )
 	set(${__COLS}_EXTERNAL_INFO        FILEDB )
 	set(${__COLS}_TARGETS_REQUIRED     FILEDB )
 	set(${__COLS}_LANGUAGES            FILEDB )
@@ -220,6 +222,19 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_add_property_to_db(FILEDB     ${__PATH_HASH} G_INSTANCES           ${__INSTANCE_ID})
 	_add_property_to_db(FILEDB     ${__PATH_HASH} G_FEATUREBASES        ${__FEATUREBASE_ID})
 	_set_property_to_db(FILEDB     ${__PATH_HASH} PARS                 "${__SERIALIZED_PARAMETERS}")
+	if(__SERIALIZED_PARAMETERS)
+		_retrieve_instance_data(${__INSTANCE_ID} DEFAULTS __SERIALIZED_DEFAULTS)
+		if(NOT __SERIALIZED_DEFAULTS)
+			#We reset all the variables, so we can learn about the defaults
+			foreach(__VAR IN LISTS ${__PARS}__LIST)
+				set(${__VAR})
+			endforeach()
+			_get_variables("${__TARGETS_CMAKE_PATH}" "defaults" "" __DEFAULTS __TMP_PARS __TMP_TEMPLATE_NAMES __TMP_EXTERNAL_PROJECT_INFO __TMP_IS_TARGET_FIXED __TMP_GLOBAL_OPTIONS)
+			_serialize_variables(__DEFAULTS "${__DEFAULTS__LIST}" __SERIALIZED_DEFAULTS)
+			message(STATUS "_store_instance_data(): __SERIALIZED_DEFAULTS: ${__SERIALIZED_DEFAULTS}")
+		endif()
+		_set_property_to_db(FILEDB     ${__PATH_HASH} DEFAULTS             "${__SERIALIZED_DEFAULTS}")
+	endif()
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXTERNAL_INFO        "${__EXTERNAL_PROJECT_INFO}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGETS_REQUIRED      ${__TARGET_REQUIRED})
 	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES            "${__LANGUAGES}")

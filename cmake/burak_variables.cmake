@@ -674,3 +674,4 @@ function(_get_nice_dependencies_name __INSTANCE_ID __OUTVAR)
 	nice_list_output(LIST "${__DEPS}" OUTVAR __OUT)
 	set(${__OUTVAR} "${__OUT}" PARENT_SCOPE )
 endfunction()
+
