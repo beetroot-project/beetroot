@@ -32,3 +32,42 @@ function(prepare_arguments_to_pass )
 	endif()
 	set(${__PATP_OUTVAR} "${__OUT}" PARENT_SCOPE)
 endfunction()
+
+#Exampel syntax:
+#	pass_compile_definitions_to_target(${TARGET_NAME} PRIVATE|PUBLIC|INTERFACE
+#		VAR_NAMES <list of variables that will be passed as string>
+#		OPTION_NAMES <list of variables that will be passed only as their existance (no value) if they are actually set>)
+#
+#Function passes listed CMake variables in 3rd and later arguments as preprocessor macros for TARGET_NAME passed as first argument.
+#
+function (pass_compile_definitions_to_target __TARGET_NAME __KEYWORD)
+	set(options )
+	set(oneValueArgs )
+	set(multiValueArgs VAR_NAMES OPTION_NAMES)
+	cmake_parse_arguments(__FPAR "${options}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+
+	set(unparsed ${__FPAR_UNPARSED_ARGUMENTS})
+	if(unparsed)
+		message(FATAL_ERROR "function nice_list_output: unparsed arguments: ${unparsed}")
+	endif()
+	
+	if(NOT TARGET "${__TARGET_NAME}")
+		message(FATAL_ERROR "pass_compile_definitions_to_targets() requires first argument to be an existing target name.")
+	endif()
+	set(__VALID_KEYWORDS PUBLIC PRIVATE INTERFACE)
+	if(NOT "${__KEYWORD}" IN_LIST __VALID_KEYWORDS)
+		message(FATAL_ERROR "2nd argument to pass_compile_definitions_to_targets() must PUBLIC or PRIVATE or INTERFACE.")
+	endif()
+	
+	foreach(__VAR IN LISTS __FPAR_VAR_NAMES)
+		if(NOT "${${__VAR}}" STREQUAL "")
+			target_compile_definitions("${__TARGET_NAME}" ${__KEYWORD} "${__VAR}=\"${${VAR}}\"")
+		endif()
+	endforeach()
+	foreach(__VAR IN LISTS __FPAR_OPTION_NAMES)
+		if(${__VAR})
+			target_compile_definitions("${__TARGET_NAME}" ${__KEYWORD} "${__VAR}")
+		endif()
+	endforeach()
+endfunction()
+
