@@ -745,6 +745,13 @@ function(_single_feature_relation __FILE_HASH __VARNAME __PARS_PREFIX __ARG1_PRE
 	endif()
 endfunction()
 
+function(_compare_featuresets __FILE_HASH __PARS_PREFIX __ARG1_PREFIX __ARG2_PREFIX __OUT_RELATION)
+	list_union(__VARS ${__ARG1_PREFIX}__LIST ${__ARG2_PREFIX}__LIST)
+	_make_promoted_featureset(${__FILE_HASH} __VARS ${__PARS_PREFIX} ${__ARG1_PREFIX} ${__ARG2_PREFIX} __TMP __COMP)
+	set(${__OUT_RELATION} ${__COPMP} PARENT_SCOPE)
+endfunction()
+
+
 #Function compiles a set of smallest features that are greater or equal to features in __ARG1_PREFIX and __ARG2_PREFIX. 
 #It also returns __OUT_RELATION that inform what is the direction of the changes.
 #If __OUT_RELATION==3 it means that there is no way to promote both featuresets to the common denominator, 
@@ -753,7 +760,7 @@ function(_make_promoted_featureset __FILE_HASH __VARNAMES __PARS_PREFIX __ARG1_P
 	set(__RESULT_RELATION 0)
 	set(__CONFLICTS)
 	set(__COMMON__LIST)
-	foreach(__VARNAME IN LISTS __VARNAMES)
+	foreach(__VARNAME IN LISTS ${__VARNAMES})
 		list(APPEND __COMMON__LIST ${__VARNAME})
 		_single_feature_relation(${__FILE_HASH} ${__VARNAME} ${__PARS_PREFIX} ${__ARG1_PREFIX} ${__ARG2_PREFIX} __SINGLE_RELATION)
 		if("${__SINGLE_RELATION}" STREQUAL "0")

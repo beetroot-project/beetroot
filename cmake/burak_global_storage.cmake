@@ -62,6 +62,8 @@
 # __FILEDB_<PATH_HASH>_EXPORTED_VARS       - List of variables that will be embedded to the dependee of this template
 # __FILEDB_<PATH_HASH>_INSTALL_DIR         - Installation directory. Makes sense only for external projects.
 # __FILEDB_<PATH_HASH>_SOURCE_DIR          - Source directory. Does not makes sense if external project and ASSUME_INSTALLED
+# __FILEDB_<PATH_HASH>_JOINT_TARGETS       - If true, it means you can't build one target without building the other. 
+#                                            Applies automatically to all external projects and only there.
 # 
 # __BURAK_ALL_INSTANCES - list of all instance ID that are required by the top level
 # __BURAK_ALL_LANGUAGES - list of all languages required by the built instances
@@ -162,6 +164,11 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 			endif()
 		endforeach()
 	endif()
+	if(__EXTERNAL_PROJECT_INFO)
+		set(__JOINT_TARGETS 1)
+	else()
+		set(__JOINT_TARGETS 0)
+	endif()
 #	message(STATUS "_store_instance_data(): __LANGUAGES: ${__LANGUAGES}")
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
@@ -170,7 +177,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 #	message(STATUS "_store_instance_data(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 #	message(STATUS "_store_instance_data(): __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
 	_serialize_parameters(${__PARS} __SERIALIZED_PARAMETERS)
-	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
+	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
 #	message(STATUS "_store_instance_data(): __INSTANCE_ID ${__INSTANCE_ID} got __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
 
@@ -241,6 +248,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_set_property_to_db(FILEDB     ${__PATH_HASH} ASSUME_INSTALLED     "${__ASSUME_INSTALLED}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} NICE_NAME            "${__NICE_NAME}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXPORTED_VARS        "${__EXPORTED_VARS}")
+	_set_property_to_db(FILEDB     ${__PATH_HASH} JOINT_TARGETS        "${__JOINT_TARGETS}")
 
 	_get_stack_depth(__STACK_DEPTH)
 	if("${__STACK_DEPTH}" STREQUAL "0")
