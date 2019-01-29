@@ -64,6 +64,7 @@
 # __FILEDB_<PATH_HASH>_SOURCE_DIR          - Source directory. Does not makes sense if external project and ASSUME_INSTALLED
 # __FILEDB_<PATH_HASH>_JOINT_TARGETS       - If true, it means you can't build one target without building the other. 
 #                                            Applies automatically to all external projects and only there.
+# __FILEDB_<PATH_HASH>_LINK_TO_DEPENDEE    - If true, it will always automatically link to the dependee (or return error if does not produce targets)
 # 
 # __BURAK_ALL_INSTANCES - list of all instance ID that are required by the top level
 # __BURAK_ALL_LANGUAGES - list of all languages required by the built instances
@@ -111,6 +112,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_EXPORTED_VARS        FILEDB )
 	set(${__COLS}_INSTALL_DIR          FILEDB )
 	set(${__COLS}_SOURCE_DIR           FILEDB )
+	set(${__COLS}_LINK_TO_DEPENDEE     FILEDB )
 	
 	
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )
@@ -121,7 +123,8 @@ function(_make_path_hash __TARGETS_CMAKE_PATH __OUT_HASH)
 	if(NOT __TARGETS_CMAKE_PATH)
 		message(FATAL_ERROR "Internal Beetroot error: __TARGETS_CMAKE_PATH should not be empty")
 	endif()
-	string(MD5 __TMP ${__TARGETS_CMAKE_PATH})
+	get_filename_component(__NORM_PATH "${__TARGETS_CMAKE_PATH}" REALPATH)
+	string(MD5 __TMP ${__NORM_PATH})
 	string(SUBSTRING ${__TMP} 1 6 __TMP)
 	if("${__TMP}" STREQUAL "")
 		meesage(FATAL_ERROR "path hash cannot come up empty")
@@ -131,7 +134,8 @@ endfunction()
 
 function(_make_featurebase_hash_2 __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES __TEMPLATE_NAME __PATH __SINGLETON_TARGETS __OUT_HASH __OUT_HASH_SOURCE)
 	if(__SINGLETON_TARGETS)
-		set(__TMP "${__PATH}")
+		get_filename_component(__NORM_PATH "${__PATH}" REALPATH)
+		set(__TMP "${__NORM_PATH}")
 	else()
 		set(__TMP "${__TEMPLATE_NAME}")
 	endif()
@@ -155,7 +159,7 @@ function(_make_featurebase_hash_1 __MODS __MODS_LIST __FEATS __FEATS__LIST __TEM
 	set(${__OUT_HASH_SOURCE} "${__HASH_SOURCE}" PARENT_SCOPE)
 endfunction()
 
-function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
+function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO_LIST __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS)
 	if(__EXPORTED_VARS)
 		foreach(__EVAR IN LISTS __EXPORTED_VARS)
@@ -164,7 +168,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 			endif()
 		endforeach()
 	endif()
-	if(__EXTERNAL_PROJECT_INFO)
+	if(${__EXTERNAL_PROJECT_INFO_LIST})
 		set(__JOINT_TARGETS 1)
 	else()
 		set(__JOINT_TARGETS 0)
@@ -183,7 +187,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 
 #	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
 #	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
-#		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
+#	message(STATUS "_store_instance_data(): __EXTERNAL_PROJECT_INFO_LIST: ${__EXTERNAL_PROJECT_INFO_LIST}: ${${__EXTERNAL_PROJECT_INFO_LIST}}")
  #	endif()
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_FEATURES            "${__SERIALIZED_FEATURES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
@@ -217,8 +221,10 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 
 	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} TEMPLATE_FEATUREBASES        ${__FEATUREBASE_ID})
 
-	if(__EXTERNAL_PROJECT_INFO)
-		_parse_external_info("${__EXTERNAL_INFO}" "${__TARGETS_CMAKE_PATH}" ASSUME_INSTALLED __ASSUME_INSTALLED)
+	if(${__EXTERNAL_PROJECT_INFO_LIST})
+		_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" ASSUME_INSTALLED __ASSUME_INSTALLED)
+		_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" LINK_TO_DEPENDEE __LINK_TO_DEPENDEE)
+#		message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}")
 	else()
 		set(__ASSUME_INSTALLED)
 	endif()
@@ -249,6 +255,7 @@ function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS _
 	_set_property_to_db(FILEDB     ${__PATH_HASH} NICE_NAME            "${__NICE_NAME}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} EXPORTED_VARS        "${__EXPORTED_VARS}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} JOINT_TARGETS        "${__JOINT_TARGETS}")
+	_set_property_to_db(FILEDB     ${__PATH_HASH} LINK_TO_DEPENDEE     "${__LINK_TO_DEPENDEE}")
 
 	_get_stack_depth(__STACK_DEPTH)
 	if("${__STACK_DEPTH}" STREQUAL "0")
@@ -267,7 +274,8 @@ endfunction()
 
 #Stores just enough information to store template id, features and target parameters (modifiers). Essentially enough to set a link to the existing FILEDB and FEATUREBASEDB.
 #It excludes dependencies. 
-function(_store_instance_link_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO __TARGET_REQUIRED __TEMPLATE_OPTIONS)
+# TODO: Usuń niepotrzebne argumenty (np. __EXTERNAL_PROJECT_INFO_LIST)
+function(_store_instance_link_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO_LIST __TARGET_REQUIRED __TEMPLATE_OPTIONS)
 
 	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS)
 	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
@@ -282,7 +290,7 @@ function(_store_instance_link_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __P
 
 #	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
 #	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
-#		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO: ${__EXTERNAL_PROJECT_INFO}")
+#		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO_LIST: ${__EXTERNAL_PROJECT_INFO_LIST}")
  #	endif()
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_FEATURES            "${__SERIALIZED_FEATURES}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")

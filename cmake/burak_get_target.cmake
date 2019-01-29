@@ -30,7 +30,7 @@ function(get_existing_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 			 ${__TEMPLATE_NAME} 
 			 ${__TARGETS_CMAKE_PATH} 
 			 ${__IS_TARGET_FIXED}
-			"${__EXTERNAL_PROJECT_INFO}"
+			__EXTERNAL_PROJECT_INFO
 			 0
 			"${__TEMPLATE_OPTIONS}"
 			 )
@@ -88,7 +88,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 #	message(STATUS "get_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
-		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC "${__EXTERNAL_PROJECT_INFO}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}")
+		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}")
 	elseif("${__GET_TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 		if(NOT TARGET "${__INSTANCE_NAME}")

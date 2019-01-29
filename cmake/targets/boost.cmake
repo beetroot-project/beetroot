@@ -14,6 +14,7 @@ set(TEMPLATE_OPTIONS
 )
 
 set(DEFINE_EXTERNAL_PROJECT 
+	LINK_TO_DEPENDEE
 	ASSUME_INSTALLED
 	NAME Boost
 	COMPONENTS "filesystem;system;log;date_time;thread;chrono;atomic;program_options"

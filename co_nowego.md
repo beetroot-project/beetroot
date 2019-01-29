@@ -5,4 +5,4 @@
 5. Automatyczna weryfikacja wartości zmiennych
 6. Możliwość tworzenia więcej niż jednego targetu na podstawie jednej definicji - nie trzeba więcej ręcznie nazywać targetów, aby uniknąć konfliktów nazw (u nas używamy to do budowania kolejnych testów. Każdy kolejny test jest efektywnie kompilacją tego samego kodu, tylko że dla innych wartości makr preprocesora)
 7. Zupełnie nowy interfejs. Zwykły użytkownik powinien teraz być w stanie napisać sensowną definicję targetów, a nie tylko modyfikować parametry istniejących.
-
+8. Nie ma potrzeby czyszczenia archiwum na wypadek zmiany wersji jakiegokolwiek z ustalonych zewnętrznych projektów (w tej chwili jest to Boost, SerialBox i Gridtools. W przyszłości dodam MPI i CUDA).

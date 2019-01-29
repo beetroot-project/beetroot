@@ -1,6 +1,6 @@
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
-function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID )
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
@@ -41,7 +41,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__TEMPLATE_NAME} 
 		 ${__TARGETS_CMAKE_PATH} 
 		 ${__IS_TARGET_FIXED}
-		"${__EXTERNAL_PROJECT_INFO}"
+		${__EXTERNAL_PROJECT_INFO_LIST}
 		 ${__TARGET_REQUIRED}
 		"${__TEMPLATE_OPTIONS}"
 		 )
@@ -122,13 +122,14 @@ function(_instantiate_target __INSTANCE_ID)
 				else()
 					message(FATAL_ERROR "Template that does not produce targets: ${__TARGET_NAME} currently cannot have any dependencies")
 				endif()
-#				message(STATUS "_instantiate_target(): __TARGET_NAME: ${__TARGET_NAME} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME} __FUNCTION_EXISTS: ${__FUNCTION_EXISTS}")
-				if(NOT __FUNCTION_EXISTS)
-#					message(STATUS "_instantiate_target(): about to call target_link_libraries:\n __INSTANCE_ID: ${__INSTANCE_ID} Linking ${__TARGET_NAME} to ${__DEP_TARGET_NAME}. ${__X} ")
+				_retrieve_instance_data(${__DEP_INSTANCE_ID} LINK_TO_DEPENDEE __LINK_TO_DEPENDEE)
+#				message(STATUS "_instantiate_target(): __TARGET_NAME: ${__TARGET_NAME} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME} __FUNCTION_EXISTS: ${__FUNCTION_EXISTS} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}" )
+				if(NOT __FUNCTION_EXISTS OR __LINK_TO_DEPENDEE)
 					if(TARGET "${__DEP_TARGET_NAME}")
 						get_target_property(__TYPE ${__TARGET_NAME} TYPE)
 						get_target_property(__DEP_TYPE ${__DEP_TARGET_NAME} TYPE)
 #						message(STATUS "_instantiate_target(): Type of ${__TARGET_NAME}: ${__TYPE} ")
+						message(STATUS "_instantiate_target(): about to call target_link_libraries:\n __INSTANCE_ID: ${__INSTANCE_ID} Linking ${__TARGET_NAME} to ${__DEP_TARGET_NAME}. ${__X} ")
 						if("${__TYPE}" STREQUAL "INTERFACE_LIBRARY" )
 							target_link_libraries(${__TARGET_NAME} INTERFACE ${__DEP_TARGET_NAME}) 
 							set(__X INTERFACE)
