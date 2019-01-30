@@ -20,6 +20,7 @@ set(TEMPLATE_OPTIONS
 
 function(declare_dependencies TEMPLATE_NAME)
 	build_target(LIBHELLO KTO ${LIBKTO})
+	build_target(EMPTY_LIB)
 endfunction()
 
 function(generate_targets TEMPLATE_NAME)
