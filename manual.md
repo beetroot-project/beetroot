@@ -6,9 +6,14 @@ TODO
 
 Optional function that is called in Project build everytime, when there is an internal dependee that requires this template. The file is called after both targets are defined. Function gets two positional arguments: first is the dependee target name (the target that needs us), and the second is the name of our target, even if our template does not define targets (in case the file we describe allows only one singleton target, this second argument is always fixed to our target name).
 
-The function role is to apply extra modifications to the dependee, and finaly to call (or not) `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`, where `DEPENDEE_TARGET_NAME` and `TARGET_NAME` are respectively first and second parameters to the function and `KEYWORD` is defined as either `INTERFACE` or `PRIVATE` depending on whether the `${DEPENDEE_TARGET_NAME}`'s type is `INTERFACE_LIBRARY` or not.
+The function role is to apply extra modifications to the dependee, and finaly to call (or not) `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`, where `DEPENDEE_TARGET_NAME` and `TARGET_NAME` are respectively first and second parameters to the function and `KEYWORD` is defined as either `INTERFACE` or `PRIVATE` depending on whether the `${DEPENDEE_TARGET_NAME}`'s type is `INTERFACE_LIBRARY` or not. 
 
-If the function is not defined, it is defined automatically with a single line `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`.
+If our dependency `targets.cmake` does not generate targets, the `${DEPENDEE_TARGET_NAME}` will not be a target either, and only serve as a identifier. On the other hand it is guaranteed that `${TARGET_NAME}` is an actual and existing target, so it might not be an immidiate dependee. If the immidiate dependee is not a target, the function will be called with the first dependee in the dependency chain that defines a target (even if it is only an `INTERFACE`).
+
+If the function is not defined, and if the `${DEPENDEE_TARGET_NAME}` is not of type `UTILITY` it is defined automatically replaced with a single line `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`. For `UTILITY` no additional code is executed. The automatically generated `target_link_libraries` will be executed after execution of `apply_dependency_to_target()` if `LINK_TO_DEPENDEE` is specified as either external project option or template option.
+
+
+ Please note, that the 
 
 
 
@@ -49,6 +54,12 @@ List of languages required by the targets. User cannot set the languages himself
 
 List of variables (`TARGET_PARAMETER`, `LINK_PARAMETER` or `FEATURE`) that can be embedded into the set of variables available when calling `generate_targets()`. These variables and their values will not participate in the definition of the targets' identities and will get instantiated only when calling those two functions. In order to actually use the variable, the dependee must explicitely declare then when defining dependencies.
 
+#### LINK_TO_DEPENDEE
+
+Flag makes sense only if the tempalate generates targets and they are not of the type `UTILITY`. If the flag is set, the Beetroot will always call `target_link_libraries()`, even if the function `apply_dependency_to_target()` is defined. The call to `target_link_libraries()` will be placed _after_ the call of the `apply_dependency_to_target()`. 
+
+This option has exactly the same meaning as the option of the same name in the external project set, so there is no point in setting them in both places.
+
 ### External project options
 
 At the moment the beetroot does not allow the user to call the `ExternalProject_Add` directly. Instead it allowd for several customizations, that are passed through `DEFINE_EXTERNAL_PROJECT` variable defined in `targets.cmake`. Defining this structure is the only way to force the `targets.cmake` to describe an external project.
@@ -83,6 +94,11 @@ Optional vector of strings. Each element of this parameter will get passed to th
 
 Optional vector of strings. Names parameters defined in either `TARGET_PARAMETERS` or `TARGET_FEATURES` to pass to the `ExternalProject_Add` during build. Ignored when `ASSUME_INSTALLED`. If missing, all parameters from `TARGET_PARAMETERS` and `TARGET_FEATURES` will be forwarded to the external project.
 
+#### LINK_TO_DEPENDEE
+
+Flag makes sense only if the tempalate generates targets and they are not of the type `UTILITY`. If the flag is set, the Beetroot will always call `target_link_libraries()`, even if the function `apply_dependency_to_target()` is defined. The call to `target_link_libraries()` will be placed _after_ the call of the `apply_dependency_to_target()`. 
+
+This option has exactly the same meaning as the option of the same name in the template global options set, so there is no point in setting them in both places.
 
 ### Parameter specification
 
