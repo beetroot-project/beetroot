@@ -2,6 +2,22 @@
 
 TODO
 
+### Targets file
+
+This file provides a list of target templates on which actual targets will be built, or actual target names in case we don't wish them to be instatiated more than once (that is the default CMake behavior). 
+
+The file consists of target generating function (`generate_targets()`) that contain all logic needed to instatiate the required target(s), `declare_dependency()` function that defines what dependencies need to be applied to the targets in addition to `generate_targets()`, and `apply_dependency_to_target()` that describe steps that needs to be taken to apply our targets as dependencies for a given dependee target.
+
+By default the `apply_dependency_to_target()` is defined as a call to `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})` unless dependee is of type UTILITY (i.e. a custom target).
+
+All those functions are parametrized by the three categories of variables, which share the same namespace. 
+
+* `TARGET_PARAMETERS` list all the variables that define the identity of all the defined targets. If user tries to instatiate our template twice with different set of target parameters, he will get either two distinct targets (named with ordinal sufix, e.g. mylib1 and mylib2) or an error if we declare that there can be only one copy of each target. 
+* `LINK_PARAMETERS` list additional variables that can be used by the `apply_dependency_to_target()` function during linking to the depndee (if our target is used as a dependency). Those variables does not change the identity of the target, so if user tries to instatiate targets that differ only in link parameters, there will be only one copy of the target built, but it will be linked in different way to the dependees. One can think of it as if those variables are implicitely included in the dependees' indetities.
+* `FEATURES`. Each variable of the list define existence of independent feature. Features are included in the targets' identities. A target that include more features is always compatible with the target that include less of them. Features can be specified using flags (each flag controls a different feature), scalars (value different than the default mean an extra feature) and vectors (each value of the vector is treated as a separate flag). As long as it is possible, beetroot will only instatiate a single copy of the target for each set of target parameters, that is compatible with all the required features. If the features are not compatible with each other (e.g. scalars), beetroot will issue an error.
+
+If you find yourself defining a large list of `TARGET_PARAMETERS` over and over again for different targets (for instance to pass targets from a library to a consumer), you can spare yourself a time and call a function `include_target_parameters_of(TEMPLATE_NAME)` in the targets body (i.e. outside of any functions defined therein) to include all the target parameters defined in that file. The file will be processed in the context just after parsing the targets file, including all declared and non-declared variables defined in this file.
+
 ### apply_dependency_to_target()
 
 Optional function that is called in Project build everytime, when there is an internal dependee that requires this template. The file is called after both targets are defined. Function gets two positional arguments: first is the dependee target name (the target that needs us), and the second is the name of our target, even if our template does not define targets (in case the file we describe allows only one singleton target, this second argument is always fixed to our target name).
@@ -11,9 +27,6 @@ The function role is to apply extra modifications to the dependee, and finaly to
 If our dependency `targets.cmake` does not generate targets, the `${DEPENDEE_TARGET_NAME}` will not be a target either, and only serve as a identifier. On the other hand it is guaranteed that `${TARGET_NAME}` is an actual and existing target, so it might not be an immidiate dependee. If the immidiate dependee is not a target, the function will be called with the first dependee in the dependency chain that defines a target (even if it is only an `INTERFACE`).
 
 If the function is not defined, and if the `${DEPENDEE_TARGET_NAME}` is not of type `UTILITY` it is defined automatically replaced with a single line `target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})`. For `UTILITY` no additional code is executed. The automatically generated `target_link_libraries` will be executed after execution of `apply_dependency_to_target()` if `LINK_TO_DEPENDEE` is specified as either external project option or template option.
-
-
- Please note, that the 
 
 
 

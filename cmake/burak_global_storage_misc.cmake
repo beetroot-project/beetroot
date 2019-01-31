@@ -8,7 +8,11 @@
 #                               Together with the stack depth (used when OUTSIDE_DEFINING_TARGETS) it allows to query the behavior using _get_target_behavior().
 #
 # __BURAK_EXTERNAL_DEPENDENCIES - list of all external projects that must be built before our project.
-
+#
+# __BURAK_INSIDE_TARGETS_FILE - TRUE or nothing. TRUE only inside reading targets.cmake
+#
+# __BURAK_TCRB_FOR_DEPENDENCIES - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_DEPENDENCIES. lists all FEATUREBASES included in the current dependency call stack.
+# __BURAK_TCRB_FOR_PREPROCESS - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_PREPROCESS. lists all targets files included by using include_target_parameters_of() or similar functions when reading them.
 
 function(_descend_dependencies_stack )
 	get_property(__STACK_TOP GLOBAL PROPERTY __BURAK_STACK_TOP)
@@ -93,3 +97,70 @@ endfunction()
 macro(_get_target_names_of_all_superbuild_dependencies __OUT_TARGET_NAMES)
 	get_property(${__OUT_TARGET_NAMES} GLOBAL PROPERTY __BURAK_EXTERNAL_DEPENDENCIES)
 endmacro()
+
+macro(_is_inside_targets_file __OUT_IS)
+	get_property(${__OUT_IS} GLOBAL PROPERTY __BURAK_INSIDE_TARGETS_FILE)
+endmacro()
+
+function(_set_inside_targets_file)
+	set_property(GLOBAL PROPERTY __BURAK_INSIDE_TARGETS_FILE 1)
+endfunction()
+
+function(_set_skip_targets_file)
+	set_property(GLOBAL PROPERTY __BURAK_INSIDE_TARGETS_FILE 2)
+endfunction()
+
+macro(_clear_inside_targets_file)
+	set_property(GLOBAL PROPERTY __BURAK_INSIDE_TARGETS_FILE 0)
+endmacro()
+
+
+
+#__STACK can be one of "DEPENDENCIES" or "PREPROCESS"
+function(_can_descend_recursively __ID __STACK __OUT)
+	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS")
+	if(NOT ${__STACK} IN_LIST __VALID_OPTS)
+		message(FATAL_ERROR "Internal beetroot error: unknown recursive stack: ${__STACK}")
+	endif()
+	get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
+
+		get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
+		list(LENGTH __LIST __LASTNR)
+		message(STATUS "_can_descend_recursively(): descending position ${__LASTNR} __STACK: ${__STACK} __ID: ${__ID}")
+		
+	if( NOT "${__ID}" IN_LIST __LIST)
+		set(${__OUT} 1 PARENT_SCOPE)
+		set_property(GLOBAL APPEND PROPERTY __BURAK_TCRB_FOR_${__STACK} "${__ID}")
+	else()
+		set(${__OUT} 0 PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(_ascend_from_recurency __ID __STACK)
+	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS")
+	if(NOT ${__STACK} IN_LIST __VALID_OPTS)
+		message(FATAL_ERROR "Internal beetroot error: unknown recursive stack: ${__STACK}")
+	endif()
+	get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
+	list(LENGTH __LIST __LASTNR)
+	math(EXPR __LASTNR "${__LASTNR}-1")
+	list(GET __LIST ${__LASTNR} __LAST_ITEM)
+	if( "${__ID}" STREQUAL "${__LAST_ITEM}")
+		list(REMOVE_AT __LIST ${__LASTNR})
+		message(STATUS "_ascend_from_recurency(): OK position in stack: ${__LAST_ITEM} __ID: ${__ID}")
+		set_property(GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK} ${__LIST})
+	else()
+		message(FATAL_ERROR "Unexpected out-of-order return from recurency stack ${__STACK} with ID ${__ID}. Expected ${__LAST_ITEM}")
+	endif()
+endfunction()
+
+function(_get_recurency_list __STACK __OUT)
+	get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
+	set(${__OUT} ${__LIST} PARENT_SCOPE)
+endfunction()
+
+set_property(GLOBAL PROPERTY __BURAK_TCRB_FOR_DEPENDENCIES "")
+set_property(GLOBAL PROPERTY __BURAK_TCRB_FOR_PREPROCESS "")
+_clear_inside_targets_file()
+
+

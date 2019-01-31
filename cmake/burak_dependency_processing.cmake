@@ -9,13 +9,19 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 #	else()
 #		set(__FEATUREBASE_DEFINED)
 #	endif()
+	_can_descend_recursively(${__INSTANCE_ID} DEPENDENCIES __CAN_DESCEND)
+	if(NOT __CAN_DESCEND)
+		_get_recurency_list(DEPENDENCIES __INSTANCE_LIST)
+		_get_nice_names("{__INSTANCE_LIST}" __OUTVAR)
+		message(FATAL_ERROR "Cyclic dependency graph encountered (in the calling order): ${__OUTVAR}")
+	endif()
+
 	_put_dependencies_into_stack("${__INSTANCE_ID}")
 	if(NOT __FEATUREBASE_ID)
 		set(__LIST ${${__PARS}__LIST_MODIFIERS})
 		list(APPEND __LIST ${__${__PARS}__LIST_LINKPARS} )
 
 		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
-	#	_read_targets_file("${__TARGETS_CMAKE_PATH}" __READ __IS_TARGET_FIXED)
 		_instantiate_variables(${__ARGS} "${__LIST}")
 
 		_descend_dependencies_stack()
@@ -26,6 +32,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		_ascend_dependencies_stack()
 	
 	endif()
+	_ascend_from_recurency(${__INSTANCE_ID} DEPENDENCIES)
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		set(__TARGET_REQUIRED 1)

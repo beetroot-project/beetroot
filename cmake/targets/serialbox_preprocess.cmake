@@ -37,12 +37,12 @@ function(generate_targets TEMPLATE_NAME)
 		BYPRODUCTS "${TARGET_DIR}/${REL_TARGET_FILENAME}"
 		DEPENDS ${SOURCE}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMENT "Preprocessing file ${TMP_REL_SOURCE} for Serialbox 2..."
+		COMMENT "Preprocessing file ${TMP_REL_SOURCE} for Serialbox..."
 		VERBATIM
 	)
 endfunction()
 
-function(apply_to_target __INSTANCE_NAME __DEP_INSTANCE_NAME)
-	target_sources(${__INSTANCE_NAME} PRIVATE ${__DEP_INSTANCE_NAME})
+function(apply_to_target DEPENDEE_TARGET_NAME __DEP_INSTANCE_NAME)
+	target_sources(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME})
 endfunction()
 
