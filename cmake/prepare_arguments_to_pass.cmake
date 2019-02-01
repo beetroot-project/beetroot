@@ -61,7 +61,7 @@ function (pass_compile_definitions_to_target __TARGET_NAME __KEYWORD)
 	
 	foreach(__VAR IN LISTS __FPAR_VAR_NAMES)
 		if(NOT "${${__VAR}}" STREQUAL "")
-			target_compile_definitions("${__TARGET_NAME}" ${__KEYWORD} "${__VAR}=\"${${VAR}}\"")
+			target_compile_definitions("${__TARGET_NAME}" ${__KEYWORD} "${__VAR}=${${__VAR}}")
 		endif()
 	endforeach()
 	foreach(__VAR IN LISTS __FPAR_OPTION_NAMES)
