@@ -24,13 +24,9 @@ if(NOT SUPERBUILD_ROOT)
 	include(root)
 endif()
 
-project(hello)
+project(hello_2boost)
 
-build_target(FEATURE-STATICLIB FUNNAME "XX") #without this line, feature-exec should fail
-build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail
-build_target(FEATURE-EXEC)
 
-get_existing_target(FEATURE-STATICLIB STH_COMPONENTS CMakeLists)
-
+build_target(HELLO_2BOOST)
 
 finalizer()

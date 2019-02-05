@@ -67,16 +67,15 @@ macro(_parse_TARGETS_PATH __TEMPLATE_NAME)
 endmacro()
 
 function(_read_functions_from_targets_file __TARGETS_CMAKE_PATH)
-#	get_property(__LAST_READ_FILE GLOBAL PROPERTY __BURAK_LAST_READ_FILE)
-#	if(NOT "${__LAST_READ_FILE}" STREQUAL "${__TARGETS_CMAKE_PATH}")
+	_retrieve_global_data(LAST_READ_FILE __LAST_READ_FILE)
+	if(NOT "${__LAST_READ_FILE}" STREQUAL "${__TARGETS_CMAKE_PATH}")
 		_read_targets_file("${__TARGETS_CMAKE_PATH}" 1 __DUMMY __DUMMY2)
-#	endif()
+	endif()
 endfunction()
 
 # The function that actually reads in the targets.cmake file. All read variables are stored in parent scope with ${__OUT_READ_PREFIX} prefix.
 # In case last optional argument is NOT present ENUM_TEMPLATES from ENUM_TARGETS are prepended with "*" character.
 function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PREFIX __OUT_IS_TARGET_FIXED)
-
 	get_filename_component(__TARGETS_CMAKE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
 	set(CMAKE_CURRENT_SOURCE_DIR "${__TARGETS_CMAKE_DIR}")
 	
@@ -118,7 +117,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 	if("${__FILE_LOADED}" STREQUAL "NOTFOUND")
 		message(FATAL_ERROR "Cannot find targets.cmake in ${__TARGETS_CMAKE_PATH}")
 	endif()
-
+	_set_property_to_db(GLOBAL ALL LAST_READ_FILE ${__TARGETS_CMAKE_PATH} FORCE)
 	_clear_inside_targets_file()
 	if(NOT __SKIP_RECURRENCE)
 		_process_all_postprocessing("${CMAKE_PARENT_LIST_FILE}")
@@ -150,7 +149,6 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 		endif()
 		set(${__OUT_READ_PREFIX}_TEMPLATE_OPTIONS "${TEMPLATE_OPTIONS}" PARENT_SCOPE)
 	endif()
-	set_property(GLOBAL PROPERTY __BURAK_LAST_READ_FILE "${__TARGETS_CMAKE_PATH}")
 endfunction()
 
 function(__append_target_from __TARGETS_CMAKE_PATH __EXISTING_TEMPLATES)
@@ -182,7 +180,7 @@ function(__prepare_template_list)
 			file(REMOVE "${__TEMPLATE_FILENAME}")
 		endif()
 		set(__TEMPLATES__LIST)
-		file(GLOB_RECURSE __EXTERNAL_TARGETS_DIRS_LIST LIST_DIRECTORIES true "${SUPERBUILD_ROOT}/*/cmake/targets")
+		file(GLOB_RECURSE __EXTERNAL_TARGETS_DIRS_LIST LIST_DIRECTORIES true "${SUPERBUILD_ROOT}/*/cmake")
 		foreach(__EXTERNAL_TARGETS_DIR IN LISTS __EXTERNAL_TARGETS_DIRS_LIST)
 			if(IS_DIRECTORY "${__EXTERNAL_TARGETS_DIR}")
 				get_filename_component(__NAME1 ${__EXTERNAL_TARGETS_DIR} DIRECTORY)
@@ -223,6 +221,7 @@ endfunction()
 function(__find_targets_cmake_by_template_name __TEMPLATE_NAME __OUT_TARGETS_CMAKE_PATH __OUT_IS_TARGET_FIXED)
 	set(__TEMPLATE_FILENAME "${SUPERBUILD_ROOT}/build/templates.cmake")
 	if(EXISTS "${__TEMPLATE_FILENAME}")
+#		message(STATUS "__find_targets_cmake_by_template_name(): Including ${__TEMPLATE_FILENAME}")
 		include("${__TEMPLATE_FILENAME}")
 	else()
 		message(FATAL_ERROR "Cannot find ${__TEMPLATE_FILENAME}")
@@ -239,7 +238,7 @@ function(__find_targets_cmake_by_template_name __TEMPLATE_NAME __OUT_TARGETS_CMA
 			set(${__OUT_IS_TARGET_FIXED} 0 PARENT_SCOPE)
 		endif()
 	else()
-		message(FATAL_ERROR "Cannot find ${__TEMPLATE_NAME} among known templates")
+		message(FATAL_ERROR "Cannot find ${__TEMPLATE_NAME} in __TEMPLATES_${__TEMPLATE_NAME} among known templates")
 	endif()
 endfunction()
 

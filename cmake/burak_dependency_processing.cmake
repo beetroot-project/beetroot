@@ -1,3 +1,38 @@
+#This function assumes the dependencies have already been discovered once
+function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED __OUT_NEW_INSTANCE_ID)
+	_retrieve_instance_args(${__INSTANCE_ID} LINKPARS __ARGS)
+	set(__PARS__LIST_LINKPARS ${__ARGS__LIST})
+	_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
+	set(__PARS__LIST_MODIFIERS ${__ARGS__LIST})
+	_unserialize_variables("${__NEW_FEATURES_SERIALIZED}" __ARGS)
+	set(__PARS__LIST_FEATURES ${__ARGS__LIST})
+	set(__ARGS__LIST ${__PARS__LIST_LINKPARS} ${__PARS__LIST_MODIFIERS} ${__PARS__LIST_FEATURES})
+	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
+	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __PARENT_INSTANCE_IDS)
+	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
+	_retrieve_instance_data(${__INSTANCE_ID} TARGET_FIXED __IS_TARGET_FIXED)
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO)
+	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS)
+	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
+	
+
+	_make_instance_id(${__TEMPLATE_NAME} __ARGS "" __NEW_INSTANCE_ID __HASH_SOURCE)
+#	message(STATUS "_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
+	if("${__NEW_INSTANCE_ID}" STREQUAL "${__INSTANCE_ID}")
+		message(FATAL_ERROR "Internal beetroot error: Hashes did not change (but should have)")
+		#Nothing to do
+		return()
+	endif()
+	
+	
+	
+	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}")
+	
+	_change_instance_id(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
+	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__NEW_INSTANCE_ID})
+	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
+endfunction()
+
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
 function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
@@ -24,13 +59,12 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 
 		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
 		_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
-		_instantiate_variables(${__ARGS} "${__LIST}")
+		_instantiate_variables(${__ARGS} ${__PARS} "${__LIST}")
 
 		_descend_dependencies_stack()
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
-	#	message(FATAL_ERROR "__LIST: ${__LIST}")
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
-#		message(STATUS "_discover_dependencies(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __DEP_INSTANCE_IDS: ${__DEP_INSTANCE_IDS}")
+#		message(STATUS "_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
 	
 	endif()
@@ -42,6 +76,8 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		set(__TARGET_REQUIRED 0)
 	endif()
 	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
+#	message(STATUS "_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
+#	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_MODIFIERS: ${${__PARS}__LIST_MODIFIERS}")
 	_store_instance_data(
 		 ${__INSTANCE_ID}
 		"${__PARENT_INSTANCE_ID}"
@@ -67,8 +103,8 @@ function(_instantiate_target __INSTANCE_ID)
 		message(FATAL_ERROR "Burak internal error: _get_dependencies() called when not DEFINIG_TARGETS")
 	endif()
 	
-	_retrieve_instance_data(${__INSTANCE_ID} TARGET_BUILT __TARGET_IS_NON_VIRTUAL) # TARGET_BUILT is one of the FEATUREBASE properties, that will always be set to non empty (but maybe to "0") for non-virtual targets
-	if("${__TARGET_IS_NON_VIRTUAL}" STREQUAL "")
+	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE) # TARGET_BUILT is one of the FEATUREBASE properties, that will always be set to non empty (but maybe to "0") for non-virtual targets
+	if(__IS_PROMISE)
 		message(FATAL_ERROR "Cannot build ${__INSTANCE_ID} because it was only declared using get_existing_target(), and never actually defined by get_target().")
 	else()
 #		message(STATUS "_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} F_TEMPLATE_NAME: ${__TARGET_IS_NON_VIRTUAL}")

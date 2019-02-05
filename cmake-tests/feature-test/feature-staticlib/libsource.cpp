@@ -1,16 +1,17 @@
 // 'Hello World!' program 
 
 #include "feature-static.h"
+#include<string>
 
 #define STRINGIFY2(X) #X
 #define STRINGIFY(X) STRINGIFY2(X)
 
 
 std::string FUNNAME() {
-	string out = "default";
-	if(USE_STH){
-		out+="STH"
-	}
+	std::string out = "default";
+	if(USE_STH)
+		out+="STH";
+	
 	
 	return(out + " with features " + STRINGIFY(OTHER) + "!");
 }

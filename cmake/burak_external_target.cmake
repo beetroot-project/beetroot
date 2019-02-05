@@ -113,7 +113,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 				EXCLUDE_FROM_MAIN FALSE
 			)
 #			message(STATUS "_get_target_external(): Setting external project ${__INSTANCE_NAME_FIXED} with the following arguments: ${__CMAKE_ARGS}")
-			set_property(GLOBAL APPEND PROPERTY __BURAK_EXTERNAL_DEPENDENCIES "${__INSTANCE_NAME}")
+			_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_NAME}") 
 			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT 1)
 		endif()
 	else()

@@ -36,7 +36,7 @@ DONE 3. _read_functions(): Niech po prostu wczyta plik, bez importowania zmienny
    
    
    
-# Obsługa przekazywanych template NO_TARGET.
+DONE # Obsługa przekazywanych template NO_TARGET.
 
 Pomysł: jeśli libX NO_TARGET jest jako DEPENDEE, to znaczy, że należy nas zaaplikować nie na libX, ale na dependee libX bezpośrednio, po tym jak zaaplikowano libX. W końcu będzie jakiś target, bo nie można pobierać projektu NO_TARGET jako root.
 

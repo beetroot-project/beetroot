@@ -42,5 +42,8 @@ build_target(HELLO_2BOOST PAR KUC)
 build_target(SERIALBOX_C_TEST)
 build_target(HEADER_CONSUMER)
 
+build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail
+build_target(FEATURE-EXEC)
+
 
 finalizer()

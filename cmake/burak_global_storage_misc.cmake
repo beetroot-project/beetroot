@@ -7,9 +7,7 @@
 # __BURAK_GET_TARGET_BEHAVIOR - One of the <DEFINING_TARGETS, OUTSIDE_DEFINING_TARGETS>, used to indicate the behavior of the user-facing beetroot functions, in particular get_targets()
 #                               Together with the stack depth (used when OUTSIDE_DEFINING_TARGETS) it allows to query the behavior using _get_target_behavior().
 #
-# __BURAK_EXTERNAL_DEPENDENCIES - list of all external projects that must be built before our project.
-#
-# __BURAK_INSIDE_TARGETS_FILE - TRUE or nothing. TRUE only inside reading targets.cmake
+# __BURAK_INSIDE_TARGETS_FILE - TRUE or nothing. TRUE only inside reading targets.cmake. 
 #
 # __BURAK_TCRB_FOR_DEPENDENCIES - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_DEPENDENCIES. lists all FEATUREBASES included in the current dependency call stack.
 # __BURAK_TCRB_FOR_PREPROCESS - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_PREPROCESS. lists all targets files included by using include_target_parameters_of() or similar functions when reading them.
@@ -18,6 +16,7 @@ function(_descend_dependencies_stack )
 	get_property(__STACK_TOP GLOBAL PROPERTY __BURAK_STACK_TOP)
 	math(EXPR __NEW_STACK_TOP "${__STACK_TOP} + 1")
 	set_property(GLOBAL PROPERTY __BURAK_STACK_TOP "${__NEW_STACK_TOP}")
+#	message(STATUS "_descend_dependencies_stack(): __NEW_STACK_TOP: ${__NEW_STACK_TOP}")
 endfunction()
 
 function(_ascend_dependencies_stack )
@@ -25,6 +24,9 @@ function(_ascend_dependencies_stack )
 	set_property(GLOBAL  PROPERTY __BURAK_STACK_${__STACK_TOP} "")
 	math(EXPR __NEW_STACK_TOP "${__STACK_TOP} - 1")
 	set_property(GLOBAL PROPERTY __BURAK_STACK_TOP "${__NEW_STACK_TOP}")
+
+	get_property(__OLD_STACK GLOBAL  PROPERTY __BURAK_STACK_${__STACK_TOP})
+#	message(STATUS "_ascend_dependencies_stack(): Removing old stack top: __BURAK_STACK_${__STACK_TOP}: ${__OLD_STACK} __NEW_STACK_TOP: ${__NEW_STACK_TOP}")
 endfunction()
 
 macro(_get_stack_depth __OUT_DEPTH)
@@ -34,7 +36,7 @@ endmacro()
 function(_put_dependencies_into_stack __DEPENDENCY_LIST)
 	get_property(__STACK_TOP GLOBAL PROPERTY __BURAK_STACK_TOP)
 	set_property(GLOBAL APPEND  PROPERTY __BURAK_STACK_${__STACK_TOP} ${__DEPENDENCY_LIST})
-#	message(STATUS "Put dependency ${__DEPENDENCY_LIST} into __BURAK_STACK_${__STACK_TOP}")
+#	message(STATUS "_put_dependencies_into_stack: put __DEPENDENCY_LIST: ${__DEPENDENCY_LIST} into __BURAK_STACK_${__STACK_TOP}")
 endfunction()
 
 function(_get_parent_dependency_from_stack __OUT_PARENT)
@@ -42,13 +44,16 @@ function(_get_parent_dependency_from_stack __OUT_PARENT)
 #	message(STATUS "_get_parent_dependency_from_stack(): __STACK_TOP: ${__STACK_TOP}")
 	if(${__STACK_TOP} GREATER 0)
 		math(EXPR __NEW_STACK_TOP "${__STACK_TOP} - 1")
-		get_property(__TMP_LIST GLOBAL PROPERTY __BURAK_STACK_${__STACK_TOP})
+		get_property(__TMP_LIST GLOBAL PROPERTY __BURAK_STACK_${__NEW_STACK_TOP})
+		if(NOT __TMP_LIST)
+			message(FATAL_ERROR "Internal beetroot error: empty parent on stack at pos __BURAK_STACK_${__NEW_STACK_TOP}")
+		endif()
 #		message(STATUS "_get_parent_dependency_from_stack(): __TMP_LIST: ${__TMP_LIST}")
 		list(LENGTH __TMP_LIST __TMP_LENGTH)
 #		message(STATUS "_get_parent_dependency_from_stack(): __TMP_LENGTH: ${__TMP_LENGTH}")
 		math(EXPR __TMP_LENGTH "${__TMP_LENGTH} - 1")
 		list(GET __TMP_LIST ${__TMP_LENGTH} __TMP_LAST )
-#		message(STATUS "_get_parent_dependency_from_stack(): __TMP_LENGTH: ${__TMP_LENGTH} __TMP_LAST: ${__TMP_LAST}")
+#		message(STATUS "_get_parent_dependency_from_stack(): __BURAK_STACK_${__NEW_STACK_TOP}: ${__TMP_LIST} dependency: ${__TMP_LAST}")
 		set(${__OUT_PARENT} ${__TMP_LAST} PARENT_SCOPE)
 	else()
 		set(${__OUT_PARENT} "" PARENT_SCOPE)
@@ -90,14 +95,6 @@ function(_set_behavior_outside_defining_targets)
 	set_property(GLOBAL PROPERTY __BURAK_GET_TARGET_BEHAVIOR "OUTSIDE_DEFINING_TARGETS")
 endfunction()
 
-function(_add_target_to_superbuild_dependencies __TARGET_NAME)
-	set_property(GLOBAL APPEND PROPERTY __BURAK_EXTERNAL_DEPENDENCIES "${__TARGET_NAME}")
-endfunction()
-
-macro(_get_target_names_of_all_superbuild_dependencies __OUT_TARGET_NAMES)
-	get_property(${__OUT_TARGET_NAMES} GLOBAL PROPERTY __BURAK_EXTERNAL_DEPENDENCIES)
-endmacro()
-
 macro(_is_inside_targets_file __OUT_IS)
 	get_property(${__OUT_IS} GLOBAL PROPERTY __BURAK_INSIDE_TARGETS_FILE)
 endmacro()
@@ -124,7 +121,6 @@ function(_can_descend_recursively __ID __STACK __OUT)
 	endif()
 	get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
 
-		get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
 		list(LENGTH __LIST __LASTNR)
 #		message(STATUS "_can_descend_recursively(): descending position ${__LASTNR} __STACK: ${__STACK} __ID: ${__ID}")
 		
