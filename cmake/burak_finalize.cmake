@@ -3,6 +3,7 @@
 #
 #It must be macro, because it has to enable languages, if enabled by any of the targets.
 macro(finalizer)
+	_set_property_to_db(GLOBAL ALL LAST_READ_FILE "NONE" FORCE)
 	_get_target_behavior(__TARGET_BEHAVIOR)
 	if("${__TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		message(WARNING "finalizer called second time. This function is meant to be called only once at the very end of the root CMakeLists. Ignoring this call.")

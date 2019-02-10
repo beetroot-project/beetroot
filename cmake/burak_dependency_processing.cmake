@@ -36,7 +36,7 @@ endfunction()
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
 function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID )
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
 #		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __FEATUREBASE_DEFINED )

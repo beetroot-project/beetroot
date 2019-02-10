@@ -18,6 +18,14 @@ All those functions are parametrized by the three categories of variables, which
 
 If you find yourself defining a large list of `TARGET_PARAMETERS` over and over again for different targets (for instance to pass targets from a library to a consumer), you can spare yourself a time and call a function `include_target_parameters_of(TEMPLATE_NAME)` in the targets body (i.e. outside of any functions defined therein) to include all the target parameters defined in that file. The file will be processed in the context just after parsing the targets file, including all declared and non-declared variables defined in this file.
 
+#### include_target_parameters_of()
+
+```
+	include_target_parameters_of(<TEMPLATE_NAME> [ALL_EXCEPT <VAR_NAME>... | INCLUDE_ONLY <VAR_NAME>...])
+```
+
+Use this function to import `TARGET_PARAMETERS` from another template file. Only the variable definitions will be imported, just like if you would paste them into the own `TARGET_PARAMETERS`, not other variables and it will not set a build dependency. If the included file itself includes target parameters, they can be included too. 
+
 ### apply_dependency_to_target()
 
 Optional function that is called in Project build everytime, when there is an internal dependee that requires this template. The file is called after both targets are defined. Function gets two positional arguments: first is the dependee target name (the target that needs us), and the second is the name of our target, even if our template does not define targets (in case the file we describe allows only one singleton target, this second argument is always fixed to our target name).

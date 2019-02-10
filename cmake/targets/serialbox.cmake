@@ -1,10 +1,13 @@
 set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic Serialbox::SerialboxFortranStatic)
 
 set(TARGET_PARAMETERS 
-	SERIALBOX_ENABLE_FORTRAN SCALAR	"BOOL" "YES"
+)
+
+set(TARGET_FEATURES 
+	SERIALBOX_ENABLE_FORTRAN SCALAR	"BOOL" "NO"
 	SERIALBOX_USE_NETCDF	SCALAR	"BOOL" "NO"
-	SERIALBOX_ENABLE_EXPERIMENTAL_FILESYSTEM	SCALAR	BOOL	"YES"
 	SERIALBOX_EXAMPLES	SCALAR	BOOL	"NO"
+	SERIALBOX_ENABLE_EXPERIMENTAL_FILESYSTEM	SCALAR	BOOL	"YES"
 )
 
 set(DEFINE_EXTERNAL_PROJECT 
@@ -19,11 +22,4 @@ function(declare_dependencies TEMPLATE_NAME)
 		build_target(Boost::filesystem)
 	endif()
 endfunction()
-
-#function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
-#	if("${TARGET_NAME}" STREQUAL "Serialbox::SerialboxFortranStatic" AND NOT SERIALBOX_ENABLE_FORTRAN)
-#		message(FATAL_ERROR "To use Fortran, you must first pass target option SERIALBOX_ENABLE_FORTRAN")
-#	endif()
-#	target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} ${TARGET_NAME}) 
-#endfunction()
 
