@@ -194,3 +194,27 @@ function(_make_promoted_featureset __FILE_HASH __VARNAMES __PARS_PREFIX __ARG1_P
 	endif()
 endfunction()
 
+
+macro(_pass_arguments_higher __IN_PREFIX __OUT_PREFIX)
+#	message(FATAL_ERROR "${__IN_PREFIX}__LIST: ${${__IN_PREFIX}__LIST}")
+	foreach(__VAR IN LISTS ${__IN_PREFIX}__LIST)
+#		message(FATAL_ERROR "set(${__OUT_PREFIX}_${__VAR} \"${${__IN_PREFIX}_${__VAR}}\" PARENT_SCOPE)")
+		set(${__OUT_PREFIX}_${__VAR} "${${__IN_PREFIX}_${__VAR}}" PARENT_SCOPE)
+		if(NOT "${${__IN_PREFIX}__SRC_${__VAR}}" STREQUAL "")
+			set(${__OUT_PREFIX}__SRC_${__VAR} "${${__IN_PREFIX}__SRC_${__VAR}}" PARENT_SCOPE)
+		endif()
+	endforeach()
+	set(${__OUT_PREFIX}__LIST "${${__IN_PREFIX}__LIST}" PARENT_SCOPE)
+endmacro()
+
+macro(_pass_parameters_higher __IN_PREFIX __OUT_PREFIX)
+	foreach(__VAR IN LISTS ${__IN_PREFIX}__LIST)
+		set(${__OUT_PREFIX}_${__VAR}__CONTAINER "${${__IN_PREFIX}_${__VAR}__CONTAINER}" PARENT_SCOPE)
+		set(${__OUT_PREFIX}_${__VAR}__TYPE "${${__IN_PREFIX}_${__VAR}__TYPE}" PARENT_SCOPE)
+	endforeach()
+	set(${__OUT_PREFIX}__LIST "${${__IN_PREFIX}__LIST}" PARENT_SCOPE)
+	set(${__OUT_PREFIX}__LIST_MODIFIERS "${${__IN_PREFIX}__LIST_MODIFIERS}" PARENT_SCOPE)
+	set(${__OUT_PREFIX}__LIST_FEATURES "${${__IN_PREFIX}__LIST_FEATURES}" PARENT_SCOPE)
+	set(${__OUT_PREFIX}__LIST_LINKPARS "${${__IN_PREFIX}__LIST_LINKPARS}" PARENT_SCOPE)
+endmacro()
+

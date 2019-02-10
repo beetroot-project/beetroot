@@ -4,16 +4,17 @@
 #If the TEMPLATE calls the function to import the parameters from elsewhere, they will be also included.
 #
 #Must be the macro, because it modifies the POSTPROCESSING list, which is local (not global). 
-macro(include_target_parameters_of __TEMPLATE_NAME)
+function(include_target_parameters_of __TEMPLATE_NAME)
 	_is_inside_targets_file(__IS_INSIDE_TARGETS_FILE)
 	if("${__IS_INSIDE_TARGETS_FILE}" STREQUAL 0)
 		message(FATAL_ERROR "Calling include_target_parameters_of(<TEMPLATE_NAME>) is supported only from within targets file (e.g. targets.cmake). ")
 	elseif("${__IS_INSIDE_TARGETS_FILE}" STREQUAL 1)
 		#The only condition when we do anything
+#		message(STATUS "include_target_parameters_of(): ARGN: ${ARGN}")
 		set(options )
 		set(oneValueArgs )
 		set(multiValueArgs ALL_EXCEPT INCLUDE_ONLY )
-		cmake_parse_arguments(__PARSED "${options}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+		cmake_parse_arguments(__PARSED "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 		set(unparsed ${__PARSED_UNPARSED_ARGUMENTS})
 		if(unparsed)
@@ -25,7 +26,7 @@ macro(include_target_parameters_of __TEMPLATE_NAME)
 	
 		set(__ARGS ${__TEMPLATE_NAME})
 		list(APPEND __ARGS ${ARGN})
-		message(STATUS "include_target_parameters_of(): __ARGS: ${__ARGS}")
+#		message(STATUS "include_target_parameters_of(): __ARGS: ${__ARGS}")
 
 		#Action is deferred by registering it in the list __POSTPROCESS.
 		#It is for speedup and to evade a potential user error of first including the foreign target parameters, and only then 
@@ -37,11 +38,11 @@ macro(include_target_parameters_of __TEMPLATE_NAME)
 		message(FATAL_ERROR "Internal beetroot error: unknown mode of reading targets file: ${__IS_INSIDE_TARGETS_FILE}")
 	endif()
 
-endmacro()
+endfunction()
 
 #This function modifies parent's __POSTPROCESS list. Care must be taken not to nest it too deeply, so
 #the list that is modified is the actual list we intend, not its local copy.
-function(_append_postprocessing_option __TARGETS_CMAKE_PATH __ACTION __ACTION_PARS)
+macro(_append_postprocessing_option __TARGETS_CMAKE_PATH __ACTION __ACTION_PARS)
 #	message(STATUS "_append_postprocessing_option(): _parse_postprocess(\"${__TARGETS_CMAKE_PATH}\", __PPPARS, ${__ACTION}, ${__ACTION_PARS})")
 	_parse_postprocess("${__TARGETS_CMAKE_PATH}" __PPPARS ${__ACTION} ${__ACTION_PARS})
 #	message(STATUS "_append_postprocessing_option(): __PPPARS__LIST: ${__PPPARS__LIST}")
@@ -52,7 +53,7 @@ function(_append_postprocessing_option __TARGETS_CMAKE_PATH __ACTION __ACTION_PA
 		set(__POSTPROCESS_${__HASH} ${__ACTION} ${__ACTION_PARS} PARENT_SCOPE)
 		set(__POSTPROCESS__LIST ${__POSTPROCESS__LIST} ${__HASH} PARENT_SCOPE)
 	endif()
-endfunction()
+endmacro()
 
 
 
@@ -142,7 +143,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 	_clear_inside_targets_file()
 	if(NOT __SKIP_RECURRENCE)
 		_process_all_postprocessing("${__TARGETS_CMAKE_PATH}")
-	
+		
 		_ascend_from_recurency("${__TARGETS_CMAKE_PATH}" PREPROCESS)
 	endif()
 
@@ -275,7 +276,7 @@ macro(_process_all_postprocessing __REF_TARGETS_CMAKE_PATH)
 	endforeach()
 endmacro()
 
-macro(_parse_postprocess __REF_TARGETS_CMAKE_PATH __OUT_PREFIX __ACTION)
+function(_parse_postprocess __REF_TARGETS_CMAKE_PATH __OUT_PREFIX __ACTION)
 	if("${__ACTION}" STREQUAL "INCLUDE_TEMPLATE_NAME")
 		set(__POSITIONAL TEMPLATE_NAME )
 		set(__OPTIONS )
@@ -286,13 +287,18 @@ macro(_parse_postprocess __REF_TARGETS_CMAKE_PATH __OUT_PREFIX __ACTION)
 	endif()
 #	message(STATUS "_parse_postprocess(): __ACTION: ${__ACTION} ARGN: ${ARGN}")
 #	message(STATUS "_parse_postprocess(): _parse_general_function_arguments(\"${__POSITIONAL}\" \"${__OPTIONS}\" \"${__oneValueArgs}\" \"${__multiValueArgs}\" ${__OUT_PREFIX} ${ARGN})")
-	_parse_general_function_arguments("${__POSITIONAL}" "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${__OUT_PREFIX} ${ARGN}) 
+	_parse_general_function_arguments("${__POSITIONAL}" "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" __PARSE ${ARGN} ) 
+#	message(STATUS "_parse_postprocess(): __OUT_PREFIX: ${__OUT_PREFIX} __PARSE__LIST: ${__PARSE__LIST} __PARSE_TEMPLATE_NAME: ${__PARSE_TEMPLATE_NAME}")
+
+	_pass_arguments_higher(__PARSE ${__OUT_PREFIX})
+	
 #	message(STATUS "_parse_postprocess(): __OUT_PREFIX: ${__OUT_PREFIX} ${__OUT_PREFIX}__LIST: ${${__OUT_PREFIX}__LIST}")
-endmacro()
+endfunction()
 
 function(_process_postprocess __REF_TARGETS_CMAKE_PATH __ACTION)
 #	message(STATUS "_process_postprocess(): To parse: ${__ACTION} ${ARGN}")
 	_parse_postprocess("${__REF_TARGETS_CMAKE_PATH}" __PPPARS ${__ACTION} ${ARGN})
+#	message(STATUS "_process_postprocess(): __PPPARS__LIST: ${__PPPARS__LIST} __PPPARS_TEMPLATE_NAME: ${__PPPARS_TEMPLATE_NAME}")
 #	message(STATUS "_process_postprocess(): __PPPARS_TEMPLATE_NAME: ${__PPPARS_TEMPLATE_NAME}")
 	
 	
@@ -304,7 +310,12 @@ function(_process_postprocess __REF_TARGETS_CMAKE_PATH __ACTION)
 #		message(STATUS "_process_postprocess(): descending into include ${__TARGETS_CMAKE_PATH} from ${__REF_TARGETS_CMAKE_PATH}")
 		
 		_include_target_parameters_from("${__REF_TARGETS_CMAKE_PATH}" "${__TARGETS_CMAKE_PATH}" "${__PPPARS_ALL_EXCEPT}" "${__PPPARS_INCLUDE_ONLY}" __PREFIX_TARGET_PARAMETERS)
+#		message(STATUS "_process_postprocess(): (parent) TARGET_PARAMETERS: ${TARGET_PARAMETERS}, (imported) __PREFIX_TARGET_PARAMETERS: ${__PREFIX_TARGET_PARAMETERS}")
+		set(TARGET_PARAMETERS "${TARGET_PARAMETERS}")
+		list(APPEND TARGET_PARAMETERS "${__PREFIX_TARGET_PARAMETERS}")
+		set(TARGET_PARAMETERS "${TARGET_PARAMETERS}" PARENT_SCOPE)
 		
+#		message(STATUS "_process_postprocess(): in total found the following parameters in ${__TARGETS_CMAKE_PATH}: __PREFIX_TARGET_PARAMETERS: ${__PREFIX_TARGET_PARAMETERS}")
 		if(__PREFIX_TARGET_PARAMETERS)
 			list(APPEND __TARGET_PARAMETERS "${__PREFIX_TARGET_PARAMETERS}")
 		endif()
@@ -318,31 +329,37 @@ function(_include_target_parameters_from __REF_TARGETS_CMAKE_PATH __TARGETS_CMAK
 #		set(__TARGET_PARAMETERS "${TARGET_PARAMETERS}")
 #	message(STATUS "_include_target_parameters_from(): __REF_TARGETS_CMAKE_PATH: ${__REF_TARGETS_CMAKE_PATH} __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __ALL_EXCEPT: ${__ALL_EXCEPT} __INCLUDE_ONLY: ${__INCLUDE_ONLY}")
 		_read_targets_file(${__TARGETS_CMAKE_PATH} 0 __PREFIX __IS_TARGET_FIXED)
+#	message(STATUS "_include_target_parameters_from(): __PREFIX_TARGET_PARAMETERS: ${__PREFIX_TARGET_PARAMETERS}")
 #		#Return the TARGET_PARAMETERS
 #		set(TARGET_PARAMETERS "${__TARGET_PARAMETERS}" PARENT_SCOPE)
-
-	_parse_parameters(__PREFIX_TARGET_PARAMETERS __DEFAULTS __INCL_PARS "${__TARGETS_CMAKE_PATH}" 0)
+	set(__ARGS__LIST)
+	set(__PARS__LIST)
+	_parse_parameters(__PREFIX_TARGET_PARAMETERS __ARGS __PARS "${__TARGETS_CMAKE_PATH}" 0)
+	if(__ARGS_DWARF)
+#		message(STATUS "_include_target_parameters_from(): __ARGS_DWARF: ${__ARGS_DWARF}")
+	endif()
 	if(__ALL_EXCEPT)
-		list_diff(__TMP __ALL_EXCEPT __PREFIX__LIST)
+		list_diff(__TMP __ALL_EXCEPT __ARGS__LIST)
 		if(__TMP)
 			nice_list_output(LIST ${__TMP} OUT_VAR __NICE_LIST)
 			message(FATAL_ERROR "Suspicious use of include_target_parameters_of() in ${__REF_TARGETS_CMAKE_PATH}: file ${__TARGETS_CMAKE_PATH} was included using ALL_EXCEPT clause, but the following exceptions were not present anyway: ${__NICE_LIST}.")
 		endif()
-		list_diff(__TO_APPEND __PREFIX__LIST __ALL_EXCEPT)
+		list_diff(__TO_APPEND __ARGS__LIST __ALL_EXCEPT)
 	elseif(__INCLUDE_ONLY)
-		list_diff(__TMP __INCLUDE_ONLY __PREFIX__LIST)
+		list_diff(__TMP __INCLUDE_ONLY __ARGS__LIST)
 		if(NOT __TMP)
 			nice_list_output(LIST ${__TMP} OUT_VAR __NICE_LIST)
 			message(FATAL_ERROR "Error when calling include_target_parameters_of() in ${__REF_TARGETS_CMAKE_PATH}: file ${__TARGETS_CMAKE_PATH} was included using INCLUDE_ONLY clause with the variables ${__NICE_LIST} that are missing in the included file.")
 		endif()
 		set(__TO_APPEND ${__INCLUDE_ONLY})
 	else()
-		set(__TO_APPEND ${__PREFIX__LIST})
+		set(__TO_APPEND ${__ARGS__LIST})
 	endif()
 #	message(STATUS "_include_target_parameters_from(): Going to include __TO_APPEND: ${__TO_APPEND} variables to ${__REF_TARGETS_CMAKE_PATH}")
 	set(__OUT)
 	foreach(__VAR IN LISTS __TO_APPEND)
-		list(APPEND __OUT ${__VAR} "${__PREFIX_${__VAR}__CONTAINER}" "${__PREFIX_${__VAR}__TYPE}" "${__DEFAULTS_${__VAR}}" )
+		list(APPEND __OUT ${__VAR} "${__PARS_${__VAR}__CONTAINER}" "${__PARS_${__VAR}__TYPE}" "${__ARGS_${__VAR}}" )
 	endforeach()
-	set(${__OUT_TARGET_PARAMETERS} __OUT PARENT_SCOPE)
+#	message(STATUS "_include_target_parameters_from(): After appending from ${__TARGETS_CMAKE_PATH} to ${__REF_TARGETS_CMAKE_PATH} := ${__OUT}")
+	set(${__OUT_TARGET_PARAMETERS} "${__OUT}" PARENT_SCOPE)
 endfunction()
