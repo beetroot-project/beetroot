@@ -124,7 +124,7 @@ macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH
 #	set(__DEFINITIONS ${__DEFINITIONS})
 	list(LENGTH ${__DEFINITIONS} __TMP)
 	
-#	message(STATUS "_parse_parameters(), __TMP: ${__TMP}, __DEFINITIONS=${${__DEFINITIONS}} ${__OUT_ARGS}__LIST: ${${__OUT_ARGS}__LIST}")
+#	message(STATUS "_parse_parameters(), __DEFINITIONS=${${__DEFINITIONS}} ${__OUT_ARGS}__LIST: ${${__OUT_ARGS}__LIST}")
 	math(EXPR __PARS_LENGTH "${__TMP} / 4 - 1")
 	math(EXPR __PARS_CHECK "${__TMP} % 4")
 	if(NOT "${__PARS_CHECK}" STREQUAL "0")
@@ -167,15 +167,17 @@ macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH
 #				message(STATUS "_parse_parameters(): ${__OUT_ARGS}_${__VAR_NAME}__CONTAINER: ${__TMP_CONTAINER} ${__OUT_ARGS}_${__VAR_NAME}__TYPE: ${__TMP_TYPE} ${__OUT_ARGS}_${__VAR_NAME}: ${__TMP_DEFAULT}")
 			endif()
 			if("${__VAR_NAME}" IN_LIST ${__OUT_ARGS}__LIST)
-				if(NOT "${${__OUT_ARGS}_${__VAR_NAME}__CONTAINER}" STREQUAL "${__TMP_CONTAINER}" OR
-					NOT "${${__OUT_ARGS}_${__VAR_NAME}__TYPE}" STREQUAL "${__TMP_TYPE}" OR
+#				message(STATUS "_parse_parameters(): ${__OUT_PARS}_${__VAR_NAME}__CONTAINER: ${__TMP_CONTAINER} ${__OUT_PARS}_${__VAR_NAME}__TYPE: ${__TMP_TYPE} ${__OUT_ARGS}_${__VAR_NAME}: ${__TMP_DEFAULT}")
+				if(NOT "${${__OUT_PARS}_${__VAR_NAME}__CONTAINER}" STREQUAL "${__TMP_CONTAINER}" OR
+					NOT "${${__OUT_PARS}_${__VAR_NAME}__TYPE}" STREQUAL "${__TMP_TYPE}" OR
 					NOT "${${__OUT_ARGS}_${__VAR_NAME}}" STREQUAL "${__TMP_DEFAULT}")
-					message(FATAL_ERROR "Multiple definitions of the same variable/modifier (here: \"${__VAR_NAME}\") are not the same. One definition is a ${${__OUT_ARGS}_${__VAR_NAME}__CONTAINER} of type ${${__OUT_ARGS}_${__VAR_NAME}__TYPE} = \"${${__OUT_ARGS}_${__VAR_NAME}}\" and the other is a ${__TMP_CONTAINER} of type ${__TMP_TYPE} = \"${__TMP_DEFAULT}\". Modifiers and variables share the same namespace. Error encountered in ${__TARGETS_CMAKE_PATH}.")
+					message(FATAL_ERROR "Multiple definitions of the same variable/modifier (here: \"${__VAR_NAME}\") are not the same. One definition is a ${${__OUT_PARS}_${__VAR_NAME}__CONTAINER} of type ${${__OUT_PARS}_${__VAR_NAME}__TYPE} = \"${${__OUT_ARGS}_${__VAR_NAME}}\" and the other is a ${__TMP_CONTAINER} of type ${__TMP_TYPE} = \"${__TMP_DEFAULT}\". Modifiers and variables share the same namespace. Error encountered in ${__TARGETS_CMAKE_PATH}.")
 				else()
 					set(__SKIP 1)
 				endif()
 			endif()
 			if(NOT __SKIP)
+#				message(STATUS "_parse_parameters(): exporting ${__OUT_PARS}_${__VAR_NAME}__CONTAINER: ${__TMP_CONTAINER} ${__OUT_PARS}_${__VAR_NAME}__TYPE: ${__TMP_TYPE} ${__OUT_ARGS}_${__VAR_NAME}: ${__TMP_DEFAULT}")
 				set(${__OUT_PARS}_${__VAR_NAME}__CONTAINER ${__TMP_CONTAINER})
 				set(${__OUT_PARS}_${__VAR_NAME}__TYPE ${__TMP_TYPE})
 				set(${__OUT_ARGS}_${__VAR_NAME} "${__TMP_DEFAULT}")

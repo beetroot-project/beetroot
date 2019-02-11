@@ -33,6 +33,7 @@ function(_make_path_hash __TARGETS_CMAKE_PATH __OUT_HASH)
 		meesage(FATAL_ERROR "path hash cannot come up empty")
 	endif()
 	set(${__OUT_HASH} ${__TMP} PARENT_SCOPE)
+#	message(WARNING "_make_path_hash(): ${__TMP} <- ${__TARGETS_CMAKE_PATH}")
 endfunction()
 
 function(_make_featurebase_hash_2 __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES __TEMPLATE_NAME __PATH __SINGLETON_TARGETS __OUT_HASH __OUT_HASH_SOURCE)
