@@ -19,14 +19,14 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED __OUT_
 	_make_instance_id(${__TEMPLATE_NAME} __ARGS "" __NEW_INSTANCE_ID __HASH_SOURCE)
 #	message(STATUS "_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
 	if("${__NEW_INSTANCE_ID}" STREQUAL "${__INSTANCE_ID}")
-		message(FATAL_ERROR "Internal beetroot error: Hashes did not change (but should have)")
+#		message(FATAL_ERROR "Internal beetroot error: Hashes did not change (but should have)")
 		#Nothing to do
 		return()
 	endif()
 	
 	
 	
-	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}")
+	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}" "")
 	
 	_change_instance_id(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__NEW_INSTANCE_ID})
@@ -35,7 +35,7 @@ endfunction()
 
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
-function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE)
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE __ALL_TEMPLATE_NAMES)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
@@ -81,14 +81,15 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	_store_instance_data(
 		 ${__INSTANCE_ID}
 		"${__PARENT_INSTANCE_ID}"
-		${__ARGS} 
-		${__PARS}
+		 ${__ARGS} 
+		 ${__PARS}
 		 ${__TEMPLATE_NAME} 
 		 ${__TARGETS_CMAKE_PATH} 
 		 ${__IS_TARGET_FIXED}
-		${__EXTERNAL_PROJECT_INFO_LIST}
+		 ${__EXTERNAL_PROJECT_INFO_LIST}
 		 ${__TARGET_REQUIRED}
 		"${__TEMPLATE_OPTIONS}"
+		"${__ALL_TEMPLATE_NAMES}"
 		 )
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_HASH_SOURCE "${__HASH_SOURCE}")
 	if(NOT __FEATUREBASE_ID)

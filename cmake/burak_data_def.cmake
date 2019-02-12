@@ -61,6 +61,7 @@
 #                                            and no attempt will be made to build it.
 # __FILEDB_<PATH_HASH>_NICE_NAME           - Nicely formatted name of the template. 
 # __FILEDB_<PATH_HASH>_EXPORTED_VARS       - List of variables that will be embedded to the dependee of this template
+# __FILEDB_<PATH_HASH>_JOINED_NAME         - If present it sets the name of all the targets defined by the file.
 # __FILEDB_<PATH_HASH>_INSTALL_DIR         - Installation directory. Makes sense only for external projects.
 # __FILEDB_<PATH_HASH>_SOURCE_DIR          - Source directory. Does not makes sense if external project and ASSUME_INSTALLED
 # __FILEDB_<PATH_HASH>_JOINT_TARGETS       - If true, it means you can't build one target without building the other. 
@@ -117,6 +118,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_ASSUME_INSTALLED       FILEDB )
 	set(${__COLS}_NICE_NAME              FILEDB )
 	set(${__COLS}_EXPORTED_VARS          FILEDB )
+	set(${__COLS}_JOINED_NAME            FILEDB )
 	set(${__COLS}_INSTALL_DIR            FILEDB )
 	set(${__COLS}_SOURCE_DIR             FILEDB )
 	set(${__COLS}_JOINT_TARGETS          FILEDB )
