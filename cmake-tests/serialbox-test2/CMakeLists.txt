@@ -27,7 +27,7 @@ include(burak)
 
 project(serialbox-c-test)
 
-build_target(SERIALBOX_C_TEST2 USE_FORTRAN 1)
+build_target(SERIALBOX_C_TEST2 USE_FORTRAN 0 SERIALBOX_EXAMPLES 0 )
 build_target(Serialbox)
 
 finalize()

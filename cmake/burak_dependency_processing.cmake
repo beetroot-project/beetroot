@@ -1,22 +1,22 @@
 #This function assumes the dependencies have already been discovered once
-function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED __OUT_NEW_INSTANCE_ID)
+function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF __OUT_NEW_INSTANCE_ID)
 	_retrieve_instance_args(${__INSTANCE_ID} LINKPARS __ARGS)
 	set(__PARS__LIST_LINKPARS ${__ARGS__LIST})
 	_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
 	set(__PARS__LIST_MODIFIERS ${__ARGS__LIST})
-	_unserialize_variables("${__NEW_FEATURES_SERIALIZED}" __ARGS)
+	_unserialize_variables(${__NEW_FEATURES_SERIALIZED__REF} __ARGS)
 	set(__PARS__LIST_FEATURES ${__ARGS__LIST})
 	set(__ARGS__LIST ${__PARS__LIST_LINKPARS} ${__PARS__LIST_MODIFIERS} ${__PARS__LIST_FEATURES})
 	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
 	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __PARENT_INSTANCE_IDS)
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
 	_retrieve_instance_data(${__INSTANCE_ID} TARGET_FIXED __IS_TARGET_FIXED)
-	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO)
-	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS)
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS__LIST)
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
 	
-
 	_make_instance_id(${__TEMPLATE_NAME} __ARGS "" __NEW_INSTANCE_ID __HASH_SOURCE)
+	message(STATUS "_rediscover_dependencies(): (old)__INSTANCE_ID: ${__INSTANCE_ID} __TEMPLATE_NAME: ${__TEMPLATE_NAME} __NEW_INSTANCE_ID: ${__NEW_INSTANCE_ID} __HASH_SOURCE: ${__HASH_SOURCE}")
 #	message(STATUS "_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
 	if("${__NEW_INSTANCE_ID}" STREQUAL "${__INSTANCE_ID}")
 #		message(FATAL_ERROR "Internal beetroot error: Hashes did not change (but should have)")
@@ -26,16 +26,16 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED __OUT_
 	
 	
 	
-	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}" "")
-	
-	_change_instance_id(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
+	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __TEMPLATE_OPTIONS "")
+
+	_move_instance(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__NEW_INSTANCE_ID})
 	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
 endfunction()
 
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
-function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO_LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS __HASH_SOURCE __ALL_TEMPLATE_NAMES)
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO__REF __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
@@ -55,6 +55,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	_put_dependencies_into_stack("${__INSTANCE_ID}")
 	if(NOT __FEATUREBASE_ID)
 		set(__LIST ${${__PARS}__LIST_MODIFIERS})
+		set(__LIST ${${__PARS}__LIST_FEATURES})
 		list(APPEND __LIST ${__${__PARS}__LIST_LINKPARS} )
 
 		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
@@ -66,7 +67,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
 #		message(STATUS "_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
-	
+
 	endif()
 	_ascend_from_recurency(${__INSTANCE_ID} DEPENDENCIES)
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
@@ -78,20 +79,21 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 #	message(STATUS "_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
 #	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_MODIFIERS: ${${__PARS}__LIST_MODIFIERS}")
-	_store_instance_data(
-		 ${__INSTANCE_ID}
-		"${__PARENT_INSTANCE_ID}"
+	_store_nonvirtual_instance_data(
+		 ${__INSTANCE_ID} 
 		 ${__ARGS} 
-		 ${__PARS}
+		 ${__PARS} 
 		 ${__TEMPLATE_NAME} 
-		 ${__TARGETS_CMAKE_PATH} 
-		 ${__IS_TARGET_FIXED}
-		 ${__EXTERNAL_PROJECT_INFO_LIST}
-		 ${__TARGET_REQUIRED}
-		"${__TEMPLATE_OPTIONS}"
-		"${__ALL_TEMPLATE_NAMES}"
-		 )
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_HASH_SOURCE "${__HASH_SOURCE}")
+		"${__TARGETS_CMAKE_PATH}" 
+		 ${__IS_TARGET_FIXED}  
+		 ${__EXTERNAL_PROJECT_INFO__REF} 
+		 ${__TARGET_REQUIRED} 
+		 ${__TEMPLATE_OPTIONS__REF} 
+		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
+	
+	foreach(__DEP_ID IN LISTS __DEP_INSTANCE_IDS)
+		_link_instances_together("${__INSTANCE_ID}" ${__DEP_ID})
+	endforeach()
 	if(NOT __FEATUREBASE_ID)
 		_store_instance_dependencies(${__INSTANCE_ID} "${__DEP_INSTANCE_IDS}")
 	endif()
@@ -118,7 +120,6 @@ function(_instantiate_target __INSTANCE_ID)
 	endif()
 
 	_make_instance_name(${__INSTANCE_ID} __TARGET_NAME)
-#	message(STATUS "_instantiate_target(): Named ${__INSTANCE_ID}: ${__TARGET_NAME}")
 	set(__DEP_TARGETS)
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 
@@ -129,14 +130,14 @@ function(_instantiate_target __INSTANCE_ID)
 			_instantiate_target(${__DEP_ID})
 			_make_instance_name(${__DEP_ID} __DEP_TARGET_NAME)
 			if(NOT __NOT_SUPERBUILD) #On superbuild the only targets we care about are external projects that are not assumed installed
-				_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO)
+				_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO__LIST)
 				_retrieve_instance_data(${__INSTANCE_ID} ASSUME_INSTALLED __ASSUME_INSTALLED)
 				
 			else()
-				set(__EXTERNAL_INFO "JUST_TO_FOOL_THE_NEXT_COMMAND_IN_THIS_LOOP") #We pretend that any target is external in the project build, to save few more commands in this loop.
+				set(__EXTERNAL_INFO__LIST "JUST_TO_FOOL_THE_NEXT_COMMAND_IN_THIS_LOOP") #We pretend that any target is external in the project build, to save few more commands in this loop.
 			endif()
 			if(__DEP_TARGET_NAME)
-				if(__EXTERNAL_INFO AND NOT __ASSUME_INSTALLED)
+				if(__EXTERNAL_INFO__LIST AND NOT __ASSUME_INSTALLED)
 					list(APPEND __DEP_TARGETS ${__DEP_TARGET_NAME})
 				endif()
 			endif()
@@ -148,8 +149,9 @@ function(_instantiate_target __INSTANCE_ID)
 		string(REPLACE "::" "_" __TARGET_NAME ${__TARGET_NAME})
 	endif()
 	
-	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO)
-	if(__EXTERNAL_PROJECT_INFO)
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
+#	message(STATUS "_instantiate_target(): __EXTERNAL_PROJECT_INFO__LIST: ${__EXTERNAL_PROJECT_INFO__LIST}")
+	if(__EXTERNAL_PROJECT_INFO__LIST)
 		#Handling external project
 		_get_target_external(${__INSTANCE_ID} "${__DEP_TARGETS}")
 	else()

@@ -14,6 +14,7 @@ set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY 1) #We disable use of CMake package r
 
 include(${__PREFIX}/burak_variables_misc.cmake)
 include(${__PREFIX}/burak_data_def.cmake)
+include(${__PREFIX}/burak_storage.cmake)
 include(${__PREFIX}/burak_get_target.cmake)
 include(${__PREFIX}/burak_finalize.cmake)
 include(${__PREFIX}/burak_reading_targets.cmake)
@@ -29,6 +30,10 @@ include(${__PREFIX}/prepare_arguments_to_pass.cmake)
 include(${__PREFIX}/missing_dependency.cmake)
 include(${__PREFIX}/burak_messages.cmake)
 
+if(NOT SUPERBUILD_ROOT)
+	message(FATAL_ERROR "First set the SUPERBUILD_ROOT, then include the beetroot!")
+endif()
+get_filename_component(SUPERBUILD_ROOT "${SUPERBUILD_ROOT}" REALPATH)
 
 _set_behavior_outside_defining_targets()
 if(NOT __NOT_SUPERBUILD)
@@ -166,7 +171,7 @@ function(_parse_general_function_arguments __POSITIONAL __OPTIONS __oneValueArgs
 endfunction()
 
 
-function(_parse_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES __OUT_NICE_NAME __OUT_EXPORTED_VARIABLES __OUT_LINK_TO_DEPENDEE)
+function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES __OUT_NICE_NAME __OUT_EXPORTED_VARIABLES __OUT_LINK_TO_DEPENDEE)
 	set(__OPTIONS SINGLETON_TARGETS NO_TARGETS LINK_TO_DEPENDEE)
 	set(__oneValueArgs NICE_NAME)
 	set(__multiValueArgs LANGUAGES EXPORTED_VARIABLES)
@@ -174,13 +179,12 @@ function(_parse_file_options __INSTANCE_ID __TARGETS_CMAKE_PATH __IS_TARGET_FIXE
 	set(__PARSED_LANGUAGES)
 	set(__PARSED_SINGLETON_TARGETS)
 	set(__PARSED_NO_TARGETS)
-	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${__TEMPLATE_OPTIONS})
+	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${${__TEMPLATE_OPTIONS__REF}__LIST})
 	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
 	if(__unparsed)
 		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH}: ${__unparsed}")
 	endif()
 	
-#	message(STATUS "_parse_file_options(): __TEMPLATE_OPTIONS: ${__TEMPLATE_OPTIONS}")
 	if(__PARSED_LANGUAGES)
 #		message(STATUS "_parse_file_options(): __PARSED_LANGUAGES: ${__PARSED_LANGUAGES}")
 		set(__CMAKE_LANGUAGES CXX C CUDA Fortran ASM)

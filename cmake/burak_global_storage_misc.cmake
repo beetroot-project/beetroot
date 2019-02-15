@@ -115,7 +115,7 @@ endmacro()
 
 #__STACK can be one of "DEPENDENCIES" or "PREPROCESS"
 function(_can_descend_recursively __ID __STACK __OUT)
-	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS")
+	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS" "DEBUG_PRINT_INSTANCE" "DEBUG_PRINT_FEATUREBASE")
 	if(NOT ${__STACK} IN_LIST __VALID_OPTS)
 		message(FATAL_ERROR "Internal beetroot error: unknown recursive stack: ${__STACK}")
 	endif()
@@ -133,7 +133,7 @@ function(_can_descend_recursively __ID __STACK __OUT)
 endfunction()
 
 function(_ascend_from_recurency __ID __STACK)
-	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS")
+	set(__VALID_OPTS "DEPENDENCIES" "PREPROCESS" "DEBUG_PRINT_INSTANCE" "DEBUG_PRINT_FEATUREBASE")
 	if(NOT ${__STACK} IN_LIST __VALID_OPTS)
 		message(FATAL_ERROR "Internal beetroot error: unknown recursive stack: ${__STACK}")
 	endif()

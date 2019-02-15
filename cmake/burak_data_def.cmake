@@ -1,6 +1,6 @@
 #     Global variables:
 #
-# Instance is a result of a single call to get_target() function. When finalaze() is called, each instance will be mapped to a single featureset and built. 
+# Instance is a result of a single call to get_target() function. When finalaze() is called, each instance will be mapped to a single featureset and built. Instance ID is hash made from all arguments (features, modifiers and link parameters) + base name of the target.
 # Additionally, instance is a container for all its link parameters, and a container for the requested features.
 #
 # __INSTANCEDB_<INSTANCE_ID>_I_FEATURES       - Serialized list of feature names with their values that are passed to that instance. 
@@ -32,18 +32,13 @@
 #                                                        fully compatible with that of FEATUREBASE. 
 #                                                        At the beginning the list is empty.
 # __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the dependencies id of the featureset.
-# __FEATUREBASEDB_<FEATURESET_ID>_FEATURES             - Serialized list of features that are incorporated in this featureset.
+# __FEATUREBASEDB_<FEATURESET_ID>_F_FEATURES           - Serialized list of features that are incorporated in this featureset.
 # __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS            - Serialized values of all the modifiers' values
-# __FEATUREBASEDB_<FEATURESET_ID>_F_TEMPLATE_NAME      - Name of the template. Can be more than one for joint targets 
-#                                                        (external targets coming from the same template).
 # __FEATUREBASEDB_<FEATURESET_ID>_F_PATH               - Path to the file that describes the template.
 #                                                        For singleton targets this path is used to build FEATURESET_ID.
 # __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT         - Boolean indicating that this particular FEATUREBASE has been defined in CMake, 
 #                                                        and perhaps (if no NO_TARGETS) targets already exist. Empty for featurebase promises.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_HASH_SOURCE        - String used to get an FEATURESET_ID (by hashing)
-# __FEATUREBASEDB_<FEATURESET_ID>_COMPATIBLE_INSTANCES - List of all instances that are guaranteed to have the same features as this featureset.
-#                                                        At the beginning this list is empty, and it grows during the phase of
-#                                                        resolving features (finalizer)
 
 #
 # __FILEDB_<PATH_HASH>_PATH                - Path to the file that defines this template
@@ -52,6 +47,7 @@
 # __FILEDB_<PATH_HASH>_NO_TARGETS          - Boolean. TRUE means that this file does not produce targets: user must define apply_to_target() and must not define generate_targets().
 # __FILEDB_<PATH_HASH>_G_INSTANCES         - List of all instance ids that are built using this file. 
 # __FILEDB_<PATH_HASH>_G_FEATUREBASES      - List of all featurebases that are built using this file. If SINGLETON_TARGETS it will be exactly one FEATUREBASE.
+# __FILEDB_<PATH_HASH>_G_TEMPLATES         - List of all template names defined in this file.
 # __FILEDB_<PATH_HASH>_PARS                - Serialized list of all parameters' definitions. 
 # __FILEDB_<PATH_HASH>_DEFAULTS            - Serialized list of all parameters' actual default values.
 # __FILEDB_<PATH_HASH>_EXTERNAL_INFO       - Serialized external project info
@@ -97,11 +93,12 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_DEP_INSTANCES          FEATUREBASEDB )
 	set(${__COLS}_F_FEATURES             FEATUREBASEDB )
 	set(${__COLS}_MODIFIERS              FEATUREBASEDB )
-	set(${__COLS}_F_TEMPLATE_NAME        FEATUREBASEDB )
+#	set(${__COLS}_F_TEMPLATE_NAME        FEATUREBASEDB )
+# __FEATUREBASEDB_<FEATURESET_ID>_F_TEMPLATE_NAME      - Name of the template. Can be more than one for joint targets 
+#                                                        (external targets coming from the same template).
 	set(${__COLS}_F_PATH                 FEATUREBASEDB )
 	set(${__COLS}_TARGET_BUILT           FEATUREBASEDB )
 	set(${__COLS}_F_HASH_SOURCE          FEATUREBASEDB )
-	set(${__COLS}_COMPATIBLE_INSTANCES   FEATUREBASEDB )
 	
 	
 	set(${__COLS}_PATH                   FILEDB )
@@ -110,6 +107,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_NO_TARGETS             FILEDB )
 	set(${__COLS}_G_INSTANCES            FILEDB )
 	set(${__COLS}_G_FEATUREBASES         FILEDB )
+	set(${__COLS}_G_TEMPLATES            FILEDB )
 	set(${__COLS}_PARS                   FILEDB )
 	set(${__COLS}_DEFAULTS               FILEDB )
 	set(${__COLS}_EXTERNAL_INFO          FILEDB )

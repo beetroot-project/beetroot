@@ -12,9 +12,11 @@ function(get_existing_target __TEMPLATE_NAME)
 	if(NOT __TEMPLATE_NAME)
 		message(FATAL_ERROR "get_error was called without any arguments")
 	endif()
+	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
+
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS ${__ARGS})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${__ARGS})
 	
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID __HASH_SOURCE) 
 #	message(STATUS "get_existing_target: __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
@@ -28,6 +30,13 @@ function(get_existing_target __TEMPLATE_NAME)
 			message(FATAL_ERROR "Cyclic dependency graph encountered (in the calling order): ${__OUTVAR}")
 		endif()
 
+		if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
+			set(__TARGET_REQUIRED 1)
+		else()
+			set(__TARGET_REQUIRED 0)
+		endif()
+
+
 #		_descend_dependencies_stack()
 #		_ascend_dependencies_stack()
 		
@@ -35,16 +44,31 @@ function(get_existing_target __TEMPLATE_NAME)
 #		message(STATUS "get_existing_target(): __PARENT_INSTANCE_ID: ${__PARENT_INSTANCE_ID}")
 		
 #		message(STATUS "get_existing_target(): _store_instance_link_data(${__INSTANCE_ID} \"${__PARENT_INSTANCE_ID}\" __VARIABLE_DIC __PARAMETERS_DIC ${__TEMPLATE_NAME} ${__TARGETS_CMAKE_PATH} ${__IS_TARGET_FIXED})")
-		_store_instance_link_data(
-			 ${__INSTANCE_ID}
-			"${__PARENT_INSTANCE_ID}"
+		_store_virtual_instance_data(
+			${__INSTANCE_ID} 
 			__VARIABLE_DIC 
-			__PARAMETERS_DIC
-			 ${__TEMPLATE_NAME} 
-			 ${__TARGETS_CMAKE_PATH} 
-			 ${__IS_TARGET_FIXED}
-			 )
-		_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_HASH_SOURCE "${__HASH_SOURCE}")
+			__PARAMETERS_DIC 
+			${__TEMPLATE_NAME} 
+			"${__TARGETS_CMAKE_PATH}" 
+			${__IS_TARGET_FIXED}
+			__EXTERNAL_PROJECT_INFO
+			${__TARGET_REQUIRED}  
+			__TEMPLATE_OPTIONS 
+			"${__TEMPLATES}" 
+			__FILE_HASH
+		)
+
+#		_store_instance_link_data(
+#			 ${__INSTANCE_ID}
+#			"${__PARENT_INSTANCE_ID}"
+#			__VARIABLE_DIC 
+#			__PARAMETERS_DIC
+#			 ${__TEMPLATE_NAME} 
+#			 ${__TARGETS_CMAKE_PATH} 
+#			 ${__IS_TARGET_FIXED}
+#			"${__TEMPLATES}"
+#			 )
+
 		_ascend_from_recurency(${__INSTANCE_ID} DEPENDENCIES)
 #		message(STATUS "get_existing_target(): __INSTANCE_ID: ${__INSTANCE_ID}")
 #		_debug_show_instance(${__INSTANCE_ID} 2 "" __MESSAGE __ERROR)
@@ -76,6 +100,7 @@ function(get_existing_target __TEMPLATE_NAME)
 endfunction()
 
 function(build_target __TEMPLATE_NAME)
+#	message(STATUS "build_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ${ARGN}")
 	get_target(${__TEMPLATE_NAME} __TMP_INSTANCE_NAME ${ARGN})
 endfunction()
 
@@ -90,9 +115,11 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	if(NOT __TEMPLATE_NAME)
 		message(FATAL_ERROR "get_error was called without any arguments")
 	endif()
+	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
+
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
-#	message(STATUS "get_target(): ARGN: ${ARGN}")
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO __IS_TARGET_FIXED __TEMPLATE_OPTIONS ${__ARGS})
+#	message(STATUS "get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
 #	if(__VARIABLE_DIC_LIB_MYVAR)
 #		message(FATAL_ERROR "__VARIABLE_DIC_LIB_MYVAR: ${__VARIABLE_DIC_LIB_MYVAR}")
 #	endif()
@@ -106,7 +133,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
 #		message(STATUS "get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
-		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" "${__HASH_SOURCE}" "${__TEMPLATES}")
+		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __TEMPLATE_OPTIONS "${__TEMPLATES}")
 #		_debug_show_instance(${__INSTANCE_ID} 2 "" __MESSAGE __ERROR)
 #		message("${__MESSAGE}")
 #		if(__ERROR)
@@ -136,6 +163,11 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	if(__OUT_INSTANCE_NAME)
 		set(${__OUT_INSTANCE_NAME} "${__INSTANCE_NAME}" PARENT_SCOPE)
 	endif()
+	
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
+#		message(STATUS "_get_target() Linking ${__INSTANCE_ID} to global")
+		_link_instances_together("" "${__INSTANCE_ID}")
+	endif()
 endfunction()
 
 #Calls targets.cmake:generate_targets() to create the declared target during the project phase run of the CMake. 
@@ -161,6 +193,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		message(FATAL_ERROR "Internal error: Empty __TARGETS_CMAKE_PATH")
 	endif()
 	
+#	message(STATUS "_get_target_internal(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_ID_LIST: ${__DEP_ID_LIST}")
 	_insert_names_from_dependencies("${__DEP_ID_LIST}" __ARGS)
 	
 #	message(STATUS "_get_target_internal()1 Serialbox_SerialboxCStatic_INSTALL_DIR: ${Serialbox_SerialboxCStatic_INSTALL_DIR}")
@@ -182,6 +215,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	generate_targets(${__TEMPLATE_NAME})
 	
 	_retrieve_instance_data(${__INSTANCE_ID} NO_TARGETS __NO_TARGETS )
+#	message(STATUS "_get_target_internal(): __INSTANCE_ID: ${__INSTANCE_ID} __NO_TARGETS: ${__NO_TARGETS}")
 	_retrieve_instance_data(${__INSTANCE_ID} TARGETS_REQUIRED __TARGETS_REQUIRED )
 	if(__NO_OP)
 		_get_target_behavior(__TARGET_BEHAVIOR)
@@ -193,19 +227,24 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		endif()
 		set(${__OUT_FUNCTION_EXISTS} 0 PARENT_SCOPE)
 	else()
-		if(__NO_TARGETS)
-			message(FATAL_ERRLR "File ${CMAKE_CURRENT_SOURCE_DIR}/targets.cmake defined generate_targets() function while also declared NO_TARGETS option.")
-		endif()
-		if(__TARGETS_REQUIRED AND NOT TARGET "${${__TEMPLATE_NAME}_TARGET_NAME}")
-			message(FATAL_ERROR "Called ${__TEMPLATE_DIR}/targets.cmake:generate_targets(${__TEMPLATE_NAME}) which did not produce the target with name TARGET_NAME = \"${TARGET_NAME}\"" )
+#		if(__NO_TARGETS)
+#			message(FATAL_ERROR "File ${CMAKE_CURRENT_SOURCE_DIR}/targets.cmake defined generate_targets() function while also declared NO_TARGETS option.")
+#		endif()
+		if(NOT __NO_TARGETS AND __TARGETS_REQUIRED AND NOT TARGET "${${__TEMPLATE_NAME}_TARGET_NAME}")
+			_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH )
+			if(TEST "${${__TEMPLATE_NAME}_TARGET_NAME}")
+				message(FATAL_ERROR "Function generate_targets() defined in ${__TARGETS_CMAKE_PATH} defined a TEST not a TARGET. TEST is not a target - please add an option NO_TARGETS to that file (i.e. add it to the TEMPLATE_OPTIONS variable like that: `set(TEMPLATE_OPTIONS NO_TARGETS)`") 
+			endif()
+			message(FATAL_ERROR "Called ${__TARGETS_CMAKE_PATH}:generate_targets(${__TEMPLATE_NAME}) which did not produce the target with name TARGET_NAME = \"${TARGET_NAME}\"" )
 		endif()
 		set(${__OUT_FUNCTION_EXISTS} 1 PARENT_SCOPE)
 	endif()
 endfunction()
 
-
+#Inserts variables from dependencies that export them.
 macro(_insert_names_from_dependencies __DEP_ID_LIST __EXISTING_ARGS)
 	#We need to populate all dependencies, so their names can be used in the targets.cmake
+#	message(STATUS "_insert_names_from_dependencies(): ENTER with __DEP_ID_LIST: ${__DEP_ID_LIST} and __EXISTING_ARGS: ${__EXISTING_ARGS}: ${${__EXISTING_ARGS}__LIST}")
 	set(__DEP_EXPVAR_LIST)
 	if(__DEP_ID_LIST)
 		foreach(__DEP_ID IN LISTS __DEP_ID_LIST)
@@ -276,225 +315,4 @@ macro(_insert_names_from_dependencies __DEP_ID_LIST __EXISTING_ARGS)
 		endforeach()
 	endif()
 endmacro()
-
-
-function(_store_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO_LIST __TARGET_REQUIRED __TEMPLATE_OPTIONS __ALL_TEMPLATE_NAMES)
-	_parse_file_options(${__INSTANCE_ID} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} "${__TEMPLATE_OPTIONS}" __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS __LINK_TO_DEPENDEE)
-	if(__EXPORTED_VARS)
-		foreach(__EVAR IN LISTS __EXPORTED_VARS)
-			if(NOT "${__EVAR}" IN_LIST ${__PARS}__LIST)
-				message(FATAL_ERROR "Cannot export a variable ${__EVAR} that is not defined as a parameter/feature (${__EXPORTED_VARS})")
-			endif()
-		endforeach()
-	endif()
-	if(${__EXTERNAL_PROJECT_INFO_LIST})
-		set(__JOINT_TARGETS 1)
-	else()
-		set(__JOINT_TARGETS 0)
-	endif()
-#	message(STATUS "_store_instance_data(): __LANGUAGES: ${__LANGUAGES}")
-	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
-	_serialize_variables(${__ARGS} "${${__PARS}__LIST_MODIFIERS}" __SERIALIZED_MODIFIERS)
-	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
-#	message(STATUS "_store_instance_data(): __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
-#	message(STATUS "_store_instance_data(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
-#	message(STATUS "_store_instance_data(): __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
-	_serialize_parameters(${__PARS} __SERIALIZED_PARAMETERS)
-	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
-#	message(STATUS "_store_instance_data(): __INSTANCE_ID ${__INSTANCE_ID} got __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
-	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
-
-#	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
-#	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
-#	message(STATUS "_store_instance_data(): __EXTERNAL_PROJECT_INFO_LIST: ${__EXTERNAL_PROJECT_INFO_LIST}: ${${__EXTERNAL_PROJECT_INFO_LIST}}")
- #	endif()
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_FEATURES            "${__SERIALIZED_FEATURES}")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
-	if(__PARENT_INSTANCE_ID)
-		_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_PARENTS              ${__PARENT_INSTANCE_ID})
-	endif()
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE            "0")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} FEATUREBASE            ${__FEATUREBASE_ID})
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __TMP)
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_TEMPLATE_NAME        ${__TEMPLATE_NAME})
-	if(__IS_TARGET_FIXED)
-#		message(STATUS "_store_instance_data(): Storing fixed target name for ${__INSTANCE_ID}: ${__TEMPLATE_NAME}")
-		_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TARGET_NAME  ${__TEMPLATE_NAME})
-	endif()
-	
-#	message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __PATH_HASH: ${__PATH_HASH}")
-	unset(__FOUND_TMP)
-	_retrieve_instance_data(${__INSTANCE_ID} F_INSTANCES __FOUND_TMP)
-	if(NOT "${__FOUND_TMP}" STREQUAL "")
-#		message(STATUS "_store_instance_data(): Featurebase ${__FEATUREBASE_ID} already defined for instances ${__FOUND_TMP}. Adding another instance: ${__INSTANCE_ID} ")
-	else()
-		_add_property_to_db(GLOBAL ALL FEATUREBASES ${__FEATUREBASE_ID})
-	endif()
-	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES           ${__INSTANCE_ID})
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}")
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} MODIFIERS            "${__SERIALIZED_MODIFIERS}")
-	if(__JOINT_TARGETS)
-#		_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
-		_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" NAME __JOINED_NAME)
-		if(__JOINED_NAME)
-			list(APPEND __ALL_TEMPLATE_NAMES ${__JOINED_NAME})
-		endif()
-		foreach(__ONE_TEMPLATE_NAME IN LISTS __ALL_TEMPLATE_NAMES)
-#			message(STATUS "_store_instance_link_data(): Adding template name: ${__ONE_TEMPLATE_NAME} for FEATUREBASEDB ${__FEATUREBASE_ID}")
-			_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME            ${__ONE_TEMPLATE_NAME})
-		endforeach()
-	else()
-		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
-	endif()
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT          0)
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE         "${__FEATUREBASE_HASH_SOURCE}")
-
-	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} TEMPLATE_FEATUREBASES        ${__FEATUREBASE_ID})
-	_set_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} T_PATH                       ${__TARGETS_CMAKE_PATH})
-
-
-	set(__LINK_TO_DEPENDEE)
-	if(${__EXTERNAL_PROJECT_INFO_LIST})
-		_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" ASSUME_INSTALLED __ASSUME_INSTALLED)
-		
-		if(NOT __LINK_TO_DEPENDEE)
-			_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" LINK_TO_DEPENDEE __LINK_TO_DEPENDEE)
-		endif()
-		_parse_external_info(${__EXTERNAL_PROJECT_INFO_LIST} "${__TARGETS_CMAKE_PATH}" NAME __JOINED_NAME)
-#		message(STATUS "_store_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}")
-	else()
-		set(__ASSUME_INSTALLED)
-	endif()
-	_set_property_to_db(FILEDB     ${__PATH_HASH} PATH                 "${__TARGETS_CMAKE_PATH}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} SINGLETON_TARGETS    "${__SINGLETON_TARGETS}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGET_FIXED         "${__IS_TARGET_FIXED}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} NO_TARGETS           "${__NO_TARGETS}")
-	_add_property_to_db(FILEDB     ${__PATH_HASH} G_INSTANCES           ${__INSTANCE_ID})
-	_add_property_to_db(FILEDB     ${__PATH_HASH} G_FEATUREBASES        ${__FEATUREBASE_ID})
-	_set_property_to_db(FILEDB     ${__PATH_HASH} PARS                 "${__SERIALIZED_PARAMETERS}")
-	if(__SERIALIZED_PARAMETERS)
-		_retrieve_instance_data(${__INSTANCE_ID} DEFAULTS __SERIALIZED_DEFAULTS)
-		if(NOT __SERIALIZED_DEFAULTS)
-			#We reset all the variables, so we can learn about the defaults
-			foreach(__VAR IN LISTS ${__PARS}__LIST)
-				set(${__VAR})
-			endforeach()
-			_get_variables("${__TARGETS_CMAKE_PATH}" "defaults" "" 0 __DEFAULTS __TMP_PARS __TMP_TEMPLATE_NAMES __TMP_EXTERNAL_PROJECT_INFO __TMP_IS_TARGET_FIXED __TMP_GLOBAL_OPTIONS)
-			_serialize_variables(__DEFAULTS "${__DEFAULTS__LIST}" __SERIALIZED_DEFAULTS)
-#			message(STATUS "_store_instance_data(): __SERIALIZED_DEFAULTS: ${__SERIALIZED_DEFAULTS}")
-		endif()
-		_set_property_to_db(FILEDB     ${__PATH_HASH} DEFAULTS         "${__SERIALIZED_DEFAULTS}")
-	endif()
-	_set_property_to_db(FILEDB     ${__PATH_HASH} EXTERNAL_INFO        "${__EXTERNAL_PROJECT_INFO}")
-	if(__JOINED_NAME)
-		_set_property_to_db(FILEDB     ${__PATH_HASH} JOINED_NAME      "${__JOINED_NAME}")
-	endif()
-	_set_property_to_db(FILEDB     ${__PATH_HASH} TARGETS_REQUIRED      ${__TARGET_REQUIRED})
-	_set_property_to_db(FILEDB     ${__PATH_HASH} LANGUAGES            "${__LANGUAGES}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} ASSUME_INSTALLED     "${__ASSUME_INSTALLED}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} NICE_NAME            "${__NICE_NAME}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} EXPORTED_VARS        "${__EXPORTED_VARS}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} JOINT_TARGETS        "${__JOINT_TARGETS}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} LINK_TO_DEPENDEE     "${__LINK_TO_DEPENDEE}")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} TEMPLATE_OPTIONS     "${__TEMPLATE_OPTIONS}")
-	
-	if(__JOINT_TARGETS AND "${__TEMPLATE_NAME}" STREQUAL "${__JOINED_NAME}")
-#		message(STATUS "_store_instance_data(): JOINT_TARGETS of __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __TEMPLATE_NAME: ${__TEMPLATE_NAME}")
-		
-		_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAME       ${__TEMPLATE_NAME})
-	endif()
-
-	_get_stack_depth(__STACK_DEPTH)
-	if("${__STACK_DEPTH}" STREQUAL "0")
-#		message(STATUS "_store_instance_data(): ADDING GLOBAL INSTANCE: ${__INSTANCE_ID}")
-		_add_property_to_db(GLOBAL ALL INSTANCES "${__INSTANCE_ID}")
-	endif()
-	
-#	_append_instance_modifiers_hash(${__INSTANCE_ID} ${__TEMPLATE_NAME} ${__ARGS} "${__ARGS_LIST_MODIFIERS}")
-endfunction()
-
-function(_store_instance_dependencies __INSTANCE_ID __DEP_LIST)
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
-#	message(STATUS "_store_instance_dependencies(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_LIST: ${__DEP_LIST} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} DEP_INSTANCES        "${__DEP_LIST}" $ARGV2)
-endfunction()
-
-#Stores just enough information to store template id, features and target parameters (modifiers). Essentially enough to set a link to the existing FILEDB and FEATUREBASEDB.
-#It excludes dependencies. 
-function(_store_instance_link_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED )
-
-	_serialize_variables(${__ARGS} "${${__PARS}__LIST_FEATURES}" __SERIALIZED_FEATURES)
-	_serialize_variables(${__ARGS} "${${__PARS}__LIST_LINKPARS}" __SERIALIZED_LINKPARS)
-#	message(STATUS "_store_instance_link_data(): __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
-#	message(STATUS "_store_instance_link_data(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
-#	message(STATUS "_store_instance_link_data(): __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
-	_serialize_parameters(${__PARS} __SERIALIZED_PARAMETERS)
-	if(${__EXTERNAL_PROJECT_INFO_LIST})
-		set(__JOINT_TARGETS 1)
-	else()
-		set(__JOINT_TARGETS 0)
-	endif()
-
-	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
-
-#	message(FATAL_ERROR "__ARGS_LIST_MODIFIERS: ${__ARGS_LIST_MODIFIERS}")
-#	if("${__INSTANCE_ID}" STREQUAL "SerialboxStatic_18768807d4b4034c1c5d4dd0f5ba6964")
-#		message(FATAL_ERROR "__EXTERNAL_PROJECT_INFO_LIST: ${__EXTERNAL_PROJECT_INFO_LIST}")
- #	endif()
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_FEATURES            "${__SERIALIZED_FEATURES}")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
-	_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_PARENTS             "${__PARENT_INSTANCE_ID}")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE            "1")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} FEATUREBASE            "")
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __TMP)
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_TEMPLATE_NAME        ${__TEMPLATE_NAME})
-	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TMP)
-#	message(STATUS "_store_instance_link_data(): Retrieved I_TEMPLATE_NAME: ${__TMP} for __INSTANCE_ID: ${__INSTANCE_ID}")
-	if(__IS_TARGET_FIXED)
-#		message(STATUS "_store_instance_link_data(): Storing fixed target name for ${__INSTANCE_ID}: ${__TEMPLATE_NAME}")
-		_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TARGET_NAME  ${__TEMPLATE_NAME})
-	endif()
-	
-#	message(STATUS "_store_instance_link_data(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __PATH_HASH: ${__PATH_HASH}")
-	unset(__FOUND_TMP)
-#	_retrieve_instance_data(${__INSTANCE_ID} F_INSTANCES __FOUND_TMP)
-#	if(NOT "${__FOUND_TMP}" STREQUAL "")
-##		message(STATUS "_store_instance_link_data(): Featurebase ${__FEATUREBASE_ID} already defined for instances ${__FOUND_TMP}. Adding another instance: ${__INSTANCE_ID} ")
-#	else()
-#		_add_property_to_db(GLOBAL ALL FEATUREBASES ${__FEATUREBASE_ID})
-#	endif()
-#	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES           ${__INSTANCE_ID})
-#	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
-#	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE        "${__FEATUREBASE_HASH_SOURCE}")
-
-	_add_property_to_db(FILEDB     ${__PATH_HASH} G_INSTANCES           ${__INSTANCE_ID})
-
-	_get_stack_depth(__STACK_DEPTH)
-
-	if("${__STACK_DEPTH}" STREQUAL "0")
-#		message(STATUS "_store_instance_link_data(): ADDING GLOBAL INSTANCE: ${__INSTANCE_ID}")
-		_add_property_to_db(GLOBAL ALL INSTANCES "${__INSTANCE_ID}")
-	endif()
-
-#	message(STATUS "_store_instance_link_data(): Adding __INSTANCE_ID: ${__INSTANCE_ID} for VIRTUAL_INSTANCES for ${__TEMPLATE_NAME}")
-	
-	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} VIRTUAL_INSTANCES            ${__INSTANCE_ID})
-	_set_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} T_PATH                       ${__TARGETS_CMAKE_PATH})
-	
-#	_retrieve_template_data(${__TEMPLATE_NAME} VIRTUAL_INSTANCES __TMP)
-#	message(STATUS "_store_instance_link_data(): __INSTANCE_ID: ${__INSTANCE_ID} __TMP: ${__TMP}")
-#	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __TMP)
-#	message(STATUS "_store_instance_link_data(): __INSTANCE_ID: ${__INSTANCE_ID} IS_PROMISE: ${__TMP}")
-
-endfunction()
-
-function(_store_target_modification_data __INSTANCE_ID __PARENT_INSTANCE_ID __FEATURES __FEATURES_LIST __TEMPLATE_NAME)
-	_serialize_variables(${__FEATURES} "${__FEATURES__LIST}" __SERIALIZED_VARIABLES)
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} VARS               "${__SERIALIZED_VARIABLES}")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TEMPLATE           "${__TEMPLATE_NAME}")
-	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_MODIFICATION    "1")
-	_add_property_to_db(INSTANCEDB ${__INSTANCE_ID} PARENTS            "${__PARENT_INSTANCE_ID}")
-	_add_property_to_db(GLOBAL ALL MODIFICATIONS "${__INSTANCE_ID}")
-endfunction()
 

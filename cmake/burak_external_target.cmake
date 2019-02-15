@@ -1,18 +1,18 @@
-macro(_parse_all_external_info __EXTERNAL_INFO __OUT_PREFIX)
+macro(_parse_all_external_info __EXTERNAL_INFO__REF __OUT_PREFIX)
 	set(__OPTIONS ASSUME_INSTALLED LINK_TO_DEPENDEE)
 	set(__oneValueArgs SOURCE_PATH INSTALL_PATH NAME EXPORTED_TARGETS_PATH)
 	set(__multiValueArgs WHAT_COMPONENTS_NAME_DEPENDS_ON COMPONENTS BUILD_PARAMETERS APT_PACKAGES SPACK_PACKAGES)
 	
-	cmake_parse_arguments(${__OUT_PREFIX} "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${${__EXTERNAL_INFO}})
+	cmake_parse_arguments(${__OUT_PREFIX} "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${${__EXTERNAL_INFO__REF}__LIST})
 	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
 	if(__unparsed)
-		message(FATAL_ERROR "Undefined options for external project: ${__unparsed}. All options: ${__EXTERNAL_INFO}")
+		message(FATAL_ERROR "Undefined options for external project: ${__unparsed}. All options: ${${__EXTERNAL_INFO__REF}__LIST}")
 	endif()
 endmacro()
 
-function(_parse_external_info __EI __TARGETS_CMAKE_PATH __PROPERTY __OUT)
-	_parse_all_external_info(${__EI} ___P)
-#	message(STATUS "_parse_external_info(): __EI: ${__EI}: ${${__EI}}")
+function(_parse_external_info __EXTERNAL_INFO__REF __TARGETS_CMAKE_PATH __PROPERTY __OUT)
+	_parse_all_external_info(${__EXTERNAL_INFO__REF} ___P)
+#	message(STATUS "_parse_external_info(): __EXTERNAL_INFO__REF: ${__EXTERNAL_INFO__REF}: ${${__EXTERNAL_INFO__REF}__LIST}")
 	if(NOT ${__PROPERTY} IN_LIST __OPTIONS AND NOT ${__PROPERTY} IN_LIST __oneValueArgs AND NOT ${__PROPERTY} IN_LIST __multiValueArgs)
 		message(FATAL_ERROR "Internal Beetroot error: property name ${__PROPERTY} is not valid for external project options in file ${__TARGETS_CMAKE_PATH}")
 	endif()
@@ -27,7 +27,16 @@ endfunction()
 
 # Pass empty __HASH if the external project does not support multiple instances (because the targets names are fixed)
 function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
-	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO) 
+
+	message(STATUS "_get_target_external(): __INSTANCE_ID: ${__INSTANCE_ID}")
+	_debug_show_instance(${__INSTANCE_ID} 2 "EXTERNAL_TARGET: " __MESSAGE __ERROR)
+	message("${__MESSAGE}")
+	if(__ERROR)
+		message(FATAL_ERROR "${__ERROR}")
+	endif()
+
+
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO__LIST) 
 	_parse_all_external_info(__EXTERNAL_INFO __PARSED)
 	
 	if(NOT __PARSED_SOURCE_PATH AND NOT __PARSED_ASSUME_INSTALLED)
@@ -64,8 +73,8 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
 #	message(STATUS "_get_target_external(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
-#	message(STATUS "_get_target_external(): Setting INSTALL_DIR: ${__INSTALL_DIR} on __PATH_HASH: ${__PATH_HASH}")
 	if(NOT __PARSED_ASSUME_INSTALLED)
+		message(STATUS "_get_target_external(): Setting INSTALL_DIR: ${__INSTALL_DIR} on __PATH_HASH: ${__PATH_HASH} __PARSED_SOURCE_PATH: ${__PARSED_SOURCE_PATH}")
 		_retrieve_instance_data(${__INSTANCE_ID} F_PATH __TARGETS_CMAKE_PATH)
 		_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 		_set_property_to_db(FILEDB ${__PATH_HASH} SOURCE_DIR ${__PARSED_SOURCE_PATH})
@@ -76,7 +85,18 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 		if(NOT __PARSED_ASSUME_INSTALLED)
 			string(REPLACE "::" "_" __INSTANCE_NAME_FIXED ${__INSTANCE_NAME})
 
-			_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __ARGS)
+			_retrieve_instance_args(${__INSTANCE_ID} F_FEATURES __ARGS)
+			
+			_debug_show_instance(${__INSTANCE_ID} 2 "EXTERNAL " __MSG __ERRORS)
+#			message(STATUS "_get_target_external(): Going to call: ${__MSG}")
+			if(__ERRORS)
+				message(FATAL_ERROR ${__ERRORS})
+			endif()
+			
+			
+			
+			_retrieve_instance_data(${__INSTANCE_ID} F_FEATURES __SERIALIZED_FEATURES)
+#			message(STATUS "_get_target_external(): __INSTANCE_NAME: ${__INSTANCE_NAME} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
 			set(__ARGS__LIST_FEATURES "${__ARGS__LIST}")
 			_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
 			set(__ARGS__LIST_MODIFIERS "${__ARGS__LIST}")
@@ -91,9 +111,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			endif()
 			_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 			_make_cmake_args(__PARS __ARGS "${__ARGS__LIST}" __CMAKE_ARGS)
-#			message(FATAL_ERROR "__CMAKE_ARGS: ${__CMAKE_ARGS}, ${__PARS_PREFIX}__LIST: ${${__PARS_PREFIX}__LIST}")
-	#		list(APPEND __CMAKE_ARGS "-D${CACHE_VAR}${CACHE_VAR_TYPE}=${${CACHE_VAR}}")
-	#		list(APPEND __CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR})
+#			message(STATUS "_get_target_external(): External project ${__INSTANCE_NAME_FIXED} will be compiled with parameters: ${__CMAKE_ARGS}")
 			ExternalProject_Add("${__INSTANCE_NAME_FIXED}" 
 				PREFIX ${__PARSED_SOURCE_PATH}
 				${__DEP_STR}
@@ -105,20 +123,23 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 				INSTALL_DIR ${__INSTALL_DIR}
 				CMAKE_ARGS ${__CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR}
 			)
-			ExternalProject_Add_Step("${__INSTANCE_NAME_FIXED}" postinstall
-				COMMAND           mkdir -p "${__INSTALL_DIR_STEM}"
-				COMMAND           mv "${__FEATUREFILETMP}" "${__INSTALL_DIR_STEM}/${__FEATUREBASE_ID}.cmake"
-				COMMENT           "Commiting the external build"
-				ALWAYS            TRUE
-				EXCLUDE_FROM_MAIN FALSE
-			)
-#			message(STATUS "_get_target_external(): Setting external project ${__INSTANCE_NAME_FIXED} with the following arguments: ${__CMAKE_ARGS}")
+			if(NOT "${__FEATUREFILETMP}" STREQUAL "")
+				message(STATUS "_get_target_external(): mv \"${__FEATUREFILETMP}\" \"${__INSTALL_DIR_STEM}/${__FEATUREBASE_ID}.cmake\"")
+				ExternalProject_Add_Step("${__INSTANCE_NAME_FIXED}" postinstall
+					COMMAND           mkdir -p "${__INSTALL_DIR_STEM}"
+					COMMAND           mv "${__FEATUREFILETMP}" "${__INSTALL_DIR_STEM}/${__FEATUREBASE_ID}.cmake"
+					COMMENT           "Commiting the external build"
+					ALWAYS            TRUE
+					EXCLUDE_FROM_MAIN FALSE
+				)
+			endif()
+			message(STATUS "_get_target_external(): Setting external project ${__INSTANCE_NAME_FIXED} with the following arguments: ${__CMAKE_ARGS}")
 			_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_NAME}") 
 			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT 1)
 		endif()
 	else()
 		
-#		message(STATUS "_get_target_external(): __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME} __INSTANCE_NAME: ${__INSTANCE_NAME} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ${__INSTANCE_NAME}_DIR: ${${__INSTANCE_NAME}_DIR}")
+		message(STATUS "_get_target_external(): __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME} __INSTANCE_NAME: ${__INSTANCE_NAME} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ${__INSTANCE_NAME}_DIR: ${${__INSTANCE_NAME}_DIR}")
 		if(__PARSED_INSTALL_PATH OR NOT __PARSED_ASSUME_INSTALLED)
 			set(${__EXTERNAL_BARE_NAME}_ROOT ${__INSTALL_DIR})
 			set(${__EXTERNAL_BARE_NAME}_DIR ${__INSTALL_DIR})
@@ -159,10 +180,11 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 endfunction()
 
 #Writes a temporary file to the binary directory that lists the features and modifiers of the external project
-function(_external_prepare_feature_file __FILENAME __FEATUREBASE_ID __PATH_HASH __INSTALL_DIR __BUILD_DIR __MODIFIERS __FEATURES)
-	file(WRITE "${__FILENAME}" "set(__${__PATH_HASH}_SERIALIZED_MODIFIERS ${${__MODIFIERS}})\n")
+function(_external_prepare_feature_file __FILENAME __FEATUREBASE_ID __PATH_HASH __INSTALL_DIR __BUILD_DIR __MODIFIERS__REF __FEATURES__REF)
+#	message(STATUS "_external_prepare_feature_file(): ${__FEATURES__REF}__LIST: ${${__FEATURES__REF}__LIST}")
+	file(WRITE "${__FILENAME}" "set(__${__PATH_HASH}_SERIALIZED_MODIFIERS__LIST ${${__MODIFIERS__REF}__LIST})\n")
 	file(APPEND "${__FILENAME}" "set(__${__PATH_HASH}_MODIFIERS_HASH ${__FEATUREBASE_ID})\n")
-	file(APPEND "${__FILENAME}" "set(__${__PATH_HASH}_SERIALIZED_FEATURES ${${__FEATURES}})\n")
+	file(APPEND "${__FILENAME}" "set(__${__PATH_HASH}_SERIALIZED_FEATURES__LIST ${${__FEATURES__REF}__LIST})\n")
 	file(APPEND "${__FILENAME}" "set(__${__PATH_HASH}_INSTALL_DIR ${__INSTALL_DIR})\n")
 	file(APPEND "${__FILENAME}" "set(__${__PATH_HASH}_BUILD_DIR ${__INSTALL_DIR})\n")
 	file(APPEND "${__FILENAME}" "list(APPEND __${__FEATUREBASE_ID}__LIST ${__PATH_HASH})\n")
@@ -171,11 +193,13 @@ endfunction()
 macro(_get_existing_targets __INSTALL_DIR_STEM __PATH_HASH)
 	file(GLOB __FILE_LIST LIST_DIRECTORIES false "${__INSTALL_DIR_STEM}/*.cmake")
 	set(${__PATH_HASH}__LIST)
+	message(STATUS "_get_existing_targets(): ${__INSTALL_DIR_STEM}/*.cmake __FILE_LIST: ${__FILE_LIST}")
 	foreach(__FILE IN LISTS __FILE_LIST)
 		include("${__FILE}" OPTIONAL RESULT_VARIABLE __FILE_LOADED)
 		if("${__FILE_LOADED}" STREQUAL "NOTFOUND")
 			message(FATAL_ERROR "Internal beetroot error: cannot find \"${__FILE}\" using GLOB.")
 		endif()
+		message(STATUS "_get_existing_targets(): loaded ${__FILE}")
 	endforeach()
 endmacro()
 
@@ -186,11 +210,11 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	#   define the version of all the manually typed dependencies
 	_retrieve_instance_data(${__INSTANCE_ID} F_PATH __TARGETS_CMAKE_PATH)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
-#	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
+	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 	name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
 	set(${__OUT_INSTALL_STEM} "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}" PARENT_SCOPE)
 	set(__BUILD_DIR  "${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/${__FEATUREBASE_ID}")
-#	message(STATUS "_workout_install_dir_for_external(): __BUILD_DIR: ${__BUILD_DIR}")
+	message(STATUS "_workout_install_dir_for_external(): __BUILD_DIR: ${__BUILD_DIR}")
 	set(${__OUT_BUILD_DIR} "${__BUILD_DIR}" PARENT_SCOPE)
 	
 	if(__OVERRIDE_INSTALL_DIR)
@@ -202,19 +226,22 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 		_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 		_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 		_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __OUR_ARGS)
+		_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_OUR_ARGS__LIST)
+		message(STATUS "_workout_install_dir_for_external(): OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
 	
 		# Get the list of all features
 		_get_existing_targets("${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}" "${__PATH_HASH}")
-# 		message(STATUS "_workout_install_dir_for_external(): ${__FEATUREBASE_ID}__LIST: ${${__FEATUREBASE_ID}__LIST}")
+ 		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
 	
-		if(${__FEATUREBASE_ID}__LIST)
+		if(__${__FEATUREBASE_ID}__LIST)
 			foreach(__INSTALLED_EXTERNAL IN LISTS __${__FEATUREBASE_ID}__LIST)
-				_unserialize_variables("${__${__FEATUREBASE_ID}_SERIALIZED_FEATURES}" __THEIR_ARGS)
+				_unserialize_variables(__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES __THEIR_ARGS)
+				message(STATUS "_workout_install_dir_for_external(): __THEIR_ARGS: ${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}")
 				_compare_featuresets(${__PATH_HASH} __PARS __OUR_ARGS __THEIR_ARGS __OUT_RELATION)
-#				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
+				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
 
-				if(${__OUT_RELATION} STRRQUAL 0 OR ${__OUT_RELATION} STRRQUAL 2)
-					set(${__OUT_INSTALL_DIR} "${__${__FEATUREBASE_ID}_INSTALL_DIR}" PARENT_SCOPE)
+				if("${__OUT_RELATION}" STREQUAL "0" OR "${__OUT_RELATION}" STREQUAL "2")
+					set(${__OUT_INSTALL_DIR} "${__${__INSTALLED_EXTERNAL}_INSTALL_DIR}" PARENT_SCOPE)
 					set(${__OUT_FEATUREBASETMP} "" PARENT_SCOPE)
 					return()
 				endif()
@@ -222,15 +249,14 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 		endif()
 		#We could not find an existing project so we set the install dir ourselves
 		set(__INSTALL_DIR "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}/${__FEATUREBASE_ID}")
-#		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
+		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
 	endif()
-	
 	#Prepare the feature file, so other calls to the external project could find us
-	_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_FEATURES)
-	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS)
-#	message(STATUS "_workout_install_dir_for_external(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
+	_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_FEATURES__LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS__LIST)
+	message(STATUS "_workout_install_dir_for_external(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 	set(__FEATUREFILETMP "${SUPERBUILD_ROOT}/build/${__FEATUREBASE_ID}.cmake")
-#	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
+	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 
 	_external_prepare_feature_file("${__FEATUREFILETMP}" "${__FEATUREBASE_ID}" "${__PATH_HASH}" "${__INSTALL_DIR}" "${__BUILD_DIR}" __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES)
 	set(${__OUT_INSTALL_DIR} "${__INSTALL_DIR}" PARENT_SCOPE)
