@@ -39,9 +39,9 @@ set(WYBOR "BLU")
 #build_target(HELLO_BOOST)
 #build_target(HELLO_2BOOST)
 #build_target(HELLO_2BOOST PAR KUC)
-build_target(SERIALBOX_C_TEST)
+#build_target(SERIALBOX_C_TEST)
 #build_target(HEADER_CONSUMER)
-build_target(SERIALBOX_C_TEST2 SERIALBOX_ENABLE_FORTRAN 1 SERIALBOX_EXAMPLES 0 ) #Works only with SERIALBOX_C_TEST
+build_target(SERIALBOX_C_TEST2 SERIALBOX_ENABLE_FORTRAN 1 SERIALBOX_EXAMPLES 1 ) #Works only with SERIALBOX_C_TEST
 #build_target(SERIALBOX_C_TEST2) 
 
 #build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail

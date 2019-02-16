@@ -6,6 +6,7 @@ function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TAR
 	if(__TARGETS_CMAKE_PATH_CHECK)
 		return()
 	endif()
+#	message(STATUS "_store_file() __PATH_HASH: ${__PATH_HASH} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES}")
 
 	_parse_file_options( "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__TEMPLATE_OPTIONS__REF} __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS __LINK_TO_DEPENDEE)
 	if(__EXPORTED_VARS)
@@ -47,7 +48,6 @@ function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TAR
 	_set_property_to_db(FILEDB     ${__PATH_HASH} NO_TARGETS           "${__NO_TARGETS}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} G_INSTANCES           "")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} G_FEATUREBASES        "")
-	_set_property_to_db(FILEDB     ${__PATH_HASH} G_TEMPLATES           "")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} PARS                 "${__SERIALIZED_PARAMETERS}")
 	
 	if(__SERIALIZED_PARAMETERS)
@@ -166,15 +166,16 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 	
 	
 	_debug_show_instance(${__INSTANCE_ID} 2 "" __MSG __ERRORS)
-	message(STATUS "_store_virtual_instance_data(): ${__MSG}")
+#	message(STATUS "_store_virtual_instance_data(): ${__MSG}")
 	if(__ERRORS)
+		message(STATUS "_store_virtual_instance_data(): ${__MSG}")
 		message(FATAL_ERROR ${__ERRORS})
 	endif()
 
 endfunction()
 
 function(_unvirtualize_instance __INSTANCE_ID __FEATUREBASE_ID)
-	message(STATUS "_unvirtualize_instance(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
+#	message(STATUS "_unvirtualize_instance(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
 	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE 0 FORCE)
 	_remove_property_from_db(TEMPLATEDB ${__TEMPLATE_NAME} VIRTUAL_INSTANCES ${__INSTANCE_ID})
@@ -183,7 +184,7 @@ function(_unvirtualize_instance __INSTANCE_ID __FEATUREBASE_ID)
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} G_TEMPLATES __ALL_TEMPLATE_NAMES)
 
 	foreach(__TEMPLATE IN LISTS __ALL_TEMPLATE_NAMES)
-		message(STATUS "_unvirtualize_instance(): Removing __INSTANCE_ID ${__INSTANCE_ID} from VIRTUAL_INSTANCES of ${__TEMPLATE}")
+#		message(STATUS "_unvirtualize_instance(): Removing __INSTANCE_ID ${__INSTANCE_ID} from VIRTUAL_INSTANCES of ${__TEMPLATE}")
 		_remove_property_from_db(TEMPLATEDB ${__TEMPLATE} VIRTUAL_INSTANCES ${__INSTANCE_ID} FORCE)
 	endforeach()
 #	message(STATUS "_unvirtualize_instance(): Adding ${__FEATUREBASE_ID} to TEMPLATE_FEATUREBASES for ${__TEMPLATE_NAME}")
@@ -212,8 +213,9 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	endif()
 	
 	_debug_show_instance(${__INSTANCE_ID} 2 "" __MSG __ERRORS)
-	message(STATUS "_store_nonvirtual_instance_data(): ${__MSG}")
+#	message(STATUS "_store_nonvirtual_instance_data(): ${__MSG}")
 	if(__ERRORS)
+		message(STATUS "_store_nonvirtual_instance_data(): ${__MSG}")
 		message(FATAL_ERROR ${__ERRORS})
 	endif()
 endfunction()
@@ -500,7 +502,7 @@ function(_store_instance_link_data_OLD __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS
 		if(__ERROR)
 			message(FATAL_ERROR "${__ERROR}")
 		endif()
-		message(STATUS "_store_instance_link_data():\n ${__STR}")
+#		message(STATUS "_store_instance_link_data():\n ${__STR}")
 		message(FATAL_ERROR "applying _store_instance_link_data to already exsting instance, not promise")
 	endif()
 
