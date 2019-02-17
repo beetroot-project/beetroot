@@ -93,13 +93,37 @@ function(_store_featurebase __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH _
 	
 	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID __FEATUREBASE_HASH_SOURCE)
 	set(${__OUT_FEATUREBASE_ID} "${__FEATUREBASE_ID}" PARENT_SCOPE)
+	
+	_retrieve_featurebase_args("${__FEATUREBASE_ID}" F_FEATURES __EXISTING_FEATURES)
+#	if("${__SERIALIZED_FEATURES}" STREQUAL "")
+#		message(FATAL_ERROR "Empty featurebase")
+#	endif()
+	if(__EXISTING_FEATURES__LIST)
+		#We need to try to merge all the features
+		_make_promoted_featureset("${__FILE_HASH}" "${${__PARS}__LIST_FEATURES}" ${__PARS} ${__ARGS} __EXISTING_FEATURES __MERGED_ARGS __RELATION)
+		if("${__RELATION}" STREQUAL "0" OR "${__RELATION}" STREQUAL "2")
+			#do nothing
+		elseif("${__RELATION}" STREQUAL "1")
+#			message(STATUS "_store_featurebase(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
+			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}" FORCE)
+		elseif("${__RELATION}" STREQUAL "3")
+			_serialize_variables(__EXISTING_FEATURES "${__EXISTING_FEATURES__LIST}" __SERIALIZED_EXISTING_FEATURES)
+#			message(STATUS "_store_featurebase(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_EXISTING_FEATURES: ${__SERIALIZED_EXISTING_FEATURES}")
+			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_EXISTING_FEATURES}" FORCE)
+		elseif("${__RELATION}" STREQUAL "4")
+			_retrieve_featurebase_data("${__FEATUREBASE_ID}" G_FEATUREBASES __TMP_FEATUREBASES)
+			message(FATAL_ERROR "Cannot merge two sets features of ${__TEMPLATE_NAME}: ${__SERIALIZED_FEATURES} and ${__TMP_FEATUREBASES}")
+		endif()
+	else()
+#		message(STATUS "_store_featurebase(): first time writing to ${__FEATUREBASE_ID}: __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
+		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}" FORCE)
+	endif()
 
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES           "${__SERIALIZED_FEATURES}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} MODIFIERS            "${__SERIALIZED_MODIFIERS}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT          0)
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE         "${__FEATUREBASE_HASH_SOURCE}")
-	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES      "")
+#	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES      "")
 
 	_add_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} TEMPLATE_FEATUREBASES        ${__FEATUREBASE_ID})
 	_set_property_to_db(TEMPLATEDB ${__TEMPLATE_NAME} T_PATH                       ${__TARGETS_CMAKE_PATH})
@@ -193,6 +217,7 @@ endfunction()
 #Makes sure a given instance is stored in the memory as a promise. It does not link the instance with the parent - for that use _link_instances_together()
 function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
+#	message(STATUS "_store_nonvirtual_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __IS_PROMISE_BEFORE: ${__IS_PROMISE_BEFORE}")
 	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH)
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
@@ -201,6 +226,7 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	else()
 		set(__JOINT_TARGETS 0)
 	endif()
+	
 	
 	_store_featurebase(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID)
 	_link_file_with_featurebase(${__FEATUREBASE_ID} ${__FILE_HASH})
@@ -212,7 +238,7 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 		_link_instance_with_featurebase(${__INSTANCE_ID} ${__FEATUREBASE_ID})
 	endif()
 	
-	_debug_show_instance(${__INSTANCE_ID} 2 "" __MSG __ERRORS)
+#	_debug_show_instance(${__INSTANCE_ID} 2 "" __MSG __ERRORS)
 #	message(STATUS "_store_nonvirtual_instance_data(): ${__MSG}")
 	if(__ERRORS)
 		message(STATUS "_store_nonvirtual_instance_data(): ${__MSG}")

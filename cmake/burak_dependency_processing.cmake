@@ -78,7 +78,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	endif()
 	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 #	message(STATUS "_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
-#	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_MODIFIERS: ${${__PARS}__LIST_MODIFIERS}")
+#	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
 	_store_nonvirtual_instance_data(
 		 ${__INSTANCE_ID} 
 		 ${__ARGS} 

@@ -132,7 +132,7 @@ function(get_target __TEMPLATE_NAME __OUT_INSTANCE_NAME)
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID __HASH_SOURCE)
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
-#		message(STATUS "get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}")
+#		message(STATUS "get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID} features: ${__PARAMETERS_DIC__LIST_FEATURES}")
 		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __TEMPLATE_OPTIONS "${__TEMPLATES}")
 #		_debug_show_instance(${__INSTANCE_ID} 2 "" __MESSAGE __ERROR)
 #		message("${__MESSAGE}")
