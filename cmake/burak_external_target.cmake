@@ -89,7 +89,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			
 			_debug_show_instance(${__INSTANCE_ID} 2 "EXTERNAL " __MSG __ERRORS)
 			if(__ERRORS)
-				message(STATUS "_get_target_external(): Going to call: ${__MSG}")
+				message(STATUS "Error when constructing: ${__MSG}")
 				message(FATAL_ERROR ${__ERRORS})
 			endif()
 			

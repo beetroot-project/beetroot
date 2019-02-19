@@ -16,6 +16,7 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
 	
 	_make_instance_id(${__TEMPLATE_NAME} __ARGS "" __NEW_INSTANCE_ID __HASH_SOURCE)
+	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
 #	message(STATUS "_rediscover_dependencies(): (old)__INSTANCE_ID: ${__INSTANCE_ID} __TEMPLATE_NAME: ${__TEMPLATE_NAME} __NEW_INSTANCE_ID: ${__NEW_INSTANCE_ID} __HASH_SOURCE: ${__HASH_SOURCE}")
 #	message(STATUS "_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
 	if("${__NEW_INSTANCE_ID}" STREQUAL "${__INSTANCE_ID}")
@@ -30,7 +31,6 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 
 	_move_instance(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__NEW_INSTANCE_ID})
-	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
 endfunction()
 
 
@@ -55,14 +55,17 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	_put_dependencies_into_stack("${__INSTANCE_ID}")
 	if(NOT __FEATUREBASE_ID)
 		set(__LIST ${${__PARS}__LIST_MODIFIERS})
-		set(__LIST ${${__PARS}__LIST_FEATURES})
-		list(APPEND __LIST ${__${__PARS}__LIST_LINKPARS} )
+		list(APPEND __LIST ${${__PARS}__LIST_FEATURES})
+		list(APPEND __LIST ${${__PARS}__LIST_LINKPARS} )
 
 		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
 		_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
+#		message(WARNING "_discover_dependencies(): list of variables: ${__LIST}")
 		_instantiate_variables(${__ARGS} ${__PARS} "${__LIST}")
-
 		_descend_dependencies_stack()
+
+#		message(STATUS "_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. DWARF: ${DWARF}")
+
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
 #		message(STATUS "_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
@@ -201,7 +204,7 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID)
 					set(__X LINK)
 				endif()
 			else()
-				_retrieve_instance_data(${__DEP_INSTANCE_ID} _I_TEMPLATE_NAME __DEP_TEMPLATE_NAME )
+				_retrieve_instance_data(${__DEP_INSTANCE_ID} I_TEMPLATE_NAME __DEP_TEMPLATE_NAME )
 				message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} does not produce targets and it does not define apply_dependency_to_target(). You must either define targets or define function apply_dependency_to_target().")
 			endif()
 		endif()
