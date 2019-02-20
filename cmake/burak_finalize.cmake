@@ -14,6 +14,11 @@ macro(finalizer)
 	message("")
 	if(__NOT_SUPERBUILD)
 		message("    DEFINING  TARGETS  IN  PROJECT BUILD")
+		if(CMAKE_TESTING_ENABLED)
+			message("    TESTS  ENABLED")
+		else()
+			message("    TESTS  disabled")
+		endif()
 	else()
 		message("    DEFINING  TARGETS  IN  SUPERBUILD")
 	endif()
@@ -57,6 +62,12 @@ macro(finalizer)
 				message(STATUS "End of SUPERBUILD phase. No external projects (why superbuild?). CMAKE_PROJECT_NAME: ${CMAKE_PROJECT_NAME}")
 			endif()
 #			message(STATUS "finalizer(): ExternalProject_Add(${CMAKE_PROJECT_NAME} PREFIX ${CMAKE_SOURCE_DIR} SOURCE_DIR ${CMAKE_SOURCE_DIR} TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/project/tmp STAMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/project/stamps DOWNLOAD_DIR \"${CMAKE_CURRENT_BINARY_DIR}\" INSTALL_COMMAND \"\" BUILD_ALWAYS ON BINARY_DIR \"${CMAKE_CURRENT_BINARY_DIR}/project\" ${__EXT_DEP_STR} CMAKE_ARGS -D__NOT_SUPERBUILD=ON)")
+			if(__SUPERBUILD_TEST_ON_BUILD)
+				set(__SUPERBUILD_TEST_ON_BUILD ON)
+			else()
+				set(__SUPERBUILD_TEST_ON_BUILD OFF)
+			endif()
+			message(STATUS "finalizer(): __SUPERBUILD_TEST_ON_BUILD: ${__SUPERBUILD_TEST_ON_BUILD}")
 			ExternalProject_Add(${CMAKE_PROJECT_NAME}
 				${__EXT_DEP_STR}
 				PREFIX ${CMAKE_SOURCE_DIR}
@@ -67,8 +78,15 @@ macro(finalizer)
 				INSTALL_COMMAND ""
 				BUILD_ALWAYS ON
 				BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/project"
+				TEST_BEFORE_INSTALL ${__SUPERBUILD_TEST_ON_BUILD}
 				CMAKE_ARGS -D__NOT_SUPERBUILD=ON
 			)
+			if(__SUPERBUILD_TRIGGER_TESTS)
+				add_custom_target(test
+					ctest
+					WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/project
+				)
+			endif()
 		endif()
 	else()
 		message(WARNING "No targets declared")

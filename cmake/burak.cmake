@@ -12,6 +12,26 @@
 get_filename_component(__PREFIX "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
 set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY 1) #We disable use of CMake package registry. See https://cmake.org/cmake/help/v3.2/variable/CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY.html . With this variable set, the only version of the packages will be the version we actually intend to use.
 
+macro(enable_testing)
+	if(NOT "${ARGV0}" STREQUAL "")
+		if("${ARGV0}" STREQUAL "TEST_ON_BUILD")
+			set(__SUPERBUILD_TEST_ON_BUILD 1)
+		else()
+			message(FATAL_ERROR "Beetroot error: unknown argument to enable_testing(). The only argument allowed is a flag TEST_ON_BUILD")
+		endif()
+	else()
+		set(__SUPERBUILD_TEST_ON_BUILD 0)
+	endif()
+	if(__NOT_SUPERBUILD)
+		_enable_testing()
+	else()
+		message(STATUS "NO TESTING IN SUPERBUILD")
+		set(__SUPERBUILD_TRIGGER_TESTS 1)
+#		_enable_testing()
+		#noop
+	endif()
+endmacro()
+
 include(${__PREFIX}/burak_variables_misc.cmake)
 include(${__PREFIX}/burak_data_def.cmake)
 include(${__PREFIX}/burak_storage.cmake)

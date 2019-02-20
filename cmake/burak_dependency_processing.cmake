@@ -63,6 +63,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 #		message(WARNING "_discover_dependencies(): list of variables: ${__LIST}")
 		_instantiate_variables(${__ARGS} ${__PARS} "${__LIST}")
 		_descend_dependencies_stack()
+		
+		get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
+		set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 
 #		message(STATUS "_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. DWARF: ${DWARF}")
 
