@@ -38,6 +38,8 @@ set(TEMPLATE_OPTIONS
 	NO_TARGETS #If set it declares that no targets will be generated. Generates error if `generate_targets()` is defined by the user.
 	LANGUAGES CUDA CXX
 	EXPORTED_VARIABLES USE_GPU
+	CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE #If set, than apply_dependency_to_target will *always* be after the target is defined, even if no dependee is set.
+	#This can be used to utilize LINK_PARAMETERS after the target is built to e.g. write a script.
 )
 
 set(ENUM_TEMPLATES <UNIQUE NAME OF TARGET_TEMPLATE>)
@@ -57,6 +59,8 @@ set(DEFINE_EXTERNAL_PROJECT
 
 ```
 Jeśli projekt nie jest external (tj. nie zdefiniowano DEFINE_EXTERNAL_PROJECT), definicję funkcji `generate_targets()` przyjmującej jako argument listę wartości zadeklarowanych w ENUM_TEMPLATES. Ta funkcja jest odpowiedzialna za tworzenie targetu o nazwie ${TEMPLATE_NAME}. Alternatywnie, jeśli dana część projektu nie jest w stanie generować targetu (np. starego typu dependency), to należy pominąć definicję `generate_targets()`, a zamiast napisać funkcję `apply_dependency_to_target(DEPENDEE_TARGET_NAME OUR_TARGET_NAME)` która aplikuje nasz projekt na istniejący target. Oczywiście nie można otrzymać dla takiego template targetu, więc wywołanie `get_targets()` z poziomu `CMakeLists.txt` dla template używającego `apply_dependency_to_target()` zakończy się niepowodzeniem. Za to można używać `get_targets()` z poziomu funkcji `declare_dependencies()`.
+
+apply_dependency_to_target() nie jest wywoływana, jeśli target jest external
 
 Definicję funkcji `declare_dependencies()` przyjmującej jako argument listę wartości zadeklarowanych w ENUM_TEMPLATES. Ta funkcja jest odpowiedzialna za tworzenie targetu o nazwie ${TEMPLATE_NAME}. Ta funkcja jest wywoływana podczas superbuild pass po to, aby wywołać ExternalProjects_Add dla zewnętrznych zależności. Wewnątrz niej można używać funkcji
 

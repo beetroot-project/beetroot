@@ -9,7 +9,18 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 	_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 	list(APPEND __TMP_LIST ${__ARGS__LIST})
 	set(__ARGS__LIST ${__TMP_LIST})
-	_make_instance_name(${__DEPENDEE_INSTANCE_ID} __DEP_INSTANCE_NAME)
+	if(__DEPENDEE_INSTANCE_ID)
+		_make_instance_name(${__DEPENDEE_INSTANCE_ID} __DEP_INSTANCE_NAME)
+		get_target_property(__TYPE ${__DEP_INSTANCE_NAME} TYPE)
+		if("${__TYPE}" STREQUAL "INTERFACE_LIBRARY" )
+			set(KEYWORD "INTERFACE")
+		else()
+			set(KEYWORD "PUBLIC")
+		endif()
+	else()
+		set(__DEP_INSTANCE_NAME)
+		set(KEYWORD "NONE")
+	endif()
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_ID_LIST)
@@ -28,15 +39,9 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 #	apply_to_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 #	take_dependency_from_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 
-	get_target_property(__TYPE ${__DEP_INSTANCE_NAME} TYPE)
-	if("${__TYPE}" STREQUAL "INTERFACE_LIBRARY" )
-		set(KEYWORD "INTERFACE")
-	else()
-		set(KEYWORD "PUBLIC")
-	endif()
 
 
-	apply_dependency_to_target(${__DEP_INSTANCE_NAME} ${__INSTANCE_NAME})
+	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME})
 
 #	message(STATUS "_invoke_apply_dependency_to_target(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID} __NO_OP: ${__NO_OP}")
 	if(__NO_OP)
@@ -117,8 +122,8 @@ function(_parse_general_function_arguments __POSITIONAL __OPTIONS __oneValueArgs
 endfunction()
 
 
-function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES __OUT_NICE_NAME __OUT_EXPORTED_VARIABLES __OUT_LINK_TO_DEPENDEE)
-	set(__OPTIONS SINGLETON_TARGETS NO_TARGETS LINK_TO_DEPENDEE)
+function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __OUT_SINGLETON_TARGETS __OUT_NO_TARGETS __OUT_LANGUAGES __OUT_NICE_NAME __OUT_EXPORTED_VARIABLES __OUT_LINK_TO_DEPENDEE __OUT_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
+	set(__OPTIONS SINGLETON_TARGETS NO_TARGETS LINK_TO_DEPENDEE CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
 	set(__oneValueArgs NICE_NAME)
 	set(__multiValueArgs LANGUAGES EXPORTED_VARIABLES)
 	
@@ -131,8 +136,8 @@ function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_O
 		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH}: ${__unparsed}")
 	endif()
 	
+	#message(STATUS "_parse_file_options(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} ${__TEMPLATE_OPTIONS__REF}__LIST: ${${__TEMPLATE_OPTIONS__REF}__LIST}")
 	if(__PARSED_LANGUAGES)
-#		message(STATUS "_parse_file_options(): __PARSED_LANGUAGES: ${__PARSED_LANGUAGES}")
 		set(__CMAKE_LANGUAGES CXX C CUDA Fortran ASM)
 		foreach(__LANGUAGE IN LISTS __PARSED_LANGUAGES)
 			if(NOT ${__LANGUAGE} IN_LIST __CMAKE_LANGUAGES)
@@ -177,6 +182,14 @@ function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_O
 	else()
 		set(${__OUT_LINK_TO_DEPENDEE} "0" PARENT_SCOPE)
 	endif()
+
+#	message(STATUS "_parse_file_options(): __PARSED_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE: ${__PARSED_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE}")
+	if(__PARSED_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
+		set(${__OUT_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE} "1" PARENT_SCOPE)
+	else()
+		set(${__OUT_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE} "0" PARENT_SCOPE)
+	endif()
+
 endfunction()
 
 

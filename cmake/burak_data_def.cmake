@@ -64,7 +64,8 @@
 #                                            Applies automatically to all external projects and only there.
 # __FILEDB_<PATH_HASH>_LINK_TO_DEPENDEE    - If true, it will always automatically link to the dependee (or return error if does not produce targets)
 # __FILEDB_<PATH_HASH>_TEMPLATE_OPTIONS    - Copy of the template options. Fully redundant information stored for optimization purposes when updating instances based on new features.
-#
+# __FILEDB_<PATH_HASH>_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE - If set, than apply_dependency_on_target will be called even if there is no dependee
+
 # __TEMPLATEDB_<TEMPLATE_NAME>_TEMPLATE_FEATUREBASES - List of all distinct featurebase IDs for that template name. Each will get
 #                                                      distinct target name.
 # __TEMPLATEDB_<TEMPLATE_NAME>_VIRTUAL_INSTANCES - List of all virtual (i.e. created using get_existing_target()) for that template
@@ -101,27 +102,29 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_F_HASH_SOURCE          FEATUREBASEDB )
 	
 	
-	set(${__COLS}_PATH                   FILEDB )
-	set(${__COLS}_SINGLETON_TARGETS      FILEDB )
-	set(${__COLS}_TARGET_FIXED           FILEDB )
-	set(${__COLS}_NO_TARGETS             FILEDB )
-	set(${__COLS}_G_INSTANCES            FILEDB )
-	set(${__COLS}_G_FEATUREBASES         FILEDB )
-	set(${__COLS}_G_TEMPLATES            FILEDB )
-	set(${__COLS}_PARS                   FILEDB )
-	set(${__COLS}_DEFAULTS               FILEDB )
-	set(${__COLS}_EXTERNAL_INFO          FILEDB )
-	set(${__COLS}_TARGETS_REQUIRED       FILEDB )
-	set(${__COLS}_LANGUAGES              FILEDB )
-	set(${__COLS}_ASSUME_INSTALLED       FILEDB )
-	set(${__COLS}_NICE_NAME              FILEDB )
-	set(${__COLS}_EXPORTED_VARS          FILEDB )
-	set(${__COLS}_JOINED_NAME            FILEDB )
-	set(${__COLS}_INSTALL_DIR            FILEDB )
-	set(${__COLS}_SOURCE_DIR             FILEDB )
-	set(${__COLS}_JOINT_TARGETS          FILEDB )
-	set(${__COLS}_LINK_TO_DEPENDEE       FILEDB )
-	set(${__COLS}_TEMPLATE_OPTIONS       FILEDB )
+	set(${__COLS}_PATH                                            FILEDB )
+	set(${__COLS}_SINGLETON_TARGETS                               FILEDB )
+	set(${__COLS}_TARGET_FIXED                                    FILEDB )
+	set(${__COLS}_NO_TARGETS                                      FILEDB )
+	set(${__COLS}_G_INSTANCES                                     FILEDB )
+	set(${__COLS}_G_FEATUREBASES                                  FILEDB )
+	set(${__COLS}_G_TEMPLATES                                     FILEDB )
+	set(${__COLS}_PARS                                            FILEDB )
+	set(${__COLS}_DEFAULTS                                        FILEDB )
+	set(${__COLS}_EXTERNAL_INFO                                   FILEDB )
+	set(${__COLS}_TARGETS_REQUIRED                                FILEDB )
+	set(${__COLS}_LANGUAGES                                       FILEDB )
+	set(${__COLS}_ASSUME_INSTALLED                                FILEDB )
+	set(${__COLS}_NICE_NAME                                       FILEDB )
+	set(${__COLS}_EXPORTED_VARS                                   FILEDB )
+	set(${__COLS}_JOINED_NAME                                     FILEDB )
+	set(${__COLS}_INSTALL_DIR                                     FILEDB )
+	set(${__COLS}_SOURCE_DIR                                      FILEDB )
+	set(${__COLS}_JOINT_TARGETS                                   FILEDB )
+	set(${__COLS}_LINK_TO_DEPENDEE                                FILEDB )
+	set(${__COLS}_TEMPLATE_OPTIONS                                FILEDB )
+	set(${__COLS}_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE FILEDB )
+	
 	
 	
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )

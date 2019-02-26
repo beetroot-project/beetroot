@@ -185,8 +185,9 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID)
 			_link_to_target(${__INSTANCE_ID} ${__DEP_DEP_ID})
 		endforeach()
 	endif()
-	
-	if(TARGET ${__TARGET_NAME})
+	_retrieve_instance_data(${__INSTANCE_ID} CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE __CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
+
+	if(TARGET ${__TARGET_NAME} OR __CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
 		_invoke_apply_dependency_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID} __FUNCTION_EXISTS)
 #	else()
 #		message(FATAL_ERROR "Template that does not produce targets: ${__TARGET_NAME} currently cannot have any dependencies")

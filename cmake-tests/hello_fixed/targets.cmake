@@ -1,3 +1,5 @@
+set(ENUM_TARGETS fiksik)
+
 set(TARGET_PARAMETERS 
 	BLA	SCALAR	STRING	"${WYBOR}-EK"
 	WYBOR SCALAR "CHOICE(BLA:BLU:BLI)" "BLI"
@@ -12,11 +14,14 @@ set(TARGET_PARAMETERS
 set(LINK_PARAMETERS 
 	NONSIGINIFICANT	SCALAR	STRING	"foo"
 )
-set(ENUM_TARGETS fiksik)
 
 #function(declare_dependencies TEMPLATE_NAME)
 #	build_target(LIBHELLO KTO ${LIBKTO})
 #endfunction()
+
+set(TEMPLATE_OPTIONS
+	CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE
+)
 
 function(generate_targets TEMPLATE_NAME)
 	message(STATUS "Inside fiksik generate_targets() trying to define ${TARGET_NAME} with BLA=${BLA}")
@@ -24,3 +29,7 @@ function(generate_targets TEMPLATE_NAME)
 	target_compile_definitions(fiksik PRIVATE "BLA=${BLA}")
 endfunction()
 
+
+function(apply_dependency_to_target DEPENDEE_TARGET_NAME OUR_TARGET_NAME)
+	message(STATUS "##### OK ######")
+endfunction()

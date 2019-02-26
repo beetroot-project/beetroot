@@ -29,10 +29,7 @@ project(hello-fixed)
 
 set(WYBOR "BLU")
 
-get_target(HELLO __OUT_INSTANCE_NAME)
-get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
-get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
-get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama NONSIGINIFICANT boo)
+build_target(fiksik)
 
 # Folder-specific configuration. Don't use relative paths and  CMAKE_CURRENT_SOURCE_DIR - use prefix paths with ${CMAKE_CURRENT_LIST_FILE}/ instead. 
 #Also make sure the file can be parsed multiple times without errors.
