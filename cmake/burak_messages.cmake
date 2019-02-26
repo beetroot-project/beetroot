@@ -56,6 +56,7 @@ function(_get_nice_dependencies_name __INSTANCE_ID __OUTVAR)
 	set(${__OUTVAR} "${__OUT}" PARENT_SCOPE )
 endfunction()
 
+if(__BURAK_DEBUG)
 function(_debug_show_featurebase __FEATUREBASE_ID __DEPTH __PREFIX __OUT __OUT_ERROR)
 #	message(STATUS "_debug_show_featurebase(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __DEPTH: ${__DEPTH}")
 	if("${__DEPTH}" STREQUAL "0")
@@ -291,3 +292,13 @@ function(_debug_show_instance __INSTANCE_ID __DEPTH __PREFIX __OUT __OUT_ERROR)
 	_ascend_from_recurency(${__INSTANCE_ID} DEBUG_PRINT_INSTANCE)
 
 endfunction()
+else()
+function(_debug_show_featurebase __FEATUREBASE_ID __DEPTH __PREFIX __OUT __OUT_ERROR)
+endfunction()
+
+function(_debug_show_instance __INSTANCE_ID __DEPTH __PREFIX __OUT __OUT_ERROR)
+
+endfunction()
+endif()
+
+

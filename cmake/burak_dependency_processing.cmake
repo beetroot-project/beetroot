@@ -107,6 +107,10 @@ endfunction()
 
 #Instantiates target. The function is called during the target building phase. Behavior is different on SUPERBUILD and in the project build.
 function(_instantiate_target __INSTANCE_ID)
+	_retrieve_instance_data(${__INSTANCE_ID} TARGET_BUILT __DEP_BUILT)
+	if(__DEP_BUILT)
+		return()
+	endif()
 	_get_target_behavior(__TARGET_BEHAVIOR)
 	if(NOT "${__TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		message(FATAL_ERROR "Burak internal error: _get_dependencies() called when not DEFINIG_TARGETS")
@@ -130,20 +134,19 @@ function(_instantiate_target __INSTANCE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 
 #	message(STATUS "_instantiate_target(): Named ${__INSTANCE_ID}: ${__TARGET_NAME}, __DEP_IDS: ${__DEP_IDS}")
+	#First we instantiate children (dependencies):
 	if(__DEP_IDS)
 		foreach(__DEP_ID IN LISTS __DEP_IDS)
-#			message(STATUS "_instantiate_target(): Defining ${__DEP_ID} required by target ${__TARGET_NAME}")
 			_instantiate_target(${__DEP_ID})
-			_make_instance_name(${__DEP_ID} __DEP_TARGET_NAME)
 			if(NOT __NOT_SUPERBUILD) #On superbuild the only targets we care about are external projects that are not assumed installed
 				_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO__LIST)
 				_retrieve_instance_data(${__INSTANCE_ID} ASSUME_INSTALLED __ASSUME_INSTALLED)
-				
 			else()
 				set(__EXTERNAL_INFO__LIST "JUST_TO_FOOL_THE_NEXT_COMMAND_IN_THIS_LOOP") #We pretend that any target is external in the project build, to save few more commands in this loop.
 			endif()
-			if(__DEP_TARGET_NAME)
-				if(__EXTERNAL_INFO__LIST AND NOT __ASSUME_INSTALLED)
+			if(__EXTERNAL_INFO__LIST AND NOT __ASSUME_INSTALLED)
+				_make_instance_name(${__DEP_ID} __DEP_TARGET_NAME)
+				if(__DEP_TARGET_NAME )
 					list(APPEND __DEP_TARGETS ${__DEP_TARGET_NAME})
 				endif()
 			endif()
@@ -164,6 +167,7 @@ function(_instantiate_target __INSTANCE_ID)
 		if(__NOT_SUPERBUILD) # We ignore internal dependencies on SUPERBUILD phase
 #			message(STATUS "_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_IDS: ${__DEP_IDS}")
 			_get_target_internal(${__INSTANCE_ID} __FUNCTION_EXISTS)
+			#Now it is a time to let the children be linked with us - we iterate over children again
 			foreach(__DEP_INSTANCE_ID IN LISTS __DEP_IDS)
 				_link_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID})
 			endforeach()
@@ -173,21 +177,23 @@ function(_instantiate_target __INSTANCE_ID)
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT 1)
 endfunction()
 
-#Function links __DEP_INSTANCE_ID to dependee __INSTANCE_ID
+#Function links __DEP_INSTANCE_ID to dependee __INSTANCE_ID, by calling apply_dependency_to_target from DEP_INSTANCE_ID to INSTANCE_ID
+#It is always called if INSTANCE_ID is not external on every pair of instances that are immidiately dependant
 function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID)
 	_make_instance_name(${__DEP_INSTANCE_ID} __DEP_TARGET_NAME)
 	_make_instance_name(${__INSTANCE_ID} __TARGET_NAME)
+	
 #	message(STATUS "_link_to_target(): __DEP_INSTANCE_ID: ${__DEP_INSTANCE_ID} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME}")
 
 	if(NOT TARGET ${__DEP_TARGET_NAME})
 		_retrieve_instance_data(${__DEP_INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 		foreach(__DEP_DEP_ID IN LISTS __DEP_IDS)
+			message(STATUS "_link_to_target(): ${__INSTANCE_ID} dep: ${__DEP_INSTANCE_ID} -> depdep ${__DEP_DEP_ID}")	
 			_link_to_target(${__INSTANCE_ID} ${__DEP_DEP_ID})
 		endforeach()
 	endif()
-	_retrieve_instance_data(${__INSTANCE_ID} CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE __CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
 
-	if(TARGET ${__TARGET_NAME} OR __CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE)
+	if(TARGET ${__TARGET_NAME})
 		_invoke_apply_dependency_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID} __FUNCTION_EXISTS)
 #	else()
 #		message(FATAL_ERROR "Template that does not produce targets: ${__TARGET_NAME} currently cannot have any dependencies")

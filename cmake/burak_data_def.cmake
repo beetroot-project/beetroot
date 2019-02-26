@@ -64,7 +64,7 @@
 #                                            Applies automatically to all external projects and only there.
 # __FILEDB_<PATH_HASH>_LINK_TO_DEPENDEE    - If true, it will always automatically link to the dependee (or return error if does not produce targets)
 # __FILEDB_<PATH_HASH>_TEMPLATE_OPTIONS    - Copy of the template options. Fully redundant information stored for optimization purposes when updating instances based on new features.
-# __FILEDB_<PATH_HASH>_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE - If set, than apply_dependency_on_target will be called even if there is no dependee
+# __FILEDB_<PATH_HASH>_GENERATE_TARGETS_INCLUDE_LINKPARS - If set, than link parameters will be visible to generate_targets (but it makes little sense to condition compilation on them)
 
 # __TEMPLATEDB_<TEMPLATE_NAME>_TEMPLATE_FEATUREBASES - List of all distinct featurebase IDs for that template name. Each will get
 #                                                      distinct target name.
@@ -123,7 +123,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_JOINT_TARGETS                                   FILEDB )
 	set(${__COLS}_LINK_TO_DEPENDEE                                FILEDB )
 	set(${__COLS}_TEMPLATE_OPTIONS                                FILEDB )
-	set(${__COLS}_CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE FILEDB )
+	set(${__COLS}_GENERATE_TARGETS_INCLUDE_LINKPARS					  FILEDB )
 	
 	
 	
