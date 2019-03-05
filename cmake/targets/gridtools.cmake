@@ -1,3 +1,5 @@
+set(ENUM_TARGETS GridTools::gridtools)
+
 if(GRIDTOOLS_USE_GPU)
 	set(NOT_GRIDTOOLS_USE_GPU 0)
 	set(GRIDTOOLS_USE_GPU 1)
@@ -31,12 +33,10 @@ else()
 	set(CUDA_LANG "")
 endif()
 
-set(ENUM_TARGETS GridTools::gridtools)
-
 set(DEFINE_EXTERNAL_PROJECT 
 	NAME GridTools
 	SOURCE_PATH "${SUPERBUILD_ROOT}/gridtools"
-	WHAT_COMPONENTS_NAME_DEPENDS_ON boost;compiler;gridtools
+	WHAT_COMPONENTS_NAME_DEPENDS_ON boost;compiler;cuda;gridtools
 	EXPORTED_TARGETS_PATH lib/cmake
 )
 
@@ -50,9 +50,9 @@ function(generate_targets)
 endfunction()
 
 function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
-	if(NOT GT_ENABLE_TARGET_X86)
-		message(FATAL_ERROR "No support for CPU")
-	endif()
+#	if(NOT GT_ENABLE_TARGET_X86)
+#		message(FATAL_ERROR "No support for CPU")
+#	endif()
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "FLOAT_PRECISION=${FLOAT_PRECISION}")
 	target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} GridTools::gridtools) 
 endfunction()
