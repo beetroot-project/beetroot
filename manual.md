@@ -81,6 +81,10 @@ Flag makes sense only if the tempalate generates targets and they are not of the
 
 This option has exactly the same meaning as the option of the same name in the external project set, so there is no point in setting them in both places.
 
+#### GENERATE_TARGETS_INCLUDE_LINKPARS
+
+This flag makes link parameters available to `generate_targets()`. They can be used for actions that do not lead to generation of targets, such as test making or installation. If they are used for parametrization of targets, subtle errors can happen.
+
 ### External project options
 
 At the moment the beetroot does not allow the user to call the `ExternalProject_Add` directly. Instead it allowd for several customizations, that are passed through `DEFINE_EXTERNAL_PROJECT` variable defined in `targets.cmake`. Defining this structure is the only way to force the `targets.cmake` to describe an external project.

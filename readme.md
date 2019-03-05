@@ -36,9 +36,10 @@ set(TARGET_FEATURES
 set(TEMPLATE_OPTIONS
 	SINGLETON_TARGETS  #If set requires TARGET_TEMPLATE and generates error if ENUM_TEMPLATES is specified
 	NO_TARGETS #If set it declares that no targets will be generated. Generates error if `generate_targets()` is defined by the user.
+	LINK_TO_DEPENDEE #calls `target_link_libraries()`, even if the function `apply_dependency_to_target()` is defined
+	GENERATE_TARGETS_INCLUDE_LINKPARS # Make linkpars available in `generate_targets()`
 	LANGUAGES CUDA CXX
 	EXPORTED_VARIABLES USE_GPU
-	CALL_APPLY_DEPEDENCY_ON_TARGET_WHEN_NO_DEPENDEE #If set, than apply_dependency_to_target will *always* be after the target is defined, even if no dependee is set.
 	#This can be used to utilize LINK_PARAMETERS after the target is built to e.g. write a script.
 )
 
@@ -55,7 +56,6 @@ set(DEFINE_EXTERNAL_PROJECT
 	COMPONENTS SerialboxC
 	BUILD_PARAMETERS USE_GPU ARCH
 )
-
 
 ```
 Jeśli projekt nie jest external (tj. nie zdefiniowano DEFINE_EXTERNAL_PROJECT), definicję funkcji `generate_targets()` przyjmującej jako argument listę wartości zadeklarowanych w ENUM_TEMPLATES. Ta funkcja jest odpowiedzialna za tworzenie targetu o nazwie ${TEMPLATE_NAME}. Alternatywnie, jeśli dana część projektu nie jest w stanie generować targetu (np. starego typu dependency), to należy pominąć definicję `generate_targets()`, a zamiast napisać funkcję `apply_dependency_to_target(DEPENDEE_TARGET_NAME OUR_TARGET_NAME)` która aplikuje nasz projekt na istniejący target. Oczywiście nie można otrzymać dla takiego template targetu, więc wywołanie `get_targets()` z poziomu `CMakeLists.txt` dla template używającego `apply_dependency_to_target()` zakończy się niepowodzeniem. Za to można używać `get_targets()` z poziomu funkcji `declare_dependencies()`.
