@@ -155,7 +155,7 @@ endfunction()
 #Calls targets.cmake:generate_targets() to create the declared target during the project phase run of the CMake. 
 #Does nothing on the SUPERBUILD phase, as the internal project dependencies are of no concern then.
 function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
-#	message(STATUS "Inside _get_target_internal trying to instantiate ${__INSTANCE_NAME}")
+	message(STATUS "Inside _get_target_internal trying to instantiate ${__INSTANCE_NAME}")
 	if(NOT __NOT_SUPERBUILD)
 		return()
 	endif()

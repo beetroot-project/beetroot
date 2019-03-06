@@ -9,6 +9,12 @@
 # 5. return the actual target name.
 #
 
+if("${SUPERBUILD}" STREQUAL "")
+	set(SUPERBUILD "AUTO")
+else()
+#	message("#### SUPERBUILD: ${SUPERBUILD}")
+endif()
+
 get_property(__BURAK_LOADED GLOBAL PROPERTY __BURAK_LOADED)
 if(NOT __BURAK_LOADED)
 	get_filename_component(__PREFIX "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)
@@ -28,11 +34,11 @@ if(NOT __BURAK_LOADED)
 	include(${__PREFIX}/burak_ids.cmake)
 	include(${__PREFIX}/burak_external_target.cmake)
 	include(${__PREFIX}/build_install_prefix.cmake)
+	include(${__PREFIX}/burak_messages.cmake)
+	include(${__PREFIX}/burak_cmake_overrides.cmake)
 	include(${__PREFIX}/set_operations.cmake)
 	include(${__PREFIX}/prepare_arguments_to_pass.cmake)
 	include(${__PREFIX}/missing_dependency.cmake)
-	include(${__PREFIX}/burak_messages.cmake)
-	include(${__PREFIX}/burak_cmake_overrides.cmake)
 
 	if(NOT SUPERBUILD_ROOT)
 		message(FATAL_ERROR "First set the SUPERBUILD_ROOT, then include the beetroot!")
@@ -51,3 +57,4 @@ if(NOT __BURAK_LOADED)
 	__prepare_template_list()
 	set_property(GLOBAL PROPERTY __BURAK_LOADED 1) #To prevent loading this file again
 endif()
+

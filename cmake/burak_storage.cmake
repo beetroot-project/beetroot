@@ -186,6 +186,10 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH)
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
+	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
+		_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_ID}")
+	endif()
+	
 	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 1 )
 	
 #	message(STATUS "_store_virtual_instance_data(): __IS_PROMISE_BEFORE: ${__IS_PROMISE_BEFORE} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES} ")
@@ -230,11 +234,11 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
 	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
+		_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_ID}")
 		set(__JOINT_TARGETS 1)
 	else()
 		set(__JOINT_TARGETS 0)
 	endif()
-	
 	
 	_store_featurebase(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID)
 	_link_file_with_featurebase(${__FEATUREBASE_ID} ${__FILE_HASH})
