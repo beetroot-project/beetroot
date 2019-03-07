@@ -290,7 +290,7 @@ function(_unserialize_variables __SERIALIZED__REF __OUT_ARGS)
 		math(EXPR __ARGS_LENGTH "${__TMP} / 2 - 1")
 		math(EXPR __ARGS_CHECK "${__TMP} % 2")
 		if(NOT "${__ARGS_CHECK}" STREQUAL "0")
-			message(FATAL_ERROR "Wrong number of elements in the serialized arguments ${${__SERIALIZED__REF}__LIST}. Expected number of elements divisible by 2, but got ${__TMP} elements.")
+			message(FATAL_ERROR "Wrong number of elements in the serialized arguments \"${${__SERIALIZED__REF}__LIST}\". Expected number of elements divisible by 2, but got ${__TMP} elements.")
 		endif()
 
 		foreach(__VAR_NR RANGE "${__ARGS_LENGTH}")

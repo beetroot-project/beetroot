@@ -187,6 +187,7 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
 	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
+#		message(STATUS "_store_virtual_instance_data(): adding virtual __INSTANCE_ID ${__INSTANCE_ID} to external dependencies")
 		_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_ID}")
 	endif()
 	
@@ -234,6 +235,7 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
 	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
+#		message(STATUS "_store_nonvirtual_instance_data(): adding __INSTANCE_ID ${__INSTANCE_ID} to external dependencies")
 		_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES "${__INSTANCE_ID}")
 		set(__JOINT_TARGETS 1)
 	else()
@@ -352,6 +354,12 @@ function(_move_instance __OLD_INSTANCE_ID __NEW_INSTANCE_ID )
 	if(${__OLD_INSTANCE_ID} IN_LIST __ALL_INSTANCES)
 		_remove_property_from_db(GLOBAL ALL INSTANCES ${__OLD_INSTANCE_ID})
 		_add_property_to_db(GLOBAL ALL INSTANCES ${__NEW_INSTANCE_ID})
+	endif()
+	_retrieve_global_data(EXTERNAL_DEPENDENCIES __EXTERNAL_DEPENDENCIES)
+	if(${__OLD_INSTANCE_ID} IN_LIST __EXTERNAL_DEPENDENCIES)
+#		message(STATUS "_move_instance(): Moving instance ${__OLD_INSTANCE_ID} from EXTERNAL_DEPENDENCIES")
+		_remove_property_from_db(GLOBAL ALL EXTERNAL_DEPENDENCIES ${__OLD_INSTANCE_ID})
+		_add_property_to_db(GLOBAL ALL EXTERNAL_DEPENDENCIES ${__NEW_INSTANCE_ID})
 	endif()
 endfunction()
 

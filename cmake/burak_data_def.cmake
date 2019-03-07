@@ -76,6 +76,7 @@
 # __GLOBAL_ALL_LANGUAGES - list of all languages required by the built instances
 # __GLOBAL_ALL_FEATUREBASES - list of all featurebases that still need to be processed to make sure they agree with the instances' features.
 # __GLOBAL_ALL_EXTERNAL_DEPENDENCIES - list of all external projects that must be built before our project.
+# __GLOBAL_ALL_EXTERNAL_TARGETS - list of all target names that are going to be build in the superbuild phase
 # __GLOBAL_ALL_LAST_READ_FILE - Name of the last read targets file.
 
 macro(_get_db_columns __COLS)
@@ -135,6 +136,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_ALL_LANGUAGES          GLOBAL)
 	set(${__COLS}_FEATUREBASES           GLOBAL)
 	set(${__COLS}_EXTERNAL_DEPENDENCIES  GLOBAL)
+	set(${__COLS}_EXTERNAL_TARGETS       GLOBAL)
 	set(${__COLS}_LAST_READ_FILE         GLOBAL)
 	
 endmacro()
