@@ -123,7 +123,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 #				message(STATUS "_get_target_external(): mv \"${__FEATUREFILETMP}\" \"${__INSTALL_DIR_STEM}/${__FEATUREBASE_ID}.cmake\"")
 				ExternalProject_Add_Step("${__INSTANCE_NAME_FIXED}" postinstall
 					COMMAND           mkdir -p "${__INSTALL_DIR_STEM}"
-					COMMAND           mv "${__FEATUREFILETMP}" "${__INSTALL_DIR_STEM}/${__EXTERNAL_ID}.cmake"
+					COMMAND           cp "${__FEATUREFILETMP}" "${__INSTALL_DIR_STEM}/${__EXTERNAL_ID}.cmake"
 					COMMENT           "Commiting the external build"
 					ALWAYS            TRUE
 					EXCLUDE_FROM_MAIN FALSE
@@ -199,9 +199,21 @@ macro(_get_existing_targets __INSTALL_DIR_STEM __PATH_HASH)
 	set(${__PATH_HASH}__LIST)
 #	message(STATUS "_get_existing_targets(): ${__INSTALL_DIR_STEM}/*.cmake __FILE_LIST: ${__FILE_LIST}")
 	foreach(__FILE IN LISTS __FILE_LIST)
-		include("${__FILE}" OPTIONAL RESULT_VARIABLE __FILE_LOADED)
-		if("${__FILE_LOADED}" STREQUAL "NOTFOUND")
-			message(FATAL_ERROR "Internal beetroot error: cannot find \"${__FILE}\" using GLOB.")
+		get_filename_component(__INSTALL_UPDIR "${__FILE}" DIRECTORY)
+		get_filename_component(__INSTALL_NAME "${__FILE}" NAME_WE)
+		file(GLOB __ANY_FILE LIST_DIRECTORIES true "${__INSTALL_UPDIR}/${__INSTALL_NAME}/*")
+#		message(STATUS "_get_existing_targets(): __FILE: ${__FILE}, ${__INSTALL_UPDIR}/${__INSTALL_NAME}/* -> __ANY_FILE: ${__ANY_FILE}")
+		if(__ANY_FILE)
+#			message(STATUS "OK: __FILE: ${__FILE}")
+			include("${__FILE}" OPTIONAL RESULT_VARIABLE __FILE_LOADED)
+			if("${__FILE_LOADED}" STREQUAL "NOTFOUND")
+				message(FATAL_ERROR "Internal beetroot error: cannot find \"${__FILE}\" using GLOB.")
+			endif()
+		else()
+#			message(STATUS "BAD: __FILE: ${__INSTALL_UPDIR}/${__INSTALL_NAME}")
+			file(REMOVE "${__FILE}")
+#			file(REMOVE_RECURSE "${__INSTALL_UPDIR}/${__INSTALL_NAME}")
+#			message(FATAL_ERROR "Check file")
 		endif()
 #		message(STATUS "_get_existing_targets(): loaded ${__FILE}")
 	endforeach()
