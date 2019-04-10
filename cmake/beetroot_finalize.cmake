@@ -87,6 +87,9 @@ macro(finalizer)
 			else()
 				set(__SUPERBUILD_TEST_ON_BUILD OFF)
 			endif()
+			if (NOT CMAKE_CONFIGURATION_TYPES)
+				set(__PROPAGATE_BUILD_TYPE -DCMAKE_BUILD_TYPE=$<CONFIG>) #see https://gitlab.kitware.com/cmake/cmake/issues/17645
+			endif()
 #			message(STATUS "finalizer(): __SUPERBUILD_TEST_ON_BUILD: ${__SUPERBUILD_TEST_ON_BUILD}")
 			ExternalProject_Add(${CMAKE_PROJECT_NAME}
 				${__EXT_DEP_STR}
@@ -95,11 +98,11 @@ macro(finalizer)
 				TMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/project/tmp
 				STAMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/project/stamps
 				DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}"
-				INSTALL_COMMAND ""
+				INSTALL_COMMAND ${CMAKE_COMMAND} --build --config $<CONFIG> --target install 
 				BUILD_ALWAYS ON
 				BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/project"
 				TEST_BEFORE_INSTALL ${__SUPERBUILD_TEST_ON_BUILD}
-				CMAKE_ARGS -D__NOT_SUPERBUILD=ON
+				CMAKE_ARGS -D__NOT_SUPERBUILD=ON ${__PROPAGATE_BUILD_TYPE}
 			)
 			if(__SUPERBUILD_TRIGGER_TESTS)
 				add_custom_target(test
