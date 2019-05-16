@@ -158,6 +158,7 @@ function(_instantiate_target __INSTANCE_ID)
 		string(REPLACE "::" "_" __TARGET_NAME ${__TARGET_NAME})
 	endif()
 	
+	# Then we link the children to the calee
 	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
 #	message(STATUS "_instantiate_target(): __EXTERNAL_PROJECT_INFO__LIST: ${__EXTERNAL_PROJECT_INFO__LIST}")
 	if(__EXTERNAL_PROJECT_INFO__LIST)
@@ -166,10 +167,10 @@ function(_instantiate_target __INSTANCE_ID)
 	else()
 		if(__NOT_SUPERBUILD) # We ignore internal dependencies on SUPERBUILD phase
 #			message(STATUS "_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_IDS: ${__DEP_IDS}")
-			_get_target_internal(${__INSTANCE_ID} __FUNCTION_EXISTS)
+			_get_target_internal(${__INSTANCE_ID} __TARGET_FUNCTION_EXISTS)
 			#Now it is a time to let the children be linked with us - we iterate over children again
 			foreach(__DEP_INSTANCE_ID IN LISTS __DEP_IDS)
-				_link_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID})
+				_link_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID} __APPLY_FUNCTION_EXISTS)
 			endforeach()
 		endif()
 	endif()
@@ -179,7 +180,7 @@ endfunction()
 
 #Function links __DEP_INSTANCE_ID to dependee __INSTANCE_ID, by calling apply_dependency_to_target from DEP_INSTANCE_ID to INSTANCE_ID
 #It is always called if INSTANCE_ID is not external on every pair of instances that are immidiately dependant
-function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID)
+function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	_make_instance_name(${__DEP_INSTANCE_ID} __DEP_TARGET_NAME)
 	_make_instance_name(${__INSTANCE_ID} __TARGET_NAME)
 	
@@ -189,7 +190,7 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID)
 		_retrieve_instance_data(${__DEP_INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 		foreach(__DEP_DEP_ID IN LISTS __DEP_IDS)
 #			message(STATUS "_link_to_target(): ${__INSTANCE_ID} dep: ${__DEP_INSTANCE_ID} -> depdep ${__DEP_DEP_ID}")	
-			_link_to_target(${__INSTANCE_ID} ${__DEP_DEP_ID})
+			_link_to_target(${__INSTANCE_ID} ${__DEP_DEP_ID} __DUMMY)
 		endforeach()
 	endif()
 

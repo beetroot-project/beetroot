@@ -1,4 +1,4 @@
-#The function that expects that the target described by the target properties already exists, and it simply brings it.
+#Expects the target described by the target properties already exists, and it simply brings it.
 #It will never define a new target.
 function(get_existing_target __TEMPLATE_NAME)
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
