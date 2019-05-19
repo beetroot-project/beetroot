@@ -114,7 +114,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 				SOURCE_DIR ${__PARSED_SOURCE_PATH}
 				TMP_DIR ${__BUILD_DIR}/tmp
 				STAMP_DIR ${__BUILD_DIR}/timestamps
-				DOWNLOAD_DIR ${SUPERBUILD_ROOT}/build/download
+				DOWNLOAD_DIR ${BEETROOT_BUILD_DIR}/download
 				BINARY_DIR ${__BUILD_DIR}
 				INSTALL_DIR ${__INSTALL_DIR}
 				CMAKE_ARGS ${__CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR}
@@ -229,12 +229,12 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 	name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
-	set(${__OUT_INSTALL_STEM} "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}" PARENT_SCOPE)
+	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
 	
 	_make_external_project_id(${__INSTANCE_ID} __EXTERNAL_ID __EXTERNAL_ID_SOURCE)
 	set(${__OUT_EXTERNAL_ID} "${__EXTERNAL_ID}" PARENT_SCOPE)
 
-	set(__BUILD_DIR  "${SUPERBUILD_ROOT}/build/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
+	set(__BUILD_DIR  "${BEETROOT_BUILD_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
 #	message(STATUS "_workout_install_dir_for_external(): __BUILD_DIR: ${__BUILD_DIR}")
 	set(${__OUT_BUILD_DIR} "${__BUILD_DIR}" PARENT_SCOPE)
 	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS__LIST)
@@ -254,7 +254,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 #		message(STATUS "_workout_install_dir_for_external(): OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
 	
 		# Get the list of all features
-		_get_existing_targets("${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}" "${__PATH_HASH}")
+		_get_existing_targets("${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" "${__PATH_HASH}")
 #		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
 	
 		if(__${__FEATUREBASE_ID}__LIST)
@@ -275,7 +275,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 			endforeach()
 		endif()
 		#We could not find an existing project so we set the install dir ourselves
-		set(__INSTALL_DIR "${SUPERBUILD_ROOT}/install/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
+		set(__INSTALL_DIR "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
 #		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
 	endif()
 	
@@ -283,7 +283,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_FEATURES__LIST)
 	set(${__OUT_FEATURES} "${__SERIALIZED_FEATURES__LIST}" PARENT_SCOPE)
 #	message(STATUS "_workout_install_dir_for_external(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
-	set(__FEATUREFILETMP "${SUPERBUILD_ROOT}/build/${__EXTERNAL_ID}.cmake")
+	set(__FEATUREFILETMP "${BEETROOT_BUILD_DIR}/${__EXTERNAL_ID}.cmake")
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 
 	_external_prepare_feature_file("${__FEATUREFILETMP}" "${__FEATUREBASE_ID}" "${__EXTERNAL_ID}" "${__INSTALL_DIR}" "${__BUILD_DIR}" __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES "${__EXTERNAL_ID_SOURCE}")
