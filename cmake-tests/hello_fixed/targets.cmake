@@ -19,7 +19,7 @@ set(LINK_PARAMETERS
 #	build_target(LIBHELLO KTO ${LIBKTO})
 #endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	message(STATUS "Inside fiksik generate_targets() trying to define ${TARGET_NAME} with BLA=${BLA}")
 	add_executable(fiksik "${CMAKE_CURRENT_SOURCE_DIR}/source.cpp")
 	target_compile_definitions(fiksik PRIVATE "BLA=${BLA}")

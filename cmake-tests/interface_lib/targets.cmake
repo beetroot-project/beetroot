@@ -15,7 +15,7 @@ function(declare_dependencies TEMPLATE_NAME)
 	build_target(NESTED_INTERFACE_LIB)
 endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	add_library(${TARGET_NAME} INTERFACE)
 	target_compile_definitions(${TARGET_NAME} INTERFACE "LIBPAR=${LIBPAR}")
 endfunction()

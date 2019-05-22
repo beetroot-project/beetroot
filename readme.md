@@ -190,7 +190,7 @@ Parsuje plikt targets.cmake i na podstawie Args..., zmiennych tam zadeklarowanyc
 4. Tworzy zmienne o nazwach `${TEMPLATE_NAME}_TARGET_NAME`, które przechowują oczekiwane nazwy targetów danego `TEMPLATE_NAME`. 
 5. Upewnia się, że flaga `__GATHERING_DEPENDENCIES` jest wyzerowana.
 6. Modyfikuje `CMAKE_CURRENT_SOURCE_DIR`, aby wskazywała na katalog, w którym jest wywoływany `targets.cmake` (tj. `path`).
-6. Wywołuje funkcję użytkownika `generate_targets(TEMPLATE_NAME)`. Wewnątrz tej funkcji każde wywołanie `get_target()` zwraca błąd z uwagi na wyzerowanie `__GATHERING_DEPENDENCIES`.
+6. Wywołuje funkcję użytkownika `generate_targets(TARGET_NAME TEMPLATE_NAME)`. Wewnątrz tej funkcji każde wywołanie `get_target()` zwraca błąd z uwagi na wyzerowanie `__GATHERING_DEPENDENCIES`.
 7. Sprawdza, czy targety, które chcieliśmy uzyskać, faktycznie są stworzone (`if(TARGET ${TEMPLATE_NAME}_TARGET_NAME)...`). Jeśli nie - zwraca błąd.
 8. Zwraca nazwę instance targetu, który chcieliśmy uzyskać.
 

@@ -13,7 +13,7 @@ set(TEMPLATE_OPTIONS
 	EXPORTED_VARIABLES LIB_MYVAR
 )
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 #	message(STATUS "LibHello: inside generate_targets trying to define ${TARGET_NAME} in ${CMAKE_CURRENT_SOURCE_DIR}/include")
 	add_library(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/src/libsource.cpp")
 #	message(WARNING "LIBHELLO: add_library(${TARGET_NAME} \"${CMAKE_CURRENT_SOURCE_DIR}/src/libsource.cpp\")")

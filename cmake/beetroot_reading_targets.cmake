@@ -133,7 +133,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 	function(declare_dependencies DUMMY_VAR)
 		#nothing to declare
 	endfunction()
-	function(generate_targets DUMMY_VAR)
+	function(generate_targets DUMMY_VAR1 DUMMY_VAR2)
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined
 	endfunction()
 	function(apply_dependency_to_target INSTANCE_NAME DEP_INSTANCE_NAME)

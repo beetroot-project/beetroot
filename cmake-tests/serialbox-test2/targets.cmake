@@ -13,7 +13,7 @@ function(declare_dependencies TEMPLATE_NAME)
 	get_existing_target(Serialbox::SerialboxCStatic)
 endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	if(NOT Serialbox_SerialboxCStatic_INSTALL_DIR)
 		message(FATAL_ERROR "Passing INSTALL_DIR of the dependency does not work")
 	endif()

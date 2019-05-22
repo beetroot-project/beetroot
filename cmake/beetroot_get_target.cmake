@@ -198,7 +198,6 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	_insert_names_from_dependencies("${__DEP_ID_LIST}" __ARGS)
 	
 #	message(STATUS "_get_target_internal()1 Serialbox_SerialboxCStatic_INSTALL_DIR: ${Serialbox_SerialboxCStatic_INSTALL_DIR}")
-	set(TARGET_NAME ${__INSTANCE_NAME})
 	set(${__TEMPLATE_NAME}_TARGET_NAME ${__INSTANCE_NAME})
 	
 	_instantiate_variables(__ARGS __PARS "${__ARGS__LIST}")
@@ -213,7 +212,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 #	message(FATAL_ERROR "Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} with instance name set as «${__INSTANCE_NAME}» ")
 	set(__NO_OP 0)
 
-	generate_targets(${__TEMPLATE_NAME})
+	generate_targets(${__INSTANCE_NAME} ${__TEMPLATE_NAME})
 	
 	_retrieve_instance_data(${__INSTANCE_ID} NO_TARGETS __NO_TARGETS )
 #	message(STATUS "_get_target_internal(): __INSTANCE_ID: ${__INSTANCE_ID} __NO_TARGETS: ${__NO_TARGETS}")

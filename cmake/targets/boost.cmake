@@ -23,7 +23,7 @@ set(DEFINE_EXTERNAL_PROJECT
 	SPACK_PACKAGES boost
 )
 
-function(generate_targets TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefined, the Beetroot will use the following definition
+function(generate_targets TARGET_NAME TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefined, the Beetroot will use the following definition
 #	message(FATAL_ERROR "find_package(Boost  COMPONENTS ${COMPONENTS} REQUIRED)")
 #	find_package(Boost ${VERSION} COMPONENTS ${COMPONENTS} REQUIRED)
 	find_package(Boost  COMPONENTS ${COMPONENTS} REQUIRED)

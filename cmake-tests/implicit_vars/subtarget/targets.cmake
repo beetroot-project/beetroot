@@ -28,7 +28,7 @@ function(declare_dependencies TEMPLATE_NAME)
 	get_existing_target(EXPORT_VAR)
 endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	if("${IMPLICIT_GLOBAL}" STREQUAL "default_implicit_global")
 		message(FATAL_ERROR "IMPLICIT_GLOBAL was not overriden")
 	endif()

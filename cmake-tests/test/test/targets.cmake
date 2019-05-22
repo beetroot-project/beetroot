@@ -11,7 +11,7 @@ function(declare_dependencies TARGET_NAME)
 	build_target(SELF_TEST)
 endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	get_target(SELF_TEST SELF_TEST_DRIVER)
 
 	file(WRITE  "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.sh" "#!/bin/sh\n")

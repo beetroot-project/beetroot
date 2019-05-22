@@ -6,13 +6,13 @@ set(LINK_PARAMETERS
 	LOG_LEVEL	SCALAR	"CHOICE(trace:debug:warning:error)" warning
 )
 
-function(declare_dependencies TARGET_NAME)
+function(declare_dependencies TEMPLATE_NAME)
 #	build_target(Boost::boost 
 #		COMPONENTS filesystem log VERSION 1.67.0)
 	
 endfunction()
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 endfunction()
 
 function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)

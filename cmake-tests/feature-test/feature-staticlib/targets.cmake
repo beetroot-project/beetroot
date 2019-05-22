@@ -9,7 +9,7 @@ set(TARGET_FEATURES
 	STH_COMPONENTS	VECTOR	STRING	"compdefault"
 )
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	message(STATUS "LibHello: inside generate_targets trying to define ${TARGET_NAME} in ${CMAKE_CURRENT_SOURCE_DIR}/include. STH_COMPONENTS: ${STH_COMPONENTS}")
 	add_library(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/libsource.cpp")
 	target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

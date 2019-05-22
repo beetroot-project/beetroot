@@ -4,7 +4,7 @@ set(TARGET_PARAMETERS
 
 set(ENUM_TEMPLATES HELLO_SIMPLE)
 
-function(generate_targets TEMPLATE_NAME)
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	if(NOT KTO)
 		message(FATAL_ERROR "KTO is empty!")
 	endif()
