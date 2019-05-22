@@ -41,12 +41,20 @@ build_target(HELLO_2BOOST)
 build_target(HELLO_2BOOST PAR KUC)
 build_target(HEADER_CONSUMER)
 
+build_target(BOOTSTRAPPED_HELLO_SIMPLE)
+
 build_target(SERIALBOX_C_TEST)
 build_target(SERIALBOX_C_TEST2 SERIALBOX_USE_NETCDF 0 SERIALBOX_ENABLE_FORTRAN 1 SERIALBOX_EXAMPLES 1 ) #Works only with SERIALBOX_C_TEST
 build_target(SERIALBOX_C_TEST2) 
 
 build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail
 build_target(FEATURE-EXEC)
+get_target(SELF_TEST_TEST TEST_NAME)
+
+set(IMPLICIT_GLOBAL "OK CMakeLists")
+build_target(IMPLICIT_VARS)
+build_target(EXPORT_VAR 
+	IMPLICIT_EXPORTED "OK CMakeLists")
 
 
 finalizer()
