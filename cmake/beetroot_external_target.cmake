@@ -26,8 +26,9 @@ endfunction()
 #3. Jeśli etap naszego projektu - wywołuje `find_packages`, tworzy alias dla importowanego targetu i zwraca nazwę `INSTANCE_NAME`.
 
 # Pass empty __HASH if the external project does not support multiple instances (because the targets names are fixed)
+# __DEP_TARGETS contains a list of other external projects this project depends on
 function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
-#	message(STATUS "_get_target_external(): __INSTANCE_ID: ${__INSTANCE_ID}")
+#	message(STATUS "_get_target_external(): first entry __INSTANCE_ID: ${__INSTANCE_ID}, because it depends on ${__DEP_TARGETS}")
 	message("${__MESSAGE}")
 	if(__ERROR)
 		_debug_show_instance(${__INSTANCE_ID} 2 "EXTERNAL_TARGET: " __MESSAGE __ERROR)
@@ -74,6 +75,12 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 		_retrieve_instance_data(${__INSTANCE_ID} F_PATH __TARGETS_CMAKE_PATH)
 		_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 		_set_property_to_db(FILEDB ${__PATH_HASH} SOURCE_DIR ${__PARSED_SOURCE_PATH})
+		_retrieve_file_data(${__PATH_HASH} INSTALL_DIR __TMP_INSTALL_DIR)
+		if(NOT "${__TMP_INSTALL_DIR}" STREQUAL "" )
+			if(NOT "${__TMP_INSTALL_DIR}" STREQUAL "${__INSTALL_DIR}")
+				message(FATAL_ERROR "Hash of the installation path of the external project ${__EXTERNAL_BARE_NAME} has changed from old ${__TMP_INSTALL_DIR} to ${__INSTALL_DIR}. This may be likely because you may have changed the set of parameters of this external project. If that is the case, simply remove path ${__INSTALL_DIR} and ${__BUILD_DIR}.")
+			endif()
+		endif()
 		_set_property_to_db(FILEDB ${__PATH_HASH} INSTALL_DIR ${__INSTALL_DIR})
 	endif()
 #	message(STATUS "_get_target_external(): Going to add external project for ${__TEMPLATE_NAME} defined in the path ${__TEMPLATE_DIR}. We expect it will generate a target ${__INSTANCE_NAME}. The project will be installed in ${__INSTALL_DIR}")
@@ -194,6 +201,10 @@ function(_external_prepare_feature_file __FILENAME __FEATUREBASE_ID __EXTERNAL_I
 	file(APPEND "${__FILENAME}" "list(APPEND __${__FEATUREBASE_ID}__LIST ${__EXTERNAL_ID})\n")
 endfunction()
 
+# loads all installed version of the external dependency with the given prefix __INSTALL_DIR_STEM.
+# After invoking this macro, a new elements will be added to lists __<featurebase_id>__LIST for each
+# found installed version of the external dependency that contain its EXTERNAL_ID.
+# User then can query the features of that dependency by inspecting __<EXTERNAL_ID>_[SERIALIZED_FEATURES__LIST; SERIALIZED_MODIFIERS__LIST; INSTALL_DIR; BUILD_DIR; HASH_SOURCE]
 macro(_get_existing_targets __INSTALL_DIR_STEM __PATH_HASH)
 	file(GLOB __FILE_LIST LIST_DIRECTORIES false "${__INSTALL_DIR_STEM}/*.cmake")
 	set(${__PATH_HASH}__LIST)
@@ -201,10 +212,12 @@ macro(_get_existing_targets __INSTALL_DIR_STEM __PATH_HASH)
 	foreach(__FILE IN LISTS __FILE_LIST)
 		get_filename_component(__INSTALL_UPDIR "${__FILE}" DIRECTORY)
 		get_filename_component(__INSTALL_NAME "${__FILE}" NAME_WE)
+		#Check if the install subdirectory with that hash really exists and is not empty
 		file(GLOB __ANY_FILE LIST_DIRECTORIES true "${__INSTALL_UPDIR}/${__INSTALL_NAME}/*")
 #		message(STATUS "_get_existing_targets(): __FILE: ${__FILE}, ${__INSTALL_UPDIR}/${__INSTALL_NAME}/* -> __ANY_FILE: ${__ANY_FILE}")
 		if(__ANY_FILE)
 #			message(STATUS "OK: __FILE: ${__FILE}")
+			# Here we load the information about the installed library, so it can be decided whether it has compatible features
 			include("${__FILE}" OPTIONAL RESULT_VARIABLE __FILE_LOADED)
 			if("${__FILE_LOADED}" STREQUAL "NOTFOUND")
 				message(FATAL_ERROR "Internal beetroot error: cannot find \"${__FILE}\" using GLOB.")
@@ -222,6 +235,10 @@ endmacro()
 #Function conjoures an install directory for the external project based on its modifiers, features and a list
 #of already installed versions, to avoid building project when a compatible version may already be installed
 function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_DEPENDS_ON __EXTERNAL_BARE_NAME __OVERRIDE_INSTALL_DIR __OUT_INSTALL_STEM __OUT_INSTALL_DIR __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
+
+	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS__LIST)
+	set(${__OUT_MODIFIERS} "${__SERIALIZED_MODIFIERS__LIST}" PARENT_SCOPE)
+
 	# Get the stem of the installation dir - a folder with all the system-dependend prefixes that
 	#   define the version of all the manually typed dependencies
 	_retrieve_instance_data(${__INSTANCE_ID} F_PATH __TARGETS_CMAKE_PATH)
@@ -229,42 +246,45 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 	name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
+	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
 	
+	# Generate hash of the external project based on the required modifiers and features
 	_make_external_project_id(${__INSTANCE_ID} __EXTERNAL_ID __EXTERNAL_ID_SOURCE)
 	set(${__OUT_EXTERNAL_ID} "${__EXTERNAL_ID}" PARENT_SCOPE)
 
+	# Append this hash to the build (install dir may need special treatment becasue there may be a different version of the external project installed with compatible features)
 	set(__BUILD_DIR  "${BEETROOT_BUILD_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
 #	message(STATUS "_workout_install_dir_for_external(): __BUILD_DIR: ${__BUILD_DIR}")
 	set(${__OUT_BUILD_DIR} "${__BUILD_DIR}" PARENT_SCOPE)
-	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS__LIST)
-	set(${__OUT_MODIFIERS} "${__SERIALIZED_MODIFIERS__LIST}" PARENT_SCOPE)
 	
 	if(__OVERRIDE_INSTALL_DIR)
 		get_filename_component(__FORCED_INSTALL_DIR "${__OVERRIDE_INSTALL_DIR}" REALPATH BASE_DIR "${SUPERBUILD_ROOT}")
 #		message(STATUS "_workout_install_dir_for_external(): __OVERRIDE_INSTALL_DIR: ${__OVERRIDE_INSTALL_DIR}")
 	else()
 
-		# Prepare our identification
+		# Prepare our identification - check if the installed version has compatible featuresets
 		_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 		_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 		_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __OUR_ARGS)
 		_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_OUR_ARGS__LIST)
-#		message(STATUS "_workout_install_dir_for_external(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __EXTERNAL_ID: ${__EXTERNAL_ID}")
-#		message(STATUS "_workout_install_dir_for_external(): OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
+		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __EXTERNAL_ID: ${__EXTERNAL_ID}...")
+		message(STATUS "_workout_install_dir_for_external(): ... OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
 	
-		# Get the list of all features
+		# Get the list of all installed versions that maybe compatible with our requirement
 		_get_existing_targets("${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" "${__PATH_HASH}")
-#		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
+		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
 	
-		if(__${__FEATUREBASE_ID}__LIST)
+		if(__${__FEATUREBASE_ID}__LIST) # If we found at least one already installed external project...
 			foreach(__INSTALLED_EXTERNAL IN LISTS __${__FEATUREBASE_ID}__LIST)
 				_unserialize_variables(__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES __THEIR_ARGS)
-#				message(STATUS "_workout_install_dir_for_external(): __THEIR_ARGS: ${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}")
+				message(STATUS "_workout_install_dir_for_external(): __THEIR_ARGS: ${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}")
+				# Check if the features of the installed version are compatible with ours
 				_compare_featuresets(${__PATH_HASH} __PARS __OUR_ARGS __THEIR_ARGS __OUT_RELATION)
-#				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
+				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
 
-				if("${__OUT_RELATION}" STREQUAL "0" OR "${__OUT_RELATION}" STREQUAL "2")
+				if("${__OUT_RELATION}" STREQUAL "0" OR "${__OUT_RELATION}" STREQUAL "2") # If installed project
+				# is compatible, then use it and exit this function
 					set(${__OUT_INSTALL_DIR} "${__${__INSTALLED_EXTERNAL}_INSTALL_DIR}" PARENT_SCOPE)
 					set(${__OUT_FEATUREBASETMP} "" PARENT_SCOPE)
 					set(${__OUT_FEATURES} "${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}" PARENT_SCOPE)
@@ -274,7 +294,8 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 				endif()
 			endforeach()
 		endif()
-		#We could not find an existing project so we set the install dir ourselves
+		# We could not find an existing project so we set the install dir ourselves - we append __EXTERNAL_ID to the installation 
+		# directory the same way as we did for __BUILD_DIR
 		set(__INSTALL_DIR "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
 #		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
 	endif()

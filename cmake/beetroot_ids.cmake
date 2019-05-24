@@ -57,8 +57,8 @@ function(_make_featurebase_hash_2 __SERIALIZED_MODIFIERS __SERIALIZED_FEATURES _
 endfunction()
 
 function(_make_featurebase_hash_1 __MODS __MODS_LIST __FEATS __FEATS__LIST __TEMPLATE_NAME __PATH __SINGLETON_TARGETS __OUT_HASH __OUT_HASH_SOURCE)
-	_serialize_variables(${__MODS} "${__MODS__LIST}" __SERIALIZED_MODIFIERS)
-	_serialize_variables(${__FEATS} "${__FEATS__LIST}" __SERIALIZED_FEATURES)
+	_serialize_variables(${__MODS} __MODS__LIST __SERIALIZED_MODIFIERS)
+	_serialize_variables(${__FEATS} __FEATS__LIST __SERIALIZED_FEATURES)
 #	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "${__SERIALIZED_FEATURES}" ${__TEMPLATE_NAME} "${__PATH}" ${__SINGLETON_TARGETS} __OUT) We remove features from featurebase hash
 	_make_featurebase_hash_2("${__SERIALIZED_MODIFIERS}" "" ${__TEMPLATE_NAME} "${__PATH}" ${__SINGLETON_TARGETS} __HASH __HASH_SOURCE)
 	set(${__OUT_HASH} "${__HASH}" PARENT_SCOPE)
@@ -78,7 +78,7 @@ function(_make_instance_id __TEMPLATE_NAME_TO_FIX __ARGS __SALT __OUT __OUT_SOUR
 		set(${__OUT} "${__TEMPLATE_NAME}_${__HASH}")
 	endif()
 	
-	_serialize_variables(${__ARGS} "${${__ARGS}__LIST}" __TMP_SER)
+	_serialize_variables(${__ARGS} ${__ARGS}__LIST __TMP_SER)
 	set(${__OUT} "${${__OUT}}" PARENT_SCOPE)
 	set(${__OUT_SOURCE} "${__HASH_SOURCE}" PARENT_SCOPE)
 #	message(STATUS "_make_instance_id(): ${__TEMPLATE_NAME} with args ${__TMP_SER} got hash ${${__OUT}} based on source ${__HASH_SOURCE}")
@@ -143,12 +143,14 @@ function(_make_instance_name __INSTANCE_ID __OUT)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TARGET_NAME "${__TARGET_NAME}")
 endfunction()
 
+#Calculates hash of the external project based on its name, features and modifiers
 function(_make_external_project_id __INSTANCE_ID __EXTERNAL_ID_OUT __HASH_SOURCE_OUT)
 	_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __ARGS)
 	set(__TMP_LIST ${__ARGS__LIST})
 	_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
 	list(APPEND __ARGS__LIST ${__TMP_LIST} )
 	_calculate_hash(__ARGS "${__ARGS__LIST}" "${__EXTERNAL_NAME}" __EXTERNAL_ID __EXTERNAL_ID_SOURCE)
+	message(STATUS "_make_external_project_id(): __ARGS__LIST: ${__ARGS__LIST} __EXTERNAL_ID_SOURCE: ${__EXTERNAL_ID_SOURCE} __EXTERNAL_ID: ${__EXTERNAL_ID}")
 	string(SUBSTRING "${__EXTERNAL_ID}" 1 5 __EXTERNAL_ID)
 	set(${__EXTERNAL_ID_OUT} ${__EXTERNAL_ID} PARENT_SCOPE)
 	set(${__HASH_SOURCE_OUT} "${__EXTERNAL_ID_SOURCE}" PARENT_SCOPE)

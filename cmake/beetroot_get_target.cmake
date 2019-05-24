@@ -16,9 +16,33 @@ function(get_existing_target __TEMPLATE_NAME)
 
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${__ARGS})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
+	message(STATUS "${__PADDING}get_existing_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __PARAMETERS_DIC__LIST_MODIFIERS: ${__PARAMETERS_DIC__LIST_MODIFIERS}")
+	
+	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
+	message(STATUS "${__PADDING}get_existing_target(): before removal __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __PARAMETERS_DIC__LIST_MODIFIERS: ${__PARAMETERS_DIC__LIST_MODIFIERS} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
+
+	_remove_variables_with_default_value(__VARIABLE_DIC ${__PARENT_ARGS_PREFIX} __PARAMETERS_DIC__LIST_MODIFIERS __VARIABLE_DIC) #Removes all modifiers which value user has not changed in his declare_dependencies().
+	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
+	message(STATUS "${__PADDING}get_existing_target(): after _remove_variables_with_default_value __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
+ 
+	_remove_default_variables(__VARIABLE_DIC __VARIABLE_DIC)
+	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
+	message(STATUS "${__PADDING}get_existing_target(): after _remove_default_variables __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
+	
+	if(__PARENT_ALL_VARIABLES)
+#		message(STATUS "${__PADDING}get_existing_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
+		_blank_variables(__PARENT_ALL_VARIABLES __VARIABLE_DIC__LIST) #Blanks all variables that may have been set by dependee's declare_dependencies().
+		_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
+		message(STATUS "${__PADDING}get_existing_target(): after _blank_variables __TEMPLATE_NAME: ${__TEMPLATE_NAME} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
+	endif()
+	
 	
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID __HASH_SOURCE) 
+#	if("${__TEMPLATE_NAME}" STREQUAL "GridTools::gridtools")
+#		message(WARNING "GridTools::gridtools ### __INSTANCE_ID: ${__INSTANCE_ID} i __HASH_SOURCE: ${__HASH_SOURCE}")
+#		message(FATAL_ERROR "TODO: Gdy rejestruje się instance (który może być singletonem), to w celu policzenia INSTANCE_ID przyjmowane są jakieś target parametry - w przypadku gridtools to jest precision=4, bo tak jest domyślnie. Potem należy je zamienić na precision=8, ale niestety niektóre właściwości nie pozwalają na to - np. zapisana ścieżka instalacji, która zawiera external_id, który zależy od tych niefortunnych (i pewnie nigdy nie używanych) wartości paramertrów ")
+#	endif()
 #	message(STATUS "get_existing_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. DWARF: ${DWARF} ")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
@@ -113,6 +137,10 @@ function(get_target __TEMPLATE_NAME __OUT)
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
 #	message(STATUS "get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
 	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
+	if(__PARENT_ALL_VARIABLES)
+#		message(STATUS "get_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
+		_blank_variables(__PARENT_ALL_VARIABLES __VARIABLE_DIC__LIST) #Blanks all variables that may have been set by dependee's declare_dependencies().
+	endif()
 #	if(__TEMPLATE_OPTIONS)
 #		message(STATUS "get_target(): __TEMPLATE_OPTIONS: ${__TEMPLATE_OPTIONS}")
 #	endif()

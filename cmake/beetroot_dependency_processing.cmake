@@ -58,18 +58,30 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		list(APPEND __LIST ${${__PARS}__LIST_FEATURES})
 		list(APPEND __LIST ${${__PARS}__LIST_LINKPARS} )
 
-		message(STATUS "Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
+		if("${__PARENT_DISCOVERY_DEPTH}" STREQUAL "")
+			set(__PARENT_DISCOVERY_DEPTH 0)
+		else()
+			math(EXPR __PARENT_DISCOVERY_DEPTH "${__PARENT_DISCOVERY_DEPTH}+1")
+		endif()
+		math(EXPR __PADDING_SIZE "${__PARENT_DISCOVERY_DEPTH}*3")
+		string(SUBSTRING "                         " 1 "${__PADDING_SIZE}" __PADDING)
+
+		message(STATUS "${__PADDING}Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
 		_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
 #		message(WARNING "_discover_dependencies(): list of variables: ${__LIST}")
 		_instantiate_variables(${__ARGS} ${__PARS} "${__LIST}")
+		set(__PARENT_ARGS_PREFIX ${__ARGS}) #So the get_existing_target can access the default values of all the relevant variables, so they can infer if user had changed them
 		_descend_dependencies_stack()
 		
 		get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
 		set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
+		set(__PARENT_ALL_VARIABLES ${${__ARGS}__LIST}) #Used by all entry functions like build_target or get_existing_target that define our dependencies to blank all our variables before executing _their_ declare_dependencies()
 
 #		message(STATUS "_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. DWARF: ${DWARF}")
 
+
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
+		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
 #		message(STATUS "_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
@@ -85,6 +97,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 #	message(STATUS "_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
 #	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
+	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with ${__ARGS}_FLOAT_PRECISION = ${${__ARGS}_FLOAT_PRECISION}")
 	_store_nonvirtual_instance_data(
 		 ${__INSTANCE_ID} 
 		 ${__ARGS} 
@@ -133,7 +146,10 @@ function(_instantiate_target __INSTANCE_ID)
 	set(__DEP_TARGETS)
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 
-#	message(STATUS "_instantiate_target(): Named ${__INSTANCE_ID}: ${__TARGET_NAME}, __DEP_IDS: ${__DEP_IDS}")
+	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __PARENT_INSTANCE_IDS) #This variable is needed here only
+	# for debugging
+
+	message(STATUS "_instantiate_target(): instance: ${__INSTANCE_ID} target name: ${__TARGET_NAME} requires __DEP_IDS: ${__DEP_IDS} and is required by ${__PARENT_INSTANCE_IDS}")
 	#First we instantiate children (dependencies):
 	if(__DEP_IDS)
 		foreach(__DEP_ID IN LISTS __DEP_IDS)
@@ -163,6 +179,7 @@ function(_instantiate_target __INSTANCE_ID)
 #	message(STATUS "_instantiate_target(): __EXTERNAL_PROJECT_INFO__LIST: ${__EXTERNAL_PROJECT_INFO__LIST}")
 	if(__EXTERNAL_PROJECT_INFO__LIST)
 		#Handling external project
+	message(STATUS "_instantiate_target(): calling _get_target_external with __INSTANCE_ID: ${__INSTANCE_ID}, because it depends on ${__PARENT_INSTANCE_IDS}")
 		_get_target_external(${__INSTANCE_ID} "${__DEP_TARGETS}")
 	else()
 		if(__NOT_SUPERBUILD) # We ignore internal dependencies on SUPERBUILD phase

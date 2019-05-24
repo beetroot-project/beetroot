@@ -35,6 +35,7 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 
 	set(__ARGUMENT_HASH_OLD "")
 	set(__ARG_LIST "${ARGN}")
+	set(__OVERRIDEN_ARGS "") #List of all args that are non-default
 #	message(STATUS "_get_variables(): ARGN: ${ARGN}")
 
 #	set(__DEBUG_VAR_NAME WHO)
@@ -274,11 +275,11 @@ endfunction()
 #
 # Iterates over all variables in __PARS, and combines the values taken from __ARGS with overrides taken as the same name, but with optional prefix "${__VALUES}_".
 function(_read_variables_from_cache __PARS __ARGS __VALUES __SOURCE __OUT_ARGS)
-	foreach(__VAR IN LISTS ${__ARGS}__LIST)
-		if("${${__VALUES}_${__VAR}}" STREQUAL "")
-			set(__EXT_VARNAME ${__VAR})
-		else()
+	foreach(__VAR IN LISTS ${__PARS}__LIST)
+		if(DEFINED ${__VALUES}_${__VAR})
 			set(__EXT_VARNAME ${__VALUES}_${__VAR})
+		else()
+			set(__EXT_VARNAME ${__VAR})
 		endif()
 		if(DEFINED ${__EXT_VARNAME})
 #			if(__PARS)
@@ -297,8 +298,7 @@ function(_read_variables_from_cache __PARS __ARGS __VALUES __SOURCE __OUT_ARGS)
 		endif()
 	endforeach()
 	set(${__OUT_ARGS}__LIST "${${__ARGS}__LIST}" PARENT_SCOPE)
-	set(${__OUT_ARGS}__LIST_MODIFIERS "${${__ARGS}__LIST_MODIFIERS}" PARENT_SCOPE)
-	
+#	set(${__OUT_ARGS}__LIST_MODIFIERS "${${__ARGS}__LIST_MODIFIERS}" PARENT_SCOPE)	
 endfunction()
 
 function(_verify_parameter NAME CONTEXT CONTAINER TYPE VALUE IS_FEATURE __TARGETS_CMAKE_PATH)

@@ -31,7 +31,7 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES -     List of all instances that already have list of features 
 #                                                        fully compatible with that of FEATUREBASE. 
 #                                                        At the beginning the list is empty.
-# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the dependencies id of the featureset.
+# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the instances that require us.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_FEATURES           - Serialized list of features that are incorporated in this featureset.
 # __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS            - Serialized values of all the modifiers' values
 # __FEATUREBASEDB_<FEATURESET_ID>_F_PATH               - Path to the file that describes the template.

@@ -191,4 +191,11 @@ function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_O
 
 endfunction()
 
-
+function(_nice_arg_list __ARGS __ARGS_LIST __OUT)
+	set(__TMP)
+	foreach(__VAR IN LISTS ${__ARGS_LIST})
+		list(APPEND __TMP "${__VAR}=\"${${__ARGS}_${__VAR}}\"")
+	endforeach()
+	nice_list_output(OUTVAR __TXT LIST ${__TMP})
+	set(${__OUT} ${__TXT} PARENT_SCOPE)
+endfunction()
