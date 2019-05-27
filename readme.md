@@ -67,7 +67,7 @@ Two targets will get built: `hello_simple1` and `hello_simple2`. First built wit
 
 * Target definition can include dependencies, with easy and versatile parameter passing to them.
 
-* It introduces a third class of parameters called "features" that describe optional functionality of the target that needs to be enabled in compile-time. With them, it is possible to define dependency as "library 'foo' with whatever parameters other parts of the project require, but with support for feature A".
+* It introduces a third class of parameters called "features" that describe optional functionality of the singleton target (i.e. that cannot be defined twice) that needs to be enabled in compile-time. With them, it is possible to define dependency as "library 'foo' with whatever parameters other parts of the project require, but with support for feature A".
 
 
 
