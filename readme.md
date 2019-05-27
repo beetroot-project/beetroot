@@ -30,12 +30,12 @@ project(hello_simple) #optional
 build_target(HELLO_SIMPLE) 
 build_target(HELLO_SIMPLE MYPAR "Foo")
 
-finalize() # Always required. After this function call the targets are defined.
+finalize() # Always required. After this function call, the targets are defined.
 ```
 
 ### 3. Write target description
 
-Write the `targets.cmake` file in any folder inside your project with a contents that builds a `source.cpp` residing in the same directory
+Write the `targets.cmake` file in any folder inside your project with content that builds a `source.cpp` residing in the same directory
 
 ```
 set(ENUM_TEMPLATES HELLO_SIMPLE)
@@ -57,14 +57,19 @@ Two targets will get built: `hello_simple1` and `hello_simple2`. First built wit
 
 ## Key features:
 
-* Tries to keep as much It facilitates writing CMake code that adheres to the modern CMake best practices, in particular, it eases relying on targets and their properties rather than global variables (although still allowing the old ways)
+* Does not invalidate a CMake knowledge. In fact, there is only a single CMake built-in function that it supersedes - `ExternalProject_Add()`.
+
+* It facilitates writing CMake code that adheres to the modern CMake best practices, in particular, it eases relying on targets and their properties rather than global variables (although still allowing the old ways). 
 
 * It allows defining an API for each target described in terms of compile time and link time parameters.
+
 * It makes it trivial to turn the target definition into a template that can define distinct targets for each combination of compile-time parameters.
 
 * Target definition can include dependencies, with easy and versatile parameter passing to them.
 
 * It introduces a third class of parameters called "features" that describe optional functionality of the target that needs to be enabled in compile-time. With them, it is possible to define dependency as "library 'foo' with whatever parameters other parts of the project require, but with support for feature A".
+
+
 
 ## Current status:
 
