@@ -27,20 +27,32 @@ include(../cmake/beetroot/cmake/beetroot.cmake)
 
 project(hello_simple) #optional
 
-build_target(HELLO_SIMPLE)
+build_target(HELLO_SIMPLE) 
+build_target(HELLO_SIMPLE MYPAR "Foo")
 
 finalize() # Always required. After this function call the targets are defined.
 ```
 
+### 3. Write target description
 3. Write the `targets.cmake` file in any folder inside your project with a contents that builds a `source.cpp` residing in the same directory
 
 ```
 set(ENUM_TEMPLATES HELLO_SIMPLE)
 
+set(TARGET_PARAMETERS 
+   MYPAR SCALAR STRING "Beetroot"
+)
+
 function(generate_targets TARGET_NAME TEMPLATE_NAME)
    add_executable(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/source.cpp")
+   target_compile_definitions(${TARGET_NAME} PRIVATE "PAR=${MYPAR}")
 endfunction()
 ```
+
+
+4. Build as usual
+
+Two targets will get built: `hello_simple1` and `hello_simple2`. First built with the `-DPAR=Beetroot` and the second with `-DPAR=Foo`. 
 
 ## Key features:
 
