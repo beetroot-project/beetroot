@@ -34,7 +34,8 @@ finalize() # Always required. After this function call the targets are defined.
 ```
 
 ### 3. Write target description
-3. Write the `targets.cmake` file in any folder inside your project with a contents that builds a `source.cpp` residing in the same directory
+
+Write the `targets.cmake` file in any folder inside your project with a contents that builds a `source.cpp` residing in the same directory
 
 ```
 set(ENUM_TEMPLATES HELLO_SIMPLE)
@@ -50,7 +51,7 @@ endfunction()
 ```
 
 
-4. Build as usual
+### 4. Build as usual
 
 Two targets will get built: `hello_simple1` and `hello_simple2`. First built with the `-DPAR=Beetroot` and the second with `-DPAR=Foo`. 
 
