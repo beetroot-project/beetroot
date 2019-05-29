@@ -76,7 +76,7 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 #			message(STATUS "_get_variables(): __ITERATION: ${__ITERATION}, phase 4, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
 #		endif()
 #		message(STATUS "_get_variables(): __ARGS__SRC_BCTYPE: ${__ARGS__SRC_BCTYPE}")
-		_calculate_hash(__ARGS "${__ARGS__LIST}" "_getvars_" __ARGUMENT_HASH_NEW __HASH_SOURCE)
+		_calculate_hash(__ARGS __ARGS__LIST "_getvars_" __ARGUMENT_HASH_NEW __HASH_SOURCE)
 		
 #		message(STATUS "_get_variables(): __ARGUMENT_HASH_OLD: ${__ARGUMENT_HASH_OLD}, __ARGUMENT_HASH_NEW: ${__ARGUMENT_HASH_NEW}, __IN_EXTERNAL_PROJECT_INFO: ${__IN_EXTERNAL_PROJECT_INFO}")
 		if("${__ARGUMENT_HASH_NEW}" STREQUAL "${__ARGUMENT_HASH_OLD}")

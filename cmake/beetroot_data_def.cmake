@@ -9,6 +9,7 @@
 # __INSTANCEDB_<INSTANCE_ID>_I_PARENTS        - List of instances that require this instance as their dependency
 # __INSTANCEDB_<INSTANCE_ID>_IS_PROMISE       - Boolean. True means that this instance is incapable of spawning a target alone. It only holds features, but the system must
 #                                               find the single featureset this instance can use (and perhaps expand with its own features)
+# __INSTANCEDB_<INSTANCE_ID>_PROMISE_PARAMS   - List of parameters that matching target must match in order to satisfy our promise
 # __INSTANCEDB_<INSTANCE_ID>_FEATUREBASE      - Pointer to the featureset that complements list of modifiers and is responsible for producing the target. Empty if IS_PROMISE
 #                                               For promises this one is initially empty.
 # __INSTANCEDB_<INSTANCE_ID>_I_TEMPLATE_NAME  - Name of the template. Makes only sense when SINGLETON_TARGETS and there is more than one target, because it this case the
@@ -84,6 +85,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_LINKPARS               INSTANCEDB )
 	set(${__COLS}_I_PARENTS              INSTANCEDB )
 	set(${__COLS}_IS_PROMISE             INSTANCEDB )
+	set(${__COLS}_PROMISE_PARAMS         INSTANCEDB )
 	set(${__COLS}_FEATUREBASE            INSTANCEDB )
 	set(${__COLS}_I_TEMPLATE_NAME        INSTANCEDB )
 	set(${__COLS}_TARGET_NAME            INSTANCEDB )

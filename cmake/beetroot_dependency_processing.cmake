@@ -13,9 +13,10 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	_retrieve_instance_data(${__INSTANCE_ID} TARGET_FIXED __IS_TARGET_FIXED)
 	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
 	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS__LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE)
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
 	
-	_make_instance_id(${__TEMPLATE_NAME} __ARGS "" __NEW_INSTANCE_ID __HASH_SOURCE)
+	_make_instance_id(${__TEMPLATE_NAME} __ARGS "${__IS_PROMISE}" __NEW_INSTANCE_ID __HASH_SOURCE)
 	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
 #	message(STATUS "_rediscover_dependencies(): (old)__INSTANCE_ID: ${__INSTANCE_ID} __TEMPLATE_NAME: ${__TEMPLATE_NAME} __NEW_INSTANCE_ID: ${__NEW_INSTANCE_ID} __HASH_SOURCE: ${__HASH_SOURCE}")
 #	message(STATUS "_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
@@ -34,9 +35,13 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 endfunction()
 
 
-# Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions.
+# Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions. 
+# After the dependencies are gathered, the dependee instance is saved and is linked with those already declared dependencies (child instances)
 function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO__REF __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID) #Lack of the featurebase_id means that this
+	# is the featurebase has not yet been defined, so it is the first context in which this instance is encountered.
+	# In that case we must a do much more work, since featurebase contains all the information except how to link
+	
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
 #		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __FEATUREBASE_DEFINED )
@@ -98,6 +103,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 #	message(STATUS "_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
 #	message(STATUS "_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
 	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with ${__ARGS}_FLOAT_PRECISION = ${${__ARGS}_FLOAT_PRECISION}")
+	#Now we know our dependencies and we can finally and properly save our instance...
 	_store_nonvirtual_instance_data(
 		 ${__INSTANCE_ID} 
 		 ${__ARGS} 
@@ -110,9 +116,11 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__TEMPLATE_OPTIONS__REF} 
 		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 	
+	#... and update the link with the children
 	foreach(__DEP_ID IN LISTS __DEP_INSTANCE_IDS)
 		_link_instances_together("${__INSTANCE_ID}" ${__DEP_ID})
 	endforeach()
+	
 	if(NOT __FEATUREBASE_ID)
 		_store_instance_dependencies(${__INSTANCE_ID} "${__DEP_INSTANCE_IDS}")
 	endif()

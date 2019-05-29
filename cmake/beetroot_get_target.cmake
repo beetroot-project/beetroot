@@ -1,5 +1,6 @@
 #Expects the target described by the target properties already exists, and it simply brings it.
-#It will never define a new target.
+#It will never define a new target. User can parametrize it with features or target parameters. In latter case it will 
+#act as a filter that limits compatibility with the existing targets
 function(get_existing_target __TEMPLATE_NAME)
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
 	set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
@@ -38,7 +39,8 @@ function(get_existing_target __TEMPLATE_NAME)
 	endif()
 	
 	
-	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID __HASH_SOURCE) 
+	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC 1 __INSTANCE_ID __HASH_SOURCE) 
+	message(STATUS "${__PADDING}get_existing_target(): got __INSTANCE_ID: ${__INSTANCE_ID} from __TEMPLATE_NAME: ${__TEMPLATE_NAME} __HASH_SOURCE: ${__HASH_SOURCE}")
 #	if("${__TEMPLATE_NAME}" STREQUAL "GridTools::gridtools")
 #		message(WARNING "GridTools::gridtools ### __INSTANCE_ID: ${__INSTANCE_ID} i __HASH_SOURCE: ${__HASH_SOURCE}")
 #		message(FATAL_ERROR "TODO: Gdy rejestruje się instance (który może być singletonem), to w celu policzenia INSTANCE_ID przyjmowane są jakieś target parametry - w przypadku gridtools to jest precision=4, bo tak jest domyślnie. Potem należy je zamienić na precision=8, ale niestety niektóre właściwości nie pozwalają na to - np. zapisana ścieżka instalacji, która zawiera external_id, który zależy od tych niefortunnych (i pewnie nigdy nie używanych) wartości paramertrów ")
@@ -147,7 +149,7 @@ function(get_target __TEMPLATE_NAME __OUT)
 	if("${__VARIABLE_DIC_VERSION}" STREQUAL "KUC")
 		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
 	endif()
-	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC "" __INSTANCE_ID __HASH_SOURCE)
+	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC 0 __INSTANCE_ID __HASH_SOURCE)
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
 #		message(STATUS "get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID} features: ${__PARAMETERS_DIC__LIST_FEATURES} modifiers: ${__PARAMETERS_DIC__LIST_MODIFIERS}" )

@@ -148,7 +148,8 @@ function(_link_instance_with_featurebase __INSTANCE_ID __FEATUREBASE_ID)
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_INSTANCES "${__INSTANCE_ID}")
 endfunction()
 
-#Stores instance data, irrelevant whether it is a promise or not. 
+#Stores instance data, irrelevant whether it is a promise or not. Instance data that is stored excludes template parameters, 
+# because those are handled by FEATUREBASE.
 function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_TARGET_FIXED __IS_PROMISE )
 	if("${__IS_PROMISE}" STREQUAL "")
 		message(FATAL_ERROR "__IS_PROMISE cannot be empty")
@@ -165,6 +166,9 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_T
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE             ${__IS_PROMISE} FORCE)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_TEMPLATE_NAME        ${__TEMPLATE_NAME})
+	if(__IS_PROMISE)
+		message(STATUS "_store_instance_data(): Defining virtual __INSTANCE_ID: ${__INSTANCE_ID} with __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES} and __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
+	endif()
 	if(__IS_TARGET_FIXED)
 #		message(STATUS "_store_instance_data(): Storing fixed target name for ${__INSTANCE_ID}: ${__TEMPLATE_NAME}")
 		_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} TARGET_NAME  ${__TEMPLATE_NAME})
@@ -176,7 +180,7 @@ endfunction()
 
 #Makes sure a given instance is stored in the memory as a promise. It does not link the instance with the parent - for that use _link_instances_together()
 function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH)
-#	message(STATUS "_store_virtual_instance_data(): __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES} __TEMPLATE_NAME: ${__TEMPLATE_NAME}")
+	message(STATUS "_store_virtual_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ")
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
 	if("${__IS_PROMISE_BEFORE}" STREQUAL "1" OR "${__IS_PROMISE_BEFORE}" STREQUAL "0")
 #		message(STATUS "_store_virtual_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} Nothing to do. __IS_PROMISE_BEFORE: ${__IS_PROMISE_BEFORE}")
@@ -192,6 +196,8 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 	endif()
 	
 	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 1 )
+	_serialize_variables(${__IN_ARGS} ${__IN_PARS}__LIST_MODIFIERS __SERIALIZED_MODIFIERS)
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} PROMISE_PARAMS "${__SERIALIZED_MODIFIERS}")
 	
 #	message(STATUS "_store_virtual_instance_data(): __IS_PROMISE_BEFORE: ${__IS_PROMISE_BEFORE} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES} ")
 	if(NOT "${__IS_PROMISE_BEFORE}" STREQUAL "1")
@@ -224,6 +230,7 @@ function(_unvirtualize_instance __INSTANCE_ID __FEATUREBASE_ID)
 #		message(STATUS "_unvirtualize_instance(): Removing __INSTANCE_ID ${__INSTANCE_ID} from VIRTUAL_INSTANCES of ${__TEMPLATE}")
 		_remove_property_from_db(TEMPLATEDB ${__TEMPLATE} VIRTUAL_INSTANCES ${__INSTANCE_ID} FORCE)
 	endforeach()
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} PROMISE_PARAMS "" FORCE)
 #	message(STATUS "_unvirtualize_instance(): Adding ${__FEATUREBASE_ID} to TEMPLATE_FEATUREBASES for ${__TEMPLATE_NAME}")
 endfunction()	
 
@@ -363,13 +370,13 @@ function(_move_instance __OLD_INSTANCE_ID __NEW_INSTANCE_ID )
 	endif()
 endfunction()
 
-#Adds an instance to the system
-function(_commit_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
+#Adds an instance to the system - function is now obsolote
+#function(_commit_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
 
-	_store_nonvirtual_instance_data(${__INSTANCE_ID} ${__ARGS} ${__PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED}  "${__EXTERNAL_PROJECT_INFO__REF}" ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
+#	_store_nonvirtual_instance_data(${__INSTANCE_ID} ${__ARGS} ${__PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED}  "${__EXTERNAL_PROJECT_INFO__REF}" ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 
-	_link_instances_together("${__PARENT_INSTANCE_ID}" ${__INSTANCE_ID})
-endfunction()
+#	_link_instances_together("${__PARENT_INSTANCE_ID}" ${__INSTANCE_ID})
+#endfunction()
 
 function(_store_instance_dependencies __INSTANCE_ID __DEP_LIST)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
