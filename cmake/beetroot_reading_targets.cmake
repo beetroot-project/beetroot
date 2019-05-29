@@ -289,9 +289,9 @@ function(__find_targets_cmake_by_template_name __TEMPLATE_NAME __OUT_TARGETS_CMA
 	endif()
 	string(REPLACE "::" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
 	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
-#	message(STATUS "__find_targets_cmake_by_template_name(): Looking up for __TEMPLATE_NAME: ${__TEMPLATE_NAME}")
+#	message(STATUS "__find_targets_cmake_by_template_name(): Looking up for __TEMPLATE_NAME: ${__TEMPLATE_NAME} in ${__TEMPLATES_${__TEMPLATE_NAME}}")
 
-	if(__TEMPLATES_${__TEMPLATE_NAME})
+	if(NOT "${__TEMPLATES_${__TEMPLATE_NAME}}" STREQUAL "")
 		set(${__OUT_TARGETS_CMAKE_PATH} "${__TEMPLATES_${__TEMPLATE_NAME}}" PARENT_SCOPE)
 		if("*${__TEMPLATE_NAME}" IN_LIST __TEMPLATES__LIST)
 			set(${__OUT_IS_TARGET_FIXED} 1 PARENT_SCOPE)

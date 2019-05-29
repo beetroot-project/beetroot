@@ -23,12 +23,6 @@ set(DEFINE_EXTERNAL_PROJECT
 	SPACK_PACKAGES boost
 )
 
-function(generate_targets TARGET_NAME TEMPLATE_NAME) #If DEFINE_EXTERNAL_PROJECT is undefined, the Beetroot will use the following definition
-#	message(FATAL_ERROR "find_package(Boost  COMPONENTS ${COMPONENTS} REQUIRED)")
-#	find_package(Boost ${VERSION} COMPONENTS ${COMPONENTS} REQUIRED)
-	find_package(Boost  COMPONENTS ${COMPONENTS} REQUIRED)
-endfunction()
-
 function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")

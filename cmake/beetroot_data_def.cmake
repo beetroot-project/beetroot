@@ -27,7 +27,7 @@
 # Featurebase_ID is a hash of all modifiers + salt of either template name (for non-singleton targets) or path to the targets.cmake (for singleton targets).
 # The purpose of feature resolution is to make sure all requested features by each instance are covered by the associated featurebase.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_INSTANCES          - List of all instances that are poiting to this featurebase. 
-#                                                        Before instantiating all targets algorithm will iterate
+#                                                        Before instantiating any target, algorithm will iterate
 #                                                        over all instances to find a common superset of features, if one exists (if it doesn't it will return an error)
 # __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES -     List of all instances that already have list of features 
 #                                                        fully compatible with that of FEATUREBASE. 
@@ -64,6 +64,7 @@
 # __FILEDB_<PATH_HASH>_JOINT_TARGETS       - If true, it means you can't build one target without building the other. 
 #                                            Applies automatically to all external projects and only there.
 # __FILEDB_<PATH_HASH>_LINK_TO_DEPENDEE    - If true, it will always automatically link to the dependee (or return error if does not produce targets)
+# __FILEDB_<PATH_HASH>_DONT_LINK_TO_DEPENDEE - If true, it will never automatically link to the dependee.
 # __FILEDB_<PATH_HASH>_TEMPLATE_OPTIONS    - Copy of the template options. Fully redundant information stored for optimization purposes when updating instances based on new features.
 # __FILEDB_<PATH_HASH>_GENERATE_TARGETS_INCLUDE_LINKPARS - If set, than link parameters will be visible to generate_targets (but it makes little sense to condition compilation on them)
 
@@ -125,6 +126,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_SOURCE_DIR                                      FILEDB )
 	set(${__COLS}_JOINT_TARGETS                                   FILEDB )
 	set(${__COLS}_LINK_TO_DEPENDEE                                FILEDB )
+	set(${__COLS}_DONT_LINK_TO_DEPENDEE                           FILEDB )
 	set(${__COLS}_TEMPLATE_OPTIONS                                FILEDB )
 	set(${__COLS}_GENERATE_TARGETS_INCLUDE_LINKPARS					  FILEDB )
 	

@@ -9,9 +9,10 @@ set(LINK_PARAMETERS
 
 set(TEMPLATE_OPTIONS
 #	EXPORTED_VARIABLES LIB_MYVAR
+	LINK_TO_DEPENDEE
 )
 
 function(apply_dependency_to_target DEPENDEE_TARGET_NAME OUR_TARGET_NAME)
-	message(STATUS "apply_dependency_to_target for NESTED_EMPTY_LIB: NESTED_LIBPAR: ${NESTED_LIBPAR}")
+	message(STATUS "apply_dependency_to_target for NESTED_EMPTY_LIB: NESTED_LIBPAR: ${NESTED_LIBPAR}, OUR_TARGET_NAME: ${OUR_TARGET_NAME}")
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "NESTED_LIBPAR=${NESTED_LIBPAR}")
 endfunction()

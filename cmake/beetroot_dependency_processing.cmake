@@ -49,7 +49,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 #	else()
 #		set(__FEATUREBASE_DEFINED)
 #	endif()
-#	message(STATUS "_discover_dependencies(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
+	message(STATUS "_discover_dependencies(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
 	_can_descend_recursively(${__INSTANCE_ID} DEPENDENCIES __CAN_DESCEND)
 	if(NOT __CAN_DESCEND)
 		_get_recurency_list(DEPENDENCIES __INSTANCE_LIST)
@@ -126,7 +126,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	endif()
 endfunction()
 
-#Instantiates target. The function is called during the target building phase. Behavior is different on SUPERBUILD and in the project build.
+# Instantiates target. The function is called during the target building phase. 
+# Must be called directly or indirectly by the finalize() function.
+# Behavior is different on SUPERBUILD and in the project build.
 function(_instantiate_target __INSTANCE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} TARGET_BUILT __DEP_BUILT)
 	if(__DEP_BUILT)
@@ -155,10 +157,9 @@ function(_instantiate_target __INSTANCE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 
 	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __PARENT_INSTANCE_IDS) #This variable is needed here only
-	# for debugging
 
 	message(STATUS "_instantiate_target(): instance: ${__INSTANCE_ID} target name: ${__TARGET_NAME} requires __DEP_IDS: ${__DEP_IDS} and is required by ${__PARENT_INSTANCE_IDS}")
-	#First we instantiate children (dependencies):
+	# First we instantiate children (dependencies):
 	if(__DEP_IDS)
 		foreach(__DEP_ID IN LISTS __DEP_IDS)
 			_instantiate_target(${__DEP_ID})
@@ -182,7 +183,7 @@ function(_instantiate_target __INSTANCE_ID)
 		string(REPLACE "::" "_" __TARGET_NAME ${__TARGET_NAME})
 	endif()
 	
-	# Then we link the children to the calee
+	# Then we call generate_targets()
 	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
 #	message(STATUS "_instantiate_target(): __EXTERNAL_PROJECT_INFO__LIST: ${__EXTERNAL_PROJECT_INFO__LIST}")
 	if(__EXTERNAL_PROJECT_INFO__LIST)
@@ -193,7 +194,7 @@ function(_instantiate_target __INSTANCE_ID)
 		if(__NOT_SUPERBUILD) # We ignore internal dependencies on SUPERBUILD phase
 #			message(STATUS "_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} __DEP_IDS: ${__DEP_IDS}")
 			_get_target_internal(${__INSTANCE_ID} __TARGET_FUNCTION_EXISTS)
-			#Now it is a time to let the children be linked with us - we iterate over children again
+			# Finally it is a time to let the children be linked with us - we iterate over children again
 			foreach(__DEP_INSTANCE_ID IN LISTS __DEP_IDS)
 				_link_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID} __APPLY_FUNCTION_EXISTS)
 			endforeach()
@@ -209,22 +210,27 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	_make_instance_name(${__DEP_INSTANCE_ID} __DEP_TARGET_NAME)
 	_make_instance_name(${__INSTANCE_ID} __TARGET_NAME)
 	
-#	message(STATUS "_link_to_target(): __DEP_INSTANCE_ID: ${__DEP_INSTANCE_ID} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME}")
+	message(STATUS "_link_to_target(): __DEP_INSTANCE_ID: ${__DEP_INSTANCE_ID} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME}")
 
 	if(NOT TARGET ${__DEP_TARGET_NAME})
 		_retrieve_instance_data(${__DEP_INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
 		foreach(__DEP_DEP_ID IN LISTS __DEP_IDS)
-#			message(STATUS "_link_to_target(): ${__INSTANCE_ID} dep: ${__DEP_INSTANCE_ID} -> depdep ${__DEP_DEP_ID}")	
+			message(STATUS "_link_to_target(): ${__INSTANCE_ID} dep: ${__DEP_INSTANCE_ID} -> depdep ${__DEP_DEP_ID}")	
 			_link_to_target(${__INSTANCE_ID} ${__DEP_DEP_ID} __DUMMY)
 		endforeach()
 	endif()
 
 	if(TARGET ${__TARGET_NAME})
+		_retrieve_instance_data(${__DEP_INSTANCE_ID} DONT_LINK_TO_DEPENDEE __DONT_LINK_TO_DEPENDEE)
+		_retrieve_instance_data(${__DEP_INSTANCE_ID} LINK_TO_DEPENDEE __LINK_TO_DEPENDEE)
 		_invoke_apply_dependency_to_target(${__INSTANCE_ID} ${__DEP_INSTANCE_ID} __FUNCTION_EXISTS)
 #	else()
 #		message(FATAL_ERROR "Template that does not produce targets: ${__TARGET_NAME} currently cannot have any dependencies")
-
-		_retrieve_instance_data(${__DEP_INSTANCE_ID} LINK_TO_DEPENDEE __LINK_TO_DEPENDEE)
+		message(STATUS "_link_to_target(): __TARGET_NAME: ${__TARGET_NAME} __FUNCTION_EXISTS: ${__FUNCTION_EXISTS} __DONT_LINK_TO_DEPENDEE: ${__DONT_LINK_TO_DEPENDEE} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}")
+		if(TARGET "${__DEP_TARGET_NAME}" AND __FUNCTION_EXISTS AND NOT __DONT_LINK_TO_DEPENDEE AND NOT __LINK_TO_DEPENDEE)
+			_retrieve_instance_data(${__DEP_INSTANCE_ID} PATH __CMAKE_TARGETS_PATH)
+			message(FATAL_ERROR "Beetroot error: User defined `apply_dependency_to_target()` in ${__CMAKE_TARGETS_PATH} which defined target ${__TARGET_NAME} and did not specified neither LINK_TO_DEPENDEE nor DONT_LINK_TO_DEPENDEE template option. Please decide whether you wish Beetroot to call `target_link_libraries()` after executing this function by setting the appropriate flag in the TEMPLATE_OPTIONS variable.")
+		endif()
 		_retrieve_instance_data(${__DEP_INSTANCE_ID} NO_TARGETS __NO_TARGETS)
 #		message(STATUS "_link_to_target(): __TARGET_NAME: ${__TARGET_NAME} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME} __FUNCTION_EXISTS: ${__FUNCTION_EXISTS} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}" )
 		if(NOT __FUNCTION_EXISTS OR __LINK_TO_DEPENDEE)
@@ -241,9 +247,10 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 					set(__X LINK)
 				endif()
 			else()
-				if(NOT __NO_TARGETS)
+				if(NOT __NO_TARGETS AND NOT __FUNCTION_EXISTS)
 					_retrieve_instance_data(${__DEP_INSTANCE_ID} I_TEMPLATE_NAME __DEP_TEMPLATE_NAME )
-					message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} does not produce targets and it does not define apply_dependency_to_target(). You must either define targets or define function apply_dependency_to_target().")
+					_retrieve_instance_data(${__DEP_INSTANCE_ID} PATH __CMAKE_TARGETS_PATH)
+					message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} defined in ${__CMAKE_TARGETS_PATH} does not produce targets and it does not define apply_dependency_to_target(). You must either define targets or define function apply_dependency_to_target().")
 				endif()
 			endif()
 		endif()

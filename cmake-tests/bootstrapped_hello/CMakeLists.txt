@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-include(../../cmake/beetroot_bootstrap.cmake)
+include(../../cmake/beetroot.cmake)
 
 project(bootstrapped_hello_simple)
 

@@ -23,7 +23,9 @@ function(get_existing_target __TEMPLATE_NAME)
 	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
 	message(STATUS "${__PADDING}get_existing_target(): before removal __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __PARAMETERS_DIC__LIST_MODIFIERS: ${__PARAMETERS_DIC__LIST_MODIFIERS} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
 
-	_remove_variables_with_default_value(__VARIABLE_DIC ${__PARENT_ARGS_PREFIX} __PARAMETERS_DIC__LIST_MODIFIERS __VARIABLE_DIC) #Removes all modifiers which value user has not changed in his declare_dependencies().
+	if(__PARENT_ARGS_PREFIX) #It will not be set if get_existing_target is called directly from CMakeLists.txt
+		_remove_variables_with_default_value(__VARIABLE_DIC ${__PARENT_ARGS_PREFIX} __PARAMETERS_DIC__LIST_MODIFIERS __VARIABLE_DIC) #Removes all modifiers which value user has not changed in his declare_dependencies().
+	endif()
 	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLES)
 	message(STATUS "${__PADDING}get_existing_target(): after _remove_variables_with_default_value __TEMPLATE_NAME: ${__TEMPLATE_NAME} __VARIABLE_DIC_FLOAT_PRECISION: ${__VARIABLE_DIC_FLOAT_PRECISION} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
  
