@@ -153,7 +153,8 @@ endfunction()
 
 function(_get_recurency_list __STACK __OUT)
 	get_property(__LIST GLOBAL PROPERTY __BURAK_TCRB_FOR_${__STACK})
-	set(${__OUT} ${__LIST} PARENT_SCOPE)
+#	message(STATUS "_get_recurency_list(): __LIST: ${__LIST}")
+	set(${__OUT} "${__LIST}" PARENT_SCOPE)
 endfunction()
 
 set_property(GLOBAL PROPERTY __BURAK_TCRB_FOR_DEPENDENCIES "")

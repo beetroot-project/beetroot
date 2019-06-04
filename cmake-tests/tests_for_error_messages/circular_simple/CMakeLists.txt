@@ -7,11 +7,7 @@ include(../../../cmake/beetroot.cmake)
 
 project(hello)
 
-build_target(FEATURE-LIB1)
-build_target(FEATURE_SHAREDLIB 		
-	LIB_COMPONENTS C1 C3
-	MYPAR 99
-)
+build_target(CS_1) #without this line, feature-exec should fail
 
 
 finalizer()

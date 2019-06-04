@@ -169,7 +169,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 #		message(STATUS "_get_target_external(): find_package(${__EXTERNAL_BARE_NAME} ${__PATHS} ${__COMPONENTS})")
 		find_package(${__EXTERNAL_BARE_NAME} ${__PATHS} ${__COMPONENTS}  )
 		if(NOT TARGET ${__INSTANCE_NAME} AND NOT __NO_TARGETS)
-			_get_nice_name(${__INSTANCE_ID} __DESCRIPTION)
+			_get_nice_instance_name(${__INSTANCE_ID} __DESCRIPTION)
 			_get_nice_dependencies_name(${__INSTANCE_ID} __REQUIREDBY)
 			set(__PACKAGES )
 			if(__PARSED_APT_PACKAGES)
@@ -246,7 +246,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 	name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
-	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
+#	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
 	
 	# Generate hash of the external project based on the required modifiers and features
@@ -268,20 +268,20 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 		_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 		_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __OUR_ARGS)
 		_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_OUR_ARGS__LIST)
-		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __EXTERNAL_ID: ${__EXTERNAL_ID}...")
-		message(STATUS "_workout_install_dir_for_external(): ... OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
+#		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __EXTERNAL_ID: ${__EXTERNAL_ID}...")
+#		message(STATUS "_workout_install_dir_for_external(): ... OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
 	
 		# Get the list of all installed versions that maybe compatible with our requirement
 		_get_existing_targets("${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" "${__PATH_HASH}")
-		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
+#		message(STATUS "_workout_install_dir_for_external(): THEIR_ARGS: __${__FEATUREBASE_ID}__LIST: ${__${__FEATUREBASE_ID}__LIST}")
 	
 		if(__${__FEATUREBASE_ID}__LIST) # If we found at least one already installed external project...
 			foreach(__INSTALLED_EXTERNAL IN LISTS __${__FEATUREBASE_ID}__LIST)
 				_unserialize_variables(__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES __THEIR_ARGS)
-				message(STATUS "_workout_install_dir_for_external(): __THEIR_ARGS: ${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}")
+#				message(STATUS "_workout_install_dir_for_external(): __THEIR_ARGS: ${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}")
 				# Check if the features of the installed version are compatible with ours
 				_compare_featuresets(${__PATH_HASH} __PARS __OUR_ARGS __THEIR_ARGS __OUT_RELATION)
-				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
+#				message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __OUT_RELATION: ${__OUT_RELATION}")
 
 				if("${__OUT_RELATION}" STREQUAL "0" OR "${__OUT_RELATION}" STREQUAL "2") # If installed project
 				# is compatible, then use it and exit this function

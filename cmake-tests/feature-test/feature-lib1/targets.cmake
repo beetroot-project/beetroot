@@ -1,13 +1,21 @@
 set(ENUM_TEMPLATES FEATURE-LIB1)
 
 set(TARGET_PARAMETERS 
-	FUNNAME SCALAR STRING "get_string"
+	FUNNAME SCALAR STRING "FUN_DEFAULT"
 )
 
 set(TARGET_FEATURES 
 	USE_STH	OPTION	BOOL	0
 	STH_COMPONENTS	VECTOR	STRING	"compdefault"
 )
+
+function(declare_dependencies TEMPLATE_NAME)
+#	set(MYPAR 12)
+	get_existing_target(FEATURE-SHAREDLIB 
+		USE_FOO
+		MYPAR 13
+	)
+endfunction()
 
 function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	message(STATUS "LibHello: inside generate_targets trying to define ${TARGET_NAME} in ${CMAKE_CURRENT_SOURCE_DIR}/include. STH_COMPONENTS: ${STH_COMPONENTS}")

@@ -7,7 +7,10 @@ include(../../../cmake/beetroot.cmake)
 
 project(hello)
 
-build_target(FEATURE-STATICLIB)
+build_target(FEATURE_SHAREDLIB 		
+	LIB_COMPONENTS C1 C3
+	MYPAR 97
+)
 
 
 finalizer()

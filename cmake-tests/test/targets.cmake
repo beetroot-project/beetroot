@@ -4,6 +4,7 @@ set(TARGET_PARAMETERS
 )
 
 set(TEMPLATE_OPTIONS
+	LANGUAGES C
 )
 
 #function(declare_dependencies TARGET_NAME)
@@ -14,4 +15,3 @@ function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	add_executable(${TARGET_NAME} main.c)
 endfunction()
 
-#663582226 - sms do 14:00 z inf. czy zgłosił się kurier

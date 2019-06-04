@@ -14,9 +14,9 @@ build_target(FEATURE-EXEC)
 #get_existing_target(FEATURE-LIB1 STH_COMPONENTS CMakeLists)
 build_target(FEATURE_SHAREDLIB 		
 	LIB_COMPONENTS C1 C3
-	USE_FOO
 	MYPAR 99
 )
 
+message(STATUS " F I N A L I Z E R")
 
 finalizer()

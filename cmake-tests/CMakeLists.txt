@@ -29,19 +29,20 @@ build_target(BOOTSTRAPPED_HELLO_SIMPLE)
 #build_target(SERIALBOX_C_TEST2 SERIALBOX_USE_NETCDF 0 SERIALBOX_ENABLE_FORTRAN 1 SERIALBOX_EXAMPLES 1 ) #Works only with SERIALBOX_C_TEST
 #build_target(SERIALBOX_C_TEST2) 
 
-build_target(FEATURE-LIB1 FUNNAME "XX") #without this line, feature-exec should fail
+
+build_target(FEATURE-LIB1 FUNNAME "alt_getstring" STH_COMPONENTS CMakeLists) #without this line, feature-exec should fail
+build_target(FEATURE-LIB1 FUNNAME "getstring" STH_COMPONENTS CMakeLists) #without this line, feature-exec should fail
 #build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail
 build_target(FEATURE-EXEC)
-
 #get_existing_target(FEATURE-LIB1 STH_COMPONENTS CMakeLists)
 build_target(FEATURE_SHAREDLIB 		
 	LIB_COMPONENTS C1 C3
-	USE_FOO
-	MYPAR 99
+	MYPAR 13
 )
 
 
-get_target(SELF_TEST_TEST TEST_NAME)
+
+build_target(SELF_TEST)
 
 set(IMPLICIT_GLOBAL "OK CMakeLists")
 build_target(IMPLICIT_VARS)
