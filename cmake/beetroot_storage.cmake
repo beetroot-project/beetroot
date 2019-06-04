@@ -140,8 +140,8 @@ function(_store_featurebase __ARGS __PARS __TEMPLATE_NAMES __TARGETS_CMAKE_PATH 
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE         "${__FEATUREBASE_HASH_SOURCE}")
 	
 	if(__IS_TARGET_FIXED)
-#		message(STATUS "${__PADDING}_store_instance_data(): Storing fixed target name for ${__INSTANCE_ID}: ${__TEMPLATE_NAMES}")
-		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TARGET_NAMES    ${__TEMPLATE_NAMES})
+#		message(STATUS "${__PADDING}_store_instance_data(): Storing fixed target name for featurebase ${__FEATUREBASE_ID}: template names: ${__TEMPLATE_NAMES}")
+		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TARGET_NAMES    "${__TEMPLATE_NAMES}")
 	endif()
 
 	
