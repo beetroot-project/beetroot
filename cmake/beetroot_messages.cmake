@@ -3,7 +3,7 @@ function(_get_nice_instance_name_with_deps __INSTANCE_IDS_IN __OUT_NICE_NAME)
 	#Gather all dep_IDs
 	set(__TOTAL_DEP_IDS)
 	foreach(__INSTANCE_ID IN LISTS ${__INSTANCE_IDS_IN})
-		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_IDS)
+		_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __DEP_IDS)
 		list(APPEND __TOTAL_DEP_IDS ${__DEP_IDS})
 	endforeach()
 	if(NOT ${__TOTAL_DEP_IDS} STREQUAL "")
