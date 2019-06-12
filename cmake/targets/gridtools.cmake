@@ -47,6 +47,7 @@ set(DEFINE_EXTERNAL_PROJECT
 set(TEMPLATE_OPTIONS
 	SINGLETON_TARGETS
 	LANGUAGES ${CUDA_LANG} CXX
+	LINK_TO_DEPENDEE
 )
 
 function(generate_targets)
@@ -59,5 +60,4 @@ function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
 #	endif()
 	message("gridtools.cmake: setting FLOAT_PRECISION=${FLOAT_PRECISION}  for TARGET_NAME ${DEPENDEE_TARGET_NAME} #####")
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "FLOAT_PRECISION=${FLOAT_PRECISION}")
-	target_link_libraries(${DEPENDEE_TARGET_NAME} ${KEYWORD} GridTools::gridtools)
 endfunction()
