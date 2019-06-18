@@ -291,6 +291,11 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 	endif()
 	set(__FEATURE_INSTANCES ${${__IN_PROMISES}})
 	list(REMOVE_DUPLICATES __FEATURE_INSTANCES)
+	if("${__FEATURE_INSTANCES}" STREQUAL "")
+		#Just a meaningful error message
+		#TODO: Add "... and make sure the parameters (list of the parameters) match"
+		message(FATAL_ERROR "Beetroot error: Cannot find any non-virtual targets that satisfy the virtual dependency ${__INSTANCE_ID} (required by ${__I_PARENTS}). Define the target that will fit it using `get_target()` somewhere, or replace the call to the `get_existing_target()` with `get_target()`.")
+	endif()
 #	message(STATUS "${__PADDING}_resolve_features_for_featurebases(): promises to check (__FEATURE_INSTANCES): ${__FEATURE_INSTANCES}, __IN_FEATUREBASE_IDS->${__IN_FEATUREBASE_IDS}->${${__IN_FEATUREBASE_IDS}}")
 
 	#There may be more than one featurebase. First we need to make the compatibility list for each promise, 
@@ -298,20 +303,36 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 	#make sure, that each promise is compatible with exaclty one featurebase.
 	foreach(__INSTANCE_ID IN LISTS __FEATURE_INSTANCES)
 		set(__COMP_FB_ID) #compatible featurebase. Empty means no compatible was found
+		set(__NON_COMP_FID)
+		set(__NON_COMP_REASON)
 		foreach(__FEATUREBASE_ID IN LISTS ${__IN_FEATUREBASE_IDS})
-			_is_promise_compatible_with_featurebase(${__INSTANCE_ID} ${__FEATUREBASE_ID} __STATUS)
+			_is_promise_compatible_with_featurebase(${__INSTANCE_ID} ${__FEATUREBASE_ID} __IS_COMPATIBLE __DIFF)
 #			message(STATUS "${__PADDING}_resolve_features_for_featurebases(): Compatibility between virt. instance ${__INSTANCE_ID} and fb ${__FEATUREBASE_ID} - ${__STATUS}")
-			if(__STATUS)
+			if(__IS_COMPATIBLE)
 				if("${__COMP_FB_ID}" STREQUAL "")
 					set(__COMP_FB_ID "${__FEATUREBASE_ID}")
 				else()
 					#TODO: Fill this error message
 					message(FATAL_ERROR "Beetroot error: Virtual dependency ${__INSTANCE_ID} (required by ${__I_PARENTS}) can be successfully instantiated by at least two targets: ${__COMP_FB_ID} and ${__FEATUREBASE_ID}. Please use target parameters in such a way as to uniqually fit this dependency to exactly one target, or remove the conflicting targets (or combination of both actions).")
 				endif()
+			else()
+				list(APPEND __NON_COMP_FID ${__FEATUREBASE_ID})
+				list(APPEND __NON_COMP_REASON ${__DIFF})
 			endif()
 		endforeach()
 		if("${__COMP_FB_ID}" STREQUAL "")
-			message(FATAL_ERROR "Beetroot error: Cannot find targets that satisfy the virtual dependency ${__INSTANCE_ID} (required by ${__I_PARENTS}). Define the target that will fit it using `get_target()` somewhere, or replace the call to the `get_existing_target()` with `get_target()`.")
+			list(LENGTH __COMP_FB_ID __COUNT)
+			math(EXPR __COUNT "${__COUNT}-1")
+			set(__FBS)
+			foreach(__FB_NR RANGE ${__COUNT})
+				list(GET __NON_COMP_FID ${__FB_NR} __FEATUREBASE_ID)
+				_get_nice_featurebase_name(${__FEATUREBASE_ID} __FB_TXT)
+				list(GET __NON_COMP_REASON ${__FB_NR} __REASON)
+				set(__FB_TXT "${__FB_TXT} sets ${__REASON}")
+				list(APPEND __FBS "${__FB_TXT}")
+			endforeach()
+			nice_list_output(LIST "${__FBS}" OUTVAR __FB_TXT)
+			message(FATAL_ERROR "Beetroot error: The are no non-virtual targets based on the same template as ${__INSTANCE_ID} (required by ${__I_PARENTS}) that can be matched because of different parameters. ${__FB_TXT}")
 		endif()
 		list(APPEND __I2FBS_${__COMP_FB_ID} ${__INSTANCE_ID})
 	endforeach()
@@ -332,7 +353,7 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 endfunction()
 
 #Check if the set of modifiers (target parameters) associated with the promise __INSTANCE_ID is compatible with the featurebase
-function(_is_promise_compatible_with_featurebase __INSTANCE_ID __FEATUREBASE_ID __OUT_STATUS)
+function(_is_promise_compatible_with_featurebase __INSTANCE_ID __FEATUREBASE_ID __OUT_STATUS __OUT_DIFF)
 	_retrieve_instance_args(${__INSTANCE_ID} PROMISE_PARAMS __PROMISE_PARAMS)
 	_retrieve_featurebase_args(${__FEATUREBASE_ID} MODIFIERS __FB_MODIFIERS)
 	_retrieve_instance_data(${__INSTANCE_ID} PROMISE_PARAMS __DEBUG_PROMISE_PARAMS)
@@ -344,12 +365,14 @@ function(_is_promise_compatible_with_featurebase __INSTANCE_ID __FEATUREBASE_ID 
 		elseif("${__PROMISE_PARAMS_${__ARG}}" STREQUAL "")
 #			message(STATUS "${__PADDING}_is_promise_compatible_with_featurebase(): modifier ${__ARG} is not set in the promise ${__INSTANCE_ID}, so it is compatible with all FB, e.g.: ${__FEATUREBASE_ID}")
 		else()
+			set(${__OUT_DIFF} "${__ARG}=${__PROMISE_PARAMS_${__ARG}}" PARENT_SCOPE)
 			set(${__OUT_STATUS} 0 PARENT_SCOPE)
 #			message(STATUS "${__PADDING}_is_promise_compatible_with_featurebase(): modifier ${__ARG} is NOT compatible between FB: ${__FEATUREBASE_ID} (=${__FB_MODIFIERS_${__ARG}}) and promise ${__INSTANCE_ID} (=${__PROMISE_PARAMS_${__ARG}})")
 			return()
 		endif()
 	endforeach()
 	set(${__OUT_STATUS} 1 PARENT_SCOPE)
+	set(${__OUT_DIFF} "" PARENT_SCOPE)
 endfunction()
 
 # Arrive at the common set of features for the given __FEATUREBASE_ID. 

@@ -143,7 +143,7 @@ function(_store_featurebase __ARGS __PARS __TEMPLATE_NAMES __TARGETS_CMAKE_PATH 
 #		message(STATUS "${__PADDING}_store_instance_data(): Storing fixed target name for featurebase ${__FEATUREBASE_ID}: template names: ${__TEMPLATE_NAMES}")
 		_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TARGET_NAMES    "${__TEMPLATE_NAMES}")
 	endif()
-
+	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_TEMPLATE_NAMES    "${__TEMPLATE_NAMES}")
 	
 #	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES      "")
 	foreach(__TEMPLATE_NAME IN LISTS __TEMPLATE_NAMES)
@@ -166,7 +166,7 @@ endfunction()
 
 #Stores instance data, irrelevant whether it is a promise or not. Instance data that is stored excludes template parameters, 
 # because those are handled by FEATUREBASE.
-function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_TARGET_FIXED __IS_PROMISE )
+function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_TARGET_FIXED __IS_PROMISE __CMAKE_PATH)
 	if("${__IS_PROMISE}" STREQUAL "")
 		message(FATAL_ERROR "__IS_PROMISE cannot be empty")
 	endif()
@@ -182,6 +182,8 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_T
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} LINKPARS              "${__SERIALIZED_LINKPARS}")
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} IS_PROMISE             ${__IS_PROMISE} FORCE)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_TEMPLATE_NAME        ${__TEMPLATE_NAME})
+	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} I_PATH                 ${__CMAKE_PATH})
+	
 	if(__IS_PROMISE)
 #		message(STATUS "${__PADDING}_store_instance_data(): Defining virtual __INSTANCE_ID: ${__INSTANCE_ID} with __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES} and __SERIALIZED_LINKPARS: ${__SERIALIZED_LINKPARS}")
 	endif()
@@ -214,7 +216,7 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 		endif()
 	endif()
 	
-	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 1 )
+	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 1 "${__TARGETS_CMAKE_PATH}")
 	_serialize_variables(${__IN_ARGS} ${__IN_ARGS}__LIST_MODIFIERS __SERIALIZED_MODIFIERS)
 	_set_property_to_db(INSTANCEDB ${__INSTANCE_ID} PROMISE_PARAMS "${__SERIALIZED_MODIFIERS}")
 #	message(STATUS "${__PADDING}_store_virtual_instance_data(): Virtual instance ${__INSTANCE_ID} got the following PROMISE_PARAMS: ${__SERIALIZED_MODIFIERS}")
@@ -237,6 +239,8 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 
 endfunction()
 
+# Basically this function only removes a IS_PROMISE flag and associates the promise with the given featurebase. 
+# The rest is just a work needed to keep the internal beetroot state consistent, at the very low level.
 function(_unvirtualize_instance __INSTANCE_ID __FEATUREBASE_ID)
 #	message(STATUS "${__PADDING}_unvirtualize_instance(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID}")
 	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
@@ -254,7 +258,8 @@ function(_unvirtualize_instance __INSTANCE_ID __FEATUREBASE_ID)
 #	message(STATUS "${__PADDING}_unvirtualize_instance(): Adding ${__FEATUREBASE_ID} to TEMPLATE_FEATUREBASES for ${__TEMPLATE_NAME}")
 endfunction()	
 
-#Makes sure a given instance is stored in the memory as a promise. It does not link the instance with the parent - for that use _link_instances_together()
+# Makes sure a given instance is stored in the memory and creates/links with the featurebase structure. 
+# It does not link the instance with the parent - for that use _link_instances_together()
 function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
 	if("${__TARGETS_CMAKE_PATH}" STREQUAL "")
@@ -282,7 +287,7 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	_store_featurebase(${__IN_ARGS} ${__IN_PARS} "${__ALL_TEMPLATE_NAMES}" "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID)
 #	message(STATUS "${__PADDING}_store_nonvirtual_instance_data(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __FILE_HASH: ${__FILE_HASH}")
 	_link_file_with_featurebase(${__FEATUREBASE_ID} ${__FILE_HASH})
-	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 0 )
+	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 0 "${__TARGETS_CMAKE_PATH}")
 	set(${__OUT_FEATUREBASE_ID} ${__FEATUREBASE_ID} PARENT_SCOPE)
 	if("${__IS_PROMISE_BEFORE}" STREQUAL "1")
 		_unvirtualize_instance(${__INSTANCE_ID} ${__FEATUREBASE_ID})
@@ -341,23 +346,26 @@ endfunction()
 #Moves all parents of the __OLD_INSTANCE_ID to the __NEW_INSTANCE_ID,
 #unregisters the dependencies of the __OLD_INSTANCE_ID from it and makes sure __OLD_INSTANCE_ID will not be built.
 #
+#This is the final stage of promoting the virtual instance into a real one.
+#
 #We assume the __NEW_INSTANCE_ID has correct dependencies, but is not dependent on anything.
 #
 #__OLD_INSTANCE_ID can be a promise (and have no dependencies)
 function(_move_instance __OLD_INSTANCE_ID __NEW_INSTANCE_ID )
 #	message(FATAL_ERROR "OK")
-	#1. For each parent, change its dependency and parent
-	_retrieve_instance_data(${__OLD_INSTANCE_ID} I_PARENTS __PARENTS)
-	foreach(__PARENT_ID IN LISTS __PARENTS)
-		_retrieve_instance_data(${__PARENT_ID} FEATUREBASE __PARENT_FEATUREBASE)
-		if(NOT __PARENT_FEATUREBASE)
-			message(FATAL_ERROR "Internal beetroot consistency error: Parent does contain a link to the featurebase.")
-		endif()
-		_remove_property_from_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__OLD_INSTANCE_ID})
-		_add_property_to_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__NEW_INSTANCE_ID})
-		_add_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
-		_remove_property_from_db(INSTANCEDB ${__OLD_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
-	endforeach()
+#	#1. For each parent, change its dependency and parent
+#	_retrieve_instance_data(${__OLD_INSTANCE_ID} I_PARENTS __PARENTS)
+#	message(STATUS "${__PADDING}_move_instance(): Adding parents of ${__OLD_INSTANCE_ID} to the new ${__NEW_INSTANCE_ID}. __PARENTS: ${__PARENTS}")
+#	foreach(__PARENT_ID IN LISTS __PARENTS)
+#		_retrieve_instance_data(${__PARENT_ID} FEATUREBASE __PARENT_FEATUREBASE)
+#		if(NOT __PARENT_FEATUREBASE)
+#			message(FATAL_ERROR "Internal beetroot consistency error: Parent does contain a link to the featurebase.")
+#		endif()
+#		_remove_property_from_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__OLD_INSTANCE_ID})
+#		_add_property_to_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__NEW_INSTANCE_ID})
+#		_add_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+#		_remove_property_from_db(INSTANCEDB ${__OLD_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+#	endforeach()
 	
 	#2. Change TEMPLATEDB
 	_retrieve_instance_data(${__OLD_INSTANCE_ID} VIRTUAL_INSTANCES __PROMISES)
@@ -401,6 +409,22 @@ function(_move_instance __OLD_INSTANCE_ID __NEW_INSTANCE_ID )
 	endif()
 endfunction()
 
+function(_move_parents_between_instances __OLD_INSTANCE_ID __NEW_INSTANCE_ID)
+	#1. For each parent, change its dependency and parent
+	_retrieve_instance_data(${__OLD_INSTANCE_ID} I_PARENTS __PARENTS)
+	message(STATUS "${__PADDING}_move_instance(): Adding parents of ${__OLD_INSTANCE_ID} to the new ${__NEW_INSTANCE_ID}. __PARENTS: ${__PARENTS}")
+	foreach(__PARENT_ID IN LISTS __PARENTS)
+		_retrieve_instance_data(${__PARENT_ID} FEATUREBASE __PARENT_FEATUREBASE)
+		if(NOT __PARENT_FEATUREBASE)
+			message(FATAL_ERROR "Internal beetroot consistency error: Parent does contain a link to the featurebase.")
+		endif()
+		_remove_property_from_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__OLD_INSTANCE_ID})
+		_add_property_to_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__NEW_INSTANCE_ID})
+		_add_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+		_remove_property_from_db(INSTANCEDB ${__OLD_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+	endforeach()
+endfunction()
+
 #Adds an instance to the system - function is now obsolote
 #function(_commit_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
 
@@ -417,6 +441,8 @@ endfunction()
 
 #Promotes features on an INSTANCE_ID to the features of the given featurebase. Target names are still not assigned - all this code happens
 #before instantianization of targets
+#
+#The process is basicaly three staged: _unvirtualize_instance() -> _rediscover_dependencies() -> _move_instance().
 function(_promote_instance __INSTANCE_ID __FEATUREBASE_ID __SERIALIZED_COMMON_FEATURES__REF __OUT_NEW_INSTANCE_ID)
 #	message(STATUS "${__PADDING}_promote_instance(): Promoting __INSTANCE_ID: ${__INSTANCE_ID} to be compatible with featurebase ${__FEATUREBASE_ID} and features ${${__SERIALIZED_COMMON_FEATURES__REF}__LIST}")
 	_debug_show_instance(${__INSTANCE_ID} 2 "BEFORE_PROMOTION: " __MSG __ERRORS)

@@ -1,4 +1,20 @@
-#This function assumes the dependencies have already been discovered once
+# This function assumes the dependencies have already been discovered once.
+# It is triggered when beetroot promoted this instance from being a promised instance (defined by get_existing_target())
+# into the normal instance with the associated featurebase. 
+#
+# The task is to rediscover the dependencies. Last discovery failed, because the pure promise does not contain a final
+# (nor complete) set of parameters - those are acquired by its discovered virtual siblings and the base instance. 
+# That's why the dependency discovery got deferred into this moment, when we finally have a chance to know the final set of the parameters.
+# Keep in mind that it is possible, that in this process of deferred dependency search we will encounter 
+# virtual instances that are compatible with those we have already promoted. In that corner case, and only 
+# if the set of parameters changed, we would run the rediscovery again.
+#
+# __NEW_FEATURES_SERIALIZED__REF are the 
+# all features (possible some new) and parameters that got associated in this process, that came from other virtual instances
+# that get promoted to the same featurebase or from the call to the get_target() that defined the basis instance.
+# __NEW_FEATURES_SERIALIZED__REF contains also link parameters, but these are not expected to change from the last run.
+#
+# This is also the only instance, when the code inside a single declare_dependencies() gets executed more than once.
 function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF __OUT_NEW_INSTANCE_ID)
 	_increase_padding()
 
@@ -30,7 +46,8 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
 	
 	#Now let's make a new INSTANCE_ID for the newly resolved virtual instance:
-	_make_instance_id(${__TEMPLATE_NAME} __ARGS "${__IS_PROMISE}" __NEW_INSTANCE_ID __HASH_SOURCE) 
+	_make_instance_id(${__TEMPLATE_NAME} __ARGS "${__IS_PROMISE}" __NEW_INSTANCE_ID __HASH_SOURCE)
+	_move_parents_between_instances(${__INSTANCE_ID} ${__NEW_INSTANCE_ID}) 
 	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE)
 #	message(STATUS "${__PADDING}_rediscover_dependencies(): (old)__INSTANCE_ID: ${__INSTANCE_ID} __TEMPLATE_NAME: ${__TEMPLATE_NAME} __NEW_INSTANCE_ID: ${__NEW_INSTANCE_ID} __HASH_SOURCE: ${__HASH_SOURCE}")
 #	message(STATUS "${__PADDING}_rediscover_dependencies(): __PARS__LIST_MODIFIERS: ${__PARS__LIST_MODIFIERS}")
@@ -150,6 +167,13 @@ endfunction()
 # Must be called directly or indirectly by the finalize() function.
 # Behavior is different on SUPERBUILD and in the project build.
 function(_instantiate_target __INSTANCE_ID)
+	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE) # TARGET_BUILT is one of the FEATUREBASE properties, that will always be set to non empty (but maybe to "0") for non-virtual targets
+	if(__IS_PROMISE)
+		message(FATAL_ERROR "Cannot build ${__INSTANCE_ID} because it was only declared using get_existing_target(), and never actually defined by get_target().")
+	else()
+#		message(STATUS "${__PADDING}_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} F_TEMPLATE_NAME: ${__TARGET_IS_NON_VIRTUAL}")
+	endif()
+#	message(STATUS "${__PADDING}_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID}")
 	_retrieve_instance_data(${__INSTANCE_ID} TARGET_BUILT __DEP_BUILT)
 	if(__DEP_BUILT)
 		return()
@@ -157,13 +181,6 @@ function(_instantiate_target __INSTANCE_ID)
 	_get_target_behavior(__TARGET_BEHAVIOR)
 	if(NOT "${__TARGET_BEHAVIOR}" STREQUAL "DEFINING_TARGETS")
 		message(FATAL_ERROR "Burak internal error: _get_dependencies() called when not DEFINIG_TARGETS")
-	endif()
-	
-	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE) # TARGET_BUILT is one of the FEATUREBASE properties, that will always be set to non empty (but maybe to "0") for non-virtual targets
-	if(__IS_PROMISE)
-		message(FATAL_ERROR "Cannot build ${__INSTANCE_ID} because it was only declared using get_existing_target(), and never actually defined by get_target().")
-	else()
-#		message(STATUS "${__PADDING}_instantiate_target(): __INSTANCE_ID: ${__INSTANCE_ID} F_TEMPLATE_NAME: ${__TARGET_IS_NON_VIRTUAL}")
 	endif()
 	
 	
@@ -271,6 +288,11 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 				if(NOT __NO_TARGETS AND NOT __FUNCTION_EXISTS)
 					_retrieve_instance_data(${__DEP_INSTANCE_ID} I_TEMPLATE_NAME __DEP_TEMPLATE_NAME )
 					_retrieve_instance_data(${__DEP_INSTANCE_ID} PATH __CMAKE_TARGETS_PATH)
+					if( TARGET "Serialbox::SerialboxFortranStatic")
+						message(STATUS "Serialbox::SerialboxFortranStatic - DOES exist")
+					else()
+						message(STATUS "Serialbox::SerialboxFortranStatic - is NOT existing")
+					endif()
 					_get_nice_instance_name_with_deps(__DEP_INSTANCE_ID __NICE_INSTANCE_NAME)
 					message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} defined in ${__CMAKE_TARGETS_PATH} did not produce target ${__DEP_TARGET_NAME} (${__NICE_INSTANCE_NAME}) and it does not define apply_dependency_to_target(). You must either define targets by defining generate_targets(TARGET_NAME TEMPLATE_NAME), or adding \"NO_TARGETS\" to CMake variable TEMPLATE_OPTIONS.")
 				endif()
