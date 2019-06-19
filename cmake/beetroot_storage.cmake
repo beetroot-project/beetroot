@@ -412,7 +412,7 @@ endfunction()
 function(_move_parents_between_instances __OLD_INSTANCE_ID __NEW_INSTANCE_ID)
 	#1. For each parent, change its dependency and parent
 	_retrieve_instance_data(${__OLD_INSTANCE_ID} I_PARENTS __PARENTS)
-	message(STATUS "${__PADDING}_move_instance(): Adding parents of ${__OLD_INSTANCE_ID} to the new ${__NEW_INSTANCE_ID}. __PARENTS: ${__PARENTS}")
+#	message(STATUS "${__PADDING}_move_parents_between_instances(): Adding parents of ${__OLD_INSTANCE_ID} to the new ${__NEW_INSTANCE_ID}. __PARENTS: ${__PARENTS}")
 	foreach(__PARENT_ID IN LISTS __PARENTS)
 		_retrieve_instance_data(${__PARENT_ID} FEATUREBASE __PARENT_FEATUREBASE)
 		if(NOT __PARENT_FEATUREBASE)

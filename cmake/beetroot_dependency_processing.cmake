@@ -72,14 +72,17 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	if(__INCREASE_PADDING)
 		_increase_padding()
 	endif()
+	if("${__INSTANCE_ID}" STREQUAL "LIB_GRIDTOOLS_UPWIND_GPUBC_bd90ae98f168595c8037bf6df1102630")
+		message(FATAL_ERROR "HERE!")
+	endif()
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID) #Lack of the featurebase_id means that this
 	# is the featurebase has not yet been defined, so it is the first context in which this instance is encountered.
 	# In that case we must a do much more work, since featurebase contains all the information except how to link
 	
 #	if(__FEATUREBASE_ID)
-#		message(STATUS "${__PADDING}_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
+		message(STATUS "${__PADDING}_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
 #		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __FEATUREBASE_DEFINED )
-#		message(STATUS "${__PADDING}_discover_dependencies(): DEP_INSTANCES: ${__FEATUREBASE_DEFINED} for __INSTANCE_ID: ${__INSTANCE_ID}")
+		message(STATUS "${__PADDING}_discover_dependencies(): DEP_INSTANCES: ${__FEATUREBASE_DEFINED} for __INSTANCE_ID: ${__INSTANCE_ID}")
 #	else()
 #		set(__FEATUREBASE_DEFINED)
 #	endif()
@@ -107,7 +110,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		list(APPEND __LIST ${${__PARS}__LIST_LINKPARS} )
 
 		message(STATUS "${__PADDING}Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
-#		message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_MYPAR: ${${__ARGS}_MYPAR}")
+		message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_HALO_SIZE: ${${__ARGS}_HALO_SIZE}")
 		_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
 #		message(WARNING "_discover_dependencies(): list of variables: ${__LIST}")
 		_instantiate_variables(${__ARGS} ${__PARS} "${__LIST}")
@@ -118,13 +121,13 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 		set(__PARENT_ALL_VARIABLES ${${__ARGS}__LIST}) #Used by all entry functions like build_target or get_existing_target that define our dependencies to blank all our variables before executing _their_ declare_dependencies()
 
-#		message(STATUS "${__PADDING}_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. DWARF: ${DWARF}")
+		message(STATUS "${__PADDING}_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. HALO_SIZE: ${HALO_SIZE}")
 
 
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
 		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
-#		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
+		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
 
 	endif()
@@ -136,9 +139,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		set(__TARGET_REQUIRED 0)
 	endif()
 	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
-#	message(STATUS "${__PADDING}_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
-#	message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
-#	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with ${__ARGS}_FLOAT_PRECISION = ${${__ARGS}_FLOAT_PRECISION}")
+	message(STATUS "${__PADDING}_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
+	message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
+	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with ${__ARGS}_HALO_SIZE = ${${__ARGS}_HALO_SIZE}")
 	# Now we know our dependencies and we can finally and properly save our instance. 
 	# (or just confirm what we know in case we were called by rediscover_dependencies)..
 	_store_nonvirtual_instance_data(
