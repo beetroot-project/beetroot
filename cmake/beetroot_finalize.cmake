@@ -122,7 +122,7 @@ macro(finalizer)
 			endif()
 		endif()
 	else()
-		message(WARNING "No targets declared")
+		message(WARNING "No targets declared in the CMakeLists.txt. Add targets you want to build using build_target()")
 	endif()
 endmacro()
 

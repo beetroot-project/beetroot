@@ -306,7 +306,7 @@ endfunction()
 
 #Links two instances together.
 #The link from dependee to the dependency is possible only through the featurebase id, so it will not be possible
-#(and will trigger the error) if dependee is a promise.
+#(and will trigger an error) if the dependee is a promise.
 #
 #
 #If dependee_id is empty, it will be assumed that this instance is top (required by the CMakeLists.txt directly)
@@ -424,14 +424,6 @@ function(_move_parents_between_instances __OLD_INSTANCE_ID __NEW_INSTANCE_ID)
 		_remove_property_from_db(INSTANCEDB ${__OLD_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
 	endforeach()
 endfunction()
-
-#Adds an instance to the system - function is now obsolote
-#function(_commit_instance_data __INSTANCE_ID __PARENT_INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES)
-
-#	_store_nonvirtual_instance_data(${__INSTANCE_ID} ${__ARGS} ${__PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED}  "${__EXTERNAL_PROJECT_INFO__REF}" ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
-
-#	_link_instances_together("${__PARENT_INSTANCE_ID}" ${__INSTANCE_ID})
-#endfunction()
 
 function(_store_instance_dependencies __INSTANCE_ID __DEP_LIST)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)

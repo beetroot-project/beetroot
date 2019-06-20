@@ -29,7 +29,7 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_F_INSTANCES          - List of all instances that are poiting to this featurebase. 
 #                                                        Before instantiating any target, algorithm will iterate
 #                                                        over all instances to find a common superset of features, if one exists (if it doesn't it will return an error)
-# __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES -     List of all instances that already have list of features 
+# __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES     - List of all instances that already have list of features 
 #                                                        fully compatible with that of FEATUREBASE. 
 #                                                        At the beginning the list is empty.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_TARGET_NAMES       - Assigned name(s) of the target. Applies only for those featuresets that produce targets. 
