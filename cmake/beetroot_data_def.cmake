@@ -16,6 +16,7 @@
 # __INSTANCEDB_<INSTANCE_ID>_I_TARGET_NAME    - Assigned name(s) of the target. Except for JOINED_TARGETS it is exactly the same value as in the 
 #                                               related featurebase
 # __INSTANCEDB_<INSTANCE_ID>_I_HASH_SOURCE    - String used to get an INSTANCE_ID (by hashing)
+# __INSTANCEDB_<INSTANCE_ID>_I_PATH           - Path to the file that defined the instance (i.e. referenced it)
 # __INSTANCEDB_<INSTANCE_ID>_IMP_VARS__LIST   - List of all imported variables from all dependencies. [not used yet]
 # __INSTANCEDB_<INSTANCE_ID>_IMP_VARS_${NAME} - Names of dependency for the imported variable. [not used yet]
 
@@ -28,7 +29,7 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_F_INSTANCES          - List of all instances that are poiting to this featurebase. 
 #                                                        Before instantiating any target, algorithm will iterate
 #                                                        over all instances to find a common superset of features, if one exists (if it doesn't it will return an error)
-# __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES -     List of all instances that already have list of features 
+# __FEATUREBASEDB_<FEATURESET_ID>_COMPAT_INSTANCES     - List of all instances that already have list of features 
 #                                                        fully compatible with that of FEATUREBASE. 
 #                                                        At the beginning the list is empty.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_TARGET_NAMES       - Assigned name(s) of the target. Applies only for those featuresets that produce targets. 
@@ -99,6 +100,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_I_TEMPLATE_NAME        INSTANCEDB )
 	set(${__COLS}_I_HASH_SOURCE          INSTANCEDB )
 	set(${__COLS}_IMP_VARS__LIST         INSTANCEDB )
+	set(${__COLS}_I_PATH                 INSTANCEDB )
 	
 	set(${__COLS}_F_INSTANCES            FEATUREBASEDB )
 	set(${__COLS}_COMPAT_INSTANCES       FEATUREBASEDB )
