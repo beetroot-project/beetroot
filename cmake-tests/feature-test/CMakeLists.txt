@@ -7,7 +7,7 @@ include(../../cmake/beetroot.cmake)
 
 project(hello)
 
-build_target(FEATURE-LIB1 FUNNAME "alt_getstring" STH_COMPONENTS CMakeLists) #without this line, feature-exec should fail
+#build_target(FEATURE-LIB1 FUNNAME "alt_getstring" STH_COMPONENTS CMakeLists) #without this line, feature-exec should fail
 build_target(FEATURE-LIB1 FUNNAME "getstring" STH_COMPONENTS CMakeLists) #without this line, feature-exec should fail
 #build_target(FEATURE-STATICLIB FUNNAME "YY") #without this line, feature-exec should fail
 build_target(FEATURE-EXEC)

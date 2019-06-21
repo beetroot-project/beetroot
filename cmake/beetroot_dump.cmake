@@ -10,58 +10,56 @@ endfunction()
 function(_graphviz_epilogue)
 	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
 	file(APPEND "${__GRAPH_FILENAME}" "}\n")
+	get_filename_component(__GRAPH_FILE "${__GRAPH_FILENAME}" NAME_WE)
+	set(__GRAPH_FILEOUT "${CMAKE_CURRENT_BINARY_DIR}/${__GRAPH_FILE}.png")
+	add_custom_command(
+		OUTPUT "${__GRAPH_FILEOUT}" 
+		COMMAND dot -Tpng "${__GRAPH_FILENAME}" -o "${__GRAPH_FILEOUT}"
+		COMMENT "Generating dependency graph"
+	)
 endfunction()
-
-function(_dumped_instances_clear)
-	set_property(GLOBAL PROPERTY __BURAK_DUMPED_INSTANCES "")
-endfunction()
-
-macro(_dumped_instances_exists __INSTANCE_ID __OUT_EXISTS)
-	_dumped_object_exists(INSTANCE ${__INSTANCE_ID} ${__OUT_EXISTS})
-endmacro()
-
-macro(_dumped_featurebase_exists __FEATUREBASE_ID __OUT_EXISTS)
-	_dumped_object_exists(FEATUREBASE ${__FEATUREBASE_ID} ${__OUT_EXISTS})
-endmacro()
-
-macro(_dumped_file_exists __FILEHASH __OUT_EXISTS)
-	_dumped_object_exists(FILE ${__FILEHASH} ${__OUT_EXISTS})
-endmacro()
 
 function(_dumped_object_clear __OBJECT_TYPE)
 	set_property(GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}S "")	
 endfunction()
 
-function(_dumped_object_exists __OBJECT_TYPE __KEY __OUT_EXISTS)
+function(_dumped_object_exists __OBJECT_TYPE __KEY __OUT_EXISTS __OUT_VALUE)
 	get_property(__DUMPED_LIST GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}S)
 	if("${__KEY}" IN_LIST __DUMPED_LIST)
 		set(${__OUT_EXISTS} 1 PARENT_SCOPE)
+		get_property(__DUMPED_VALUE GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}_DIC_${__KEY})
+		set(${__OUT_VALUE} "${__DUMPED_VALUE}" PARENT_SCOPE)
 	else()
 		set(${__OUT_EXISTS} 0 PARENT_SCOPE)
 	endif()
 endfunction()
 
-function(_dumped_object_add __OBJECT_TYPE __KEY)
+function(_dumped_object_add __OBJECT_TYPE __KEY __VALUE)
 	get_property(__DUMPED_OBJECTS GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}S)
 	list(APPEND __DUMPED_OBJECTS "${__KEY}")
 	set_property(GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}S ${__DUMPED_OBJECTS})
+	set_property(GLOBAL PROPERTY __BURAK_DUMPED_${__OBJECT_TYPE}_DIC_${__KEY} "${__VALUE}")
 endfunction()
 
-function(_dump_instance __INSTANCE_ID)
-	_dumped_instances_exists(${__INSTANCE_ID} __ALREADY_DONE)
+function(_dump_instance __INSTANCE_ID __OUT_INSTANCE_ID)
+	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
+	_dumped_object_exists(INSTANCE ${__INSTANCE_ID} __ALREADY_DONE __EXISTING_KEY)
 	if(__ALREADY_DONE)
+		set(${__OUT_INSTANCE_ID} "${__EXISTING_KEY}" PARENT_SCOPE)
 		return()
 	endif()
-	_dumped_object_add(INSTANCE ${__INSTANCE_ID})
 	
 	#TO Include inside the box:
 	#PROMISE_PARAMS   - List of parameters that matching target must match in order to satisfy our promise
 	#LINKPARS         - Serialized list of link parameters that are passed to that instance. 
 	
 	_retrieve_instance_args(${__INSTANCE_ID} PROMISE_PARAMS __PARAMS)
-	_pretty_print_args(__PARAMS 16 "</TD></TR><TR><TD>" __OUT1)
+	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
+	
+	_retrieve_instance_args(${__INSTANCE_ID} DEFAULTS __DEFAULTS)	
+	_pretty_print_args(__PARAMS __DEFAULTS __PARS 16 "<TR><TD bgcolor=\"powderblue\">" "</TD></TR>" "" __OUT1)
 	_retrieve_instance_args(${__INSTANCE_ID} LINKPARS __LINKPARAMS)
-	_pretty_print_args(__LINKPARAMS 16 "</I></TD></TR><TR><TD><I>" __OUT2)
+	_pretty_print_args(__LINKPARAMS __DEFAULTS __PARS 16 "<TR><TD bgcolor=\"powderblue\"><I>" "</I></TD></TR>" "" __OUT2)
 	_retrieve_instance_data(${__INSTANCE_ID} WAS_PROMISE __WAS_PROMISE)
 	_retrieve_instance_data(${__INSTANCE_ID} I_TARGET_NAME __TARGET_NAME)
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
@@ -76,85 +74,133 @@ function(_dump_instance __INSTANCE_ID)
 		set(__XLABEL )
 	endif()
 	
-	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
+	_dump_featurebase(${__FEATUREBASE_ID} __FEATUREBASE_PREFIX __FEATUREBASE_INSIDE __FEATUREBASE_SUFFIX)
+
+	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_INSTANCES __RETURN_INSTANCES)	
+	list(LENGTH __RETURN_INSTANCES __RETURN_INSTANCES_COUNT)
+	string(REPLACE "::" "_" __INSTANCE_ID_FIXED "${__INSTANCE_ID}")
+	set(__INSTANCE_ID_FIXED "i${__INSTANCE_ID_FIXED}")
+	set(__SHAPE record)
+	set(__FEATUREBASEADD)
+	if("${__RETURN_INSTANCES_COUNT}" EQUAL "1")
+		if("${__RETURN_INSTANCES}" STREQUAL "${__INSTANCE_ID}")
+			_retrieve_featurebase_data(${__FEATUREBASE_ID} F_PATH __PATH)
+			_get_relative_path("${__PATH}" __RELPATH)
+			if("${__XLABEL}" STREQUAL "")
+				set(__XLABEL ", xlabel=\"${__RELPATH}\"")
+			else()
+				set(__XLABEL ", xlabel=\"${__RELPATH}:${__TARGET_NAME}\"")
+			endif()
+			set(__INSTANCE_ID_FIXED "t${__FEATUREBASE_ID}")
+			set(__SHAPE Mrecord)
+			set(__FEATUREBASEADD "${__FEATUREBASE_INSIDE}")
+		else()
+			message(FATAL_ERROR "Beetroot internal error: Consistency problem")
+		endif()
+	endif()
+	if("${__FEATUREBASEADD}" STREQUAL "")
+		file(APPEND "${__GRAPH_FILENAME}" "${__FEATUREBASE_PREFIX} ${__FEATUREBASE_INSIDE} ${__FEATUREBASE_SUFFIX}")
+	endif()
+
+	
 	
 	#Format: {bold - instanceid | pars | italic: linkpars}
+	file(APPEND "${__GRAPH_FILENAME}" "${__INSTANCE_ID_FIXED} [shape=${__SHAPE}${__DASHES}${__XLABEL}, label=< <TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" >${__FEATUREBASEADD}<TR><TD bgcolor=\"skyblue\"><B>${__INSTANCE_ID}</B></TD></TR> ${__OUT1}  ${__OUT2} </TABLE> >]\n")
 	
-	file(APPEND "${__GRAPH_FILENAME}" "i${__INSTANCE_ID} [shape=Mrecord${__DASHES}${__XLABEL}, label=< <TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" ><TR><TD><B>${__INSTANCE_ID}</B></TD></TR><TR><TD> ${__OUT1} </TD></TR><TR><TD> <I> ${__OUT2}  </I> </TD></TR> </TABLE> >]\n")
+	if("${__FEATUREBASEADD}" STREQUAL "")
+		file(APPEND "${__GRAPH_FILENAME}" "t${__FEATUREBASE_ID} -> ${__INSTANCE_ID_FIXED} [style=bold, arrowhead=none${__DASHES}]\n")
+#		set(__INSTANCE_ID_FIXED "t${__FEATUREBASE_ID}")
+	endif()
+	_dumped_object_add(INSTANCE ${__INSTANCE_ID} "${__INSTANCE_ID_FIXED}")
+	set(${__OUT_INSTANCE_ID} "${__INSTANCE_ID_FIXED}" PARENT_SCOPE)
 	
-	_dump_featurebase(${__FEATUREBASE_ID})
-	file(APPEND "${__GRAPH_FILENAME}" "t${__FEATUREBASE_ID} -> i${__INSTANCE_ID} [style=bold, arrowhead=none${__DASHES}]\n")
+
+	_retrieve_instance_data(${__INSTANCE_ID} I_CHILDREN __IDEPENDENCIES)
+	foreach(__ICHILD IN LISTS __IDEPENDENCIES)
+		_retrieve_instance_data(${__ICHILD} FEATUREBASE __FCHILD)
+		_dump_instance(${__ICHILD} __OUT_CHILDID)
+		file(APPEND "${__GRAPH_FILENAME}" "${__INSTANCE_ID_FIXED} -> ${__OUT_CHILDID}\n")
+	endforeach()
+
 endfunction()
 
-function(_dump_featurebase __FEATUREBASE_ID)
-	_dumped_featurebase_exists(${__FEATUREBASE_ID} __ALREADY_DONE)
+function(_dump_featurebase __FEATUREBASE_ID __OUT_PREFIX __OUT_INSIDE __OUT_SUFFIX)
+	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
+	_dumped_object_exists(FEATUREBASE ${__FEATUREBASE_ID} __ALREADY_DONE __EXISTING_KEY)
 	if(__ALREADY_DONE)
+		set(${__OUT_PREFIX} "" PARENT_SCOPE)
+		set(${__OUT_INSIDE} "" PARENT_SCOPE)
+		set(${__OUT_SUFFIX} "" PARENT_SCOPE)
 		return()
 	endif()
-	_dumped_object_add(FEATUREBASE ${__FEATUREBASE_ID})
+	_dumped_object_add(FEATUREBASE ${__FEATUREBASE_ID} "t${__FEATUREBASE_ID}")
 
 	#TO Include inside the box:
 	#PROMISE_PARAMS   - List of parameters that matching target must match in order to satisfy our promise
 	#LINKPARS         - Serialized list of link parameters that are passed to that instance. 
-	
+
+	_retrieve_featurebase_args(${__FEATUREBASE_ID} DEFAULTS __DEFAULTS)	
 	_retrieve_featurebase_args(${__FEATUREBASE_ID} MODIFIERS __PARAMS)
-	_pretty_print_args(__PARAMS 16 "</TD></TR><TR><TD>" __OUT1)
+	_retrieve_featurebase_pars(${__FEATUREBASE_ID} PARS __PARS)
+	_pretty_print_args(__PARAMS __DEFAULTS __PARS 16 "<TR><TD bgcolor=\"moccasin\">" "</TD></TR>" "" __OUT1)
 	_retrieve_featurebase_args(${__FEATUREBASE_ID} F_FEATURES __FEATURES)
-	_pretty_print_args(__FEATURES 16 "</TD></TR><TR><TD>" __OUT2)
+	_pretty_print_args(__FEATURES __DEFAULTS __PARS 16 "<TR><TD bgcolor=\"moccasin\">" "</TD></TR>" "" __OUT2)
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_PATH __PATH)
 	_get_relative_path("${__PATH}" __RELPATH)
-	
-	
-	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
-	
+	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_TARGET_NAMES __TARGET_NAMES)
+	_retrieve_featurebase_data(${__FEATUREBASE_ID} NO_TARGETS __NO_TARGETS)
+	if(__NO_TARGETS)
+		if("${__TARGET_NAMES}" STREQUAL "")
+			set(__TARGET_NAMES "<I>no targets</I>")
+		else()
+			set(__TARGET_NAMES "[${__TARGET_NAMES}]")
+		endif()
+	endif()
+	_lineset_list(__TARGET_NAMES 16 "<TR><TD bgcolor=\"orange\"><B>" "</B></TD></TR>" "" __OUT_TARGETS)
 	#Format: {bold - featurebase | pars | italic: linkpars}
 	
 	#TODO: Wstaw linię, która odgraniczy pars od features
-	file(APPEND "${__GRAPH_FILENAME}" "t${__FEATUREBASE_ID} [shape=record, label=< <TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" ><TR><TD>${__FEATUREBASE_ID}</TD></TR><TR><TD> ${__OUT1} </TD></TR><TR><TD> ${__OUT2}  </TD></TR> </TABLE> > xlabel=\"${__RELPATH}\"]\n")
+	set(${__OUT_PREFIX} "t${__FEATUREBASE_ID} [shape=Mrecord, label=< <TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" >" PARENT_SCOPE)
+	set(${__OUT_INSIDE} "${__OUT_TARGETS} <TR><TD bgcolor=\"orange\">${__FEATUREBASE_ID}</TD></TR>  ${__OUT1}  ${__OUT2}" PARENT_SCOPE)
+	set(${__OUT_SUFFIX} "</TABLE> > xlabel=\"${__RELPATH}\"]\n" PARENT_SCOPE)
 	
-	_retrieve_featurebase_data(${__FEATUREBASE_ID} DEP_INSTANCES __DEPENDENCIES)
-	foreach(__INSTANCE_ID IN LISTS __DEPENDENCIES)
-		_dump_instance("${__INSTANCE_ID}")
-		file(APPEND "${__GRAPH_FILENAME}" "i${__INSTANCE_ID} -> t${__FEATUREBASE_ID}\n")
-	endforeach()
-#	_make_path_hash("${__PATH}" __FILEHASH)
-#	_dump_file("${__PATH}")
-#	file(APPEND "${__GRAPH_FILENAME}" "t${__FEATUREBASE_ID} -> p${__FILEHASH} [style=bold, arrowhead=none]\n")
+#	_retrieve_featurebase_data(${__FEATUREBASE_ID} DEP_INSTANCES __DEPENDENCIES)
+#	foreach(__INSTANCE_ID IN LISTS __DEPENDENCIES)
+#		_dump_instance("${__INSTANCE_ID}" __INSTANCE_ID_FIXED)
+#		file(APPEND "${__GRAPH_FILENAME}" "${__INSTANCE_ID_FIXED} -> t${__FEATUREBASE_ID}\n")
+#	endforeach()
 	
 endfunction()
 
-function(_dump_file __PATH)
-	_dumped_file_exists(${__FILEHASH} __ALREADY_DONE)
-	if(__ALREADY_DONE)
-		return()
-	endif()
-	_dumped_object_add(FILE ${__FILEHASH})
-	_get_relative_path("${__PATH}" __RELPATH)
-	
-	#TO Include inside the box:
-	#filename (relative to the superbuild root)
-	
-	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
-	
-	file(APPEND "${__GRAPH_FILENAME}" "p${__FILEHASH} [shape=note, label=\"${__RELPATH}\"]\n")
-endfunction()
+#function(_dump_file __PATH)
+#	_dumped_file_exists(${__FILEHASH} __ALREADY_DONE)
+#	if(__ALREADY_DONE)
+#		return()
+#	endif()
+#	_dumped_object_add(FILE ${__FILEHASH})
+#	_get_relative_path("${__PATH}" __RELPATH)
+#	
+#	#TO Include inside the box:
+#	#filename (relative to the superbuild root)
+#	
+#	get_property(__GRAPH_FILENAME GLOBAL PROPERTY __BURAK_GRAPH_FILENAME)
+#	
+#	file(APPEND "${__GRAPH_FILENAME}" "p${__FILEHASH} [shape=note, label=\"${__RELPATH}\"]\n")
+#endfunction()
 
-
-#The most important thing it does is to make sure the line width is not exceeded.
-function(_pretty_print_args __ARGS_REF __MAX_WIDTH __NEWLINESTR __OUT_TXT)
+function(_lineset_list __LIST_REF __MAX_WIDTH __PREFIX __SUFFIX __NEWLINESTR __OUT_TXT)
 #	message(STATUS "_pretty_print_args(): __ARGS_REF: ${__ARGS_REF}")
 	set(__OUT)
 	set(__OUT_LINE)
 	set(__CUR_WIDTH 0)
-	foreach(__ARG IN LISTS ${__ARGS_REF}__LIST)
-#		message(STATUS "set(__TOKEN \"${__ARG}=${${__ARGS_REF}_${__ARG}}\")")
-		set(__TOKEN "${__ARG}=${${__ARGS_REF}_${__ARG}}")
+	
+	foreach(__TOKEN IN LISTS ${__LIST_REF})
 		string(LENGTH "${__TOKEN}" __STRLEN)
 		math(EXPR __NEW_WIDTH "${__CUR_WIDTH}+${__STRLEN}")
 		if(${__NEW_WIDTH} GREATER ${__MAX_WIDTH})
 #			message(STATUS "${__NEW_WIDTH} GREATER ${__MAX_WIDTH}")
 			if(NOT "${__OUT}" STREQUAL "")
-				set(__OUT "${__OUT}${__NEWLINESTR}")
+				set(__OUT "${__OUT}${__SUFFIX}${__NEWLINESTR}${__PREFIX}")
 			endif()
 			set(__OUT "${__OUT}${__OUT_LINE}")
 			set(__OUT_LINE)
@@ -170,11 +216,41 @@ function(_pretty_print_args __ARGS_REF __MAX_WIDTH __NEWLINESTR __OUT_TXT)
 	if(NOT "${__OUT_LINE}" STREQUAL "")
 #		message(STATUS "NOT \"${__OUT_LINE}\" STREQUAL \"\"")
 		if(NOT "${__OUT}" STREQUAL "")
-			set(__OUT "${__OUT}${__NEWLINESTR}")
+			set(__OUT "${__OUT}${__SUFFIX}${__NEWLINESTR}${__PREFIX}")
 		endif()
-#		message(STATUS "set(__OUT \"${__OUT}${__NEWLINESTR}${__OUT_LINE}\")")
 		set(__OUT "${__OUT}${__OUT_LINE}")
+	endif()
+	if(NOT "${__OUT}" STREQUAL "")
+		set(__OUT "${__PREFIX}${__OUT}${__SUFFIX}")
 	endif()
 #	message(STATUS "__OUT: ${__OUT}")
 	set(${__OUT_TXT} "${__OUT}" PARENT_SCOPE)
 endfunction()
+
+#The most important thing it does is to make sure the line width is not exceeded.
+function(_pretty_print_args __ARGS_REF __DEFAULTS_REF __PARS __MAX_WIDTH __PREFIX __SUFFIX __NEWLINESTR __OUT_TXT2)
+#	message(STATUS "_pretty_print_args(): __ARGS_REF: ${__ARGS_REF}")
+	set(__LIST)
+	set(__OUT)
+	set(__OUT_LINE)
+	set(__CUR_WIDTH 0)
+#	message(STATUS "_pretty_print_args(): __ARGS_REF: ${__ARGS_REF}->${__ARGS_REF}__LIST:${${__ARGS_REF}__LIST}")
+	
+	foreach(__ARG IN LISTS ${__ARGS_REF}__LIST)
+		if(NOT "${${__DEFAULTS_REF}_${__ARG}}" STREQUAL "${${__ARGS_REF}_${__ARG}}")
+			if("${${__PARS}_${__ARG}__TYPE}" STREQUAL "PATH")
+				if(IS_ABSOLUTE "${${__ARGS_REF}_${__ARG}}")
+#					message(STATUS "_pretty_print_args(): PATH ${__ARG}: \"${${__ARGS_REF}_${__ARG}}\"")
+					_get_relative_path("${${__ARGS_REF}_${__ARG}}" ${__ARGS_REF}_${__ARG})
+				else()
+#					message(STATUS "_pretty_print_args(): arg ${__ARG} NOT ABSOLUTE: ${${__ARGS_REF}_${__ARG}}")
+				endif()
+			endif()
+			list(APPEND __LIST "${__ARG}=${${__ARGS_REF}_${__ARG}}")
+		endif()
+	endforeach()
+	_lineset_list(__LIST ${__MAX_WIDTH} "${__PREFIX}" "${__SUFFIX}" "${__NEWLINESTR}" __OUT_TXT_IN)
+#	message(STATUS "_pretty_print_args(): __LIST: ${__LIST}, __OUT_TXT_IN: ${__OUT_TXT_IN}")
+	set(${__OUT_TXT2} "${__OUT_TXT_IN}" PARENT_SCOPE)
+endfunction()
+

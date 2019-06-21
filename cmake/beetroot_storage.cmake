@@ -325,7 +325,8 @@ function(_link_instances_together __DEPENDEE_ID __DEPENDENT_ID)
 #	message(STATUS "${__PADDING}_link_instances_together(): __DEPENDEE_ID: ${__DEPENDEE_ID} __DEPENDENT_ID: ${__DEPENDENT_ID}")
 	
 	_add_property_to_db(INSTANCEDB ${__DEPENDENT_ID} I_PARENTS "${__DEPENDEE_ID}")
-	if(__DEPENDEE_ID)
+	if(NOT "${__DEPENDEE_ID}" STREQUAL "")
+		_add_property_to_db(INSTANCEDB ${__DEPENDEE_ID} I_CHILDREN "${__DEPENDENT_ID}")
 		_retrieve_instance_data(${__DEPENDEE_ID} IS_PROMISE __IS_PROMISE)
 		if("${__IS_PROMISE}" STREQUAL "")
 			message(FATAL_ERROR "Internal beetroot error: __DEPENDEE_ID: ${__DEPENDEE_ID} must be first initialized")
@@ -421,7 +422,9 @@ function(_move_parents_between_instances __OLD_INSTANCE_ID __NEW_INSTANCE_ID)
 		_remove_property_from_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__OLD_INSTANCE_ID})
 		_add_property_to_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__NEW_INSTANCE_ID})
 		_add_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+		_add_property_to_db(INSTANCEDB ${__PARENT_ID} I_CHILDREN ${__NEW_INSTANCE_ID})
 		_remove_property_from_db(INSTANCEDB ${__OLD_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+		_remove_property_from_db(INSTANCEDB ${__PARENT_ID} I_CHILDREN ${__OLD_INSTANCE_ID})
 	endforeach()
 endfunction()
 
@@ -458,10 +461,10 @@ function(_promote_instance __INSTANCE_ID __FEATUREBASE_ID __SERIALIZED_COMMON_FE
 	endif()
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__INSTANCE_ID})
 #	message(STATUS "${__PADDING}_promote_instance(): ${__SERIALIZED_COMMON_FEATURES__REF}__LIST: ${${__SERIALIZED_COMMON_FEATURES__REF}__LIST}")
-#	message(STATUS "${__PADDING}_move_instance(): moving ${__INSTANCE_ID} -> ${__NEW_INSTANCE_ID}")
 	set(__NEW_INSTANCE_ID)
 #	message(STATUS "${__PADDING}_promote_instance(): _rediscover_dependencies(${__INSTANCE_ID} ${__SERIALIZED_COMMON_FEATURES__REF} __NEW_INSTANCE_ID)")
 	_rediscover_dependencies(${__INSTANCE_ID} ${__SERIALIZED_COMMON_FEATURES__REF} __NEW_INSTANCE_ID)
+#	message(STATUS "${__PADDING}_promote_instance(): moved ${__INSTANCE_ID} -> ${__NEW_INSTANCE_ID}")
 	
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_FEATURES __SERIALIZED_FEATURES)
 	
@@ -476,7 +479,6 @@ function(_promote_instance __INSTANCE_ID __FEATUREBASE_ID __SERIALIZED_COMMON_FE
 		message(STATUS "Error in instance efter promotion:\n${__MSG}")
 		message(FATAL_ERROR "${__ERRORS}")
 	endif()
-#	message(FATAL_ERROR "!!!!")
 	
 	set(${__OUT_NEW_INSTANCE_ID} ${__NEW_INSTANCE_ID} PARENT_SCOPE )
 endfunction()
@@ -498,6 +500,7 @@ function(_change_instance_id __OLD_INSTANCE_ID __NEW_INSTANCE_ID)
 		_remove_property_from_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__OLD_INSTANCE_ID})
 		_add_property_to_db(FEATUREBASEDB ${__PARENT_FEATUREBASE} DEP_INSTANCES ${__NEW_INSTANCE_ID})
 		_add_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} I_PARENTS ${__PARENT_ID})
+		_add_property_to_db(INSTANCEDB ${__PARENT_ID} I_CHILDREN ${__NEW_INSTANCE_ID})
 	endforeach()
 	
 	#2. Change TEMPLATEDB

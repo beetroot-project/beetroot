@@ -7,6 +7,7 @@
 #                                               Does not apply if the target is singleton
 # __INSTANCEDB_<INSTANCE_ID>_LINKPARS         - Serialized list of link parameters that are passed to that instance. 
 # __INSTANCEDB_<INSTANCE_ID>_I_PARENTS        - List of instances that require this instance as their dependency
+# __INSTANCEDB_<INSTANCE_ID>_I_CHILDREN       - List of instances that are required by us, because they are our dependency
 # __INSTANCEDB_<INSTANCE_ID>_IS_PROMISE       - Boolean. True means that this instance is incapable of spawning a target alone. It only holds features, but the system must
 #                                               find the single featureset this instance can use (and perhaps expand with its own features)
 # __INSTANCEDB_<INSTANCE_ID>_WAS_PROMISE      - Boolean. True, if the instance is a converted promise, empty otherwise
@@ -94,6 +95,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_I_FEATURES             INSTANCEDB )
 	set(${__COLS}_LINKPARS               INSTANCEDB )
 	set(${__COLS}_I_PARENTS              INSTANCEDB )
+	set(${__COLS}_I_CHILDREN             INSTANCEDB )
 	set(${__COLS}_IS_PROMISE             INSTANCEDB )
 	set(${__COLS}_PROMISE_PARAMS         INSTANCEDB )
 	set(${__COLS}_FEATUREBASE            INSTANCEDB )

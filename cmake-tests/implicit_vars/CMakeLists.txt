@@ -13,8 +13,14 @@ message(STATUS "Calling build_target(IMPLICIT_VARS)")
 build_target(IMPLICIT_VARS)
 message(STATUS "Calling build_target(EXPORT_VAR...)")
 build_target(EXPORT_VAR 
-	IMPLICIT_EXPORTED "OK CMakeLists")
+	IMPLICIT_EXPORTED "OK CMakeLists"
+	LINKPAR 33
+	)
+build_target(EXPORT_VAR 
+	LINKPAR 34
+	)
 message(STATUS "End of CMakeLists")
+build_target(IMPLICIT_VARS LINKPAR1 3)
 
 #IMPLICIT_EXPORTED
 #IMPLICIT_LOCAL

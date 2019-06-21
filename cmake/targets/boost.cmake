@@ -1,6 +1,6 @@
 set(TARGET_PARAMETERS 
 	COMPONENTS VECTOR STRING "filesystem:system:log:date_time:thread:chrono:atomic:program_options"
-	VERSION SCALAR "STRING" "1.68"
+	VERSION SCALAR STRING "1.68"
 )
 
 set(LINK_PARAMETERS 
