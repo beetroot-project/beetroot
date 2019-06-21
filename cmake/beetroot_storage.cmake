@@ -464,6 +464,9 @@ function(_promote_instance __INSTANCE_ID __FEATUREBASE_ID __SERIALIZED_COMMON_FE
 	_rediscover_dependencies(${__INSTANCE_ID} ${__SERIALIZED_COMMON_FEATURES__REF} __NEW_INSTANCE_ID)
 	
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_FEATURES __SERIALIZED_FEATURES)
+	
+#	message(STATUS "${__PADDING}_promote_instance(): __NEW_INSTANCE_ID: ${__NEW_INSTANCE_ID} WAS_PROMISE 1")
+	_set_property_to_db(INSTANCEDB ${__NEW_INSTANCE_ID} WAS_PROMISE 1)
 #	message(STATUS "${__PADDING}_promote_instance(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
 #	message(STATUS "${__PADDING}_promote_instance(): moving ${__INSTANCE_ID} -> ${__NEW_INSTANCE_ID}")
 #	_move_instance(${__INSTANCE_ID} ${__NEW_INSTANCE_ID} )

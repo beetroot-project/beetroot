@@ -44,7 +44,7 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS__LIST)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE)
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
-	
+		
 	#Now let's make a new INSTANCE_ID for the newly resolved virtual instance:
 	_make_instance_id(${__TEMPLATE_NAME} __ARGS "${__IS_PROMISE}" __NEW_INSTANCE_ID __HASH_SOURCE)
 	_move_parents_between_instances(${__INSTANCE_ID} ${__NEW_INSTANCE_ID}) 
