@@ -9,6 +9,7 @@
 # __INSTANCEDB_<INSTANCE_ID>_I_PARENTS        - List of instances that require this instance as their dependency
 # __INSTANCEDB_<INSTANCE_ID>_IS_PROMISE       - Boolean. True means that this instance is incapable of spawning a target alone. It only holds features, but the system must
 #                                               find the single featureset this instance can use (and perhaps expand with its own features)
+# __INSTANCEDB_<INSTANCE_ID>_WAS_PROMISE      - Boolean. True, if the instance is a converted promise, empty otherwise
 # __INSTANCEDB_<INSTANCE_ID>_PROMISE_PARAMS   - List of parameters that matching target must match in order to satisfy our promise
 # __INSTANCEDB_<INSTANCE_ID>_FEATUREBASE      - Pointer to the featureset that complements list of modifiers and is responsible for producing the target. Empty if IS_PROMISE
 #                                               For promises this one is initially empty.
@@ -101,6 +102,8 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_I_HASH_SOURCE          INSTANCEDB )
 	set(${__COLS}_IMP_VARS__LIST         INSTANCEDB )
 	set(${__COLS}_I_PATH                 INSTANCEDB )
+	set(${__COLS}_WAS_PROMISE            INSTANCEDB )
+	
 	
 	set(${__COLS}_F_INSTANCES            FEATUREBASEDB )
 	set(${__COLS}_COMPAT_INSTANCES       FEATUREBASEDB )

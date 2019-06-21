@@ -98,6 +98,7 @@ if(NOT __BURAK_LOADED)
 	include(${__PREFIX}/prepare_arguments_to_pass.cmake)
 	include(${__PREFIX}/missing_dependency.cmake)
 	include(${__PREFIX}/beetroot_debug.cmake)	
+	include(${__PREFIX}/beetroot_dump.cmake)	
 
 	_set_behavior_outside_defining_targets()
 	if(NOT __NOT_SUPERBUILD)
