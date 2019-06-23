@@ -3,9 +3,13 @@
 #act as a filter that limits compatibility with the existing targets
 function(get_existing_target __TEMPLATE_NAME)
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
-	set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
+	get_property(__CALLING_FILE GLOBAL PROPERTY __BURAK_CALLEE_PATH)
+	if("${__CALLING_FILE}" STREQUAL "")
+		set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
+	endif()
+
 	file(RELATIVE_PATH __CALLING_FILE ${SUPERBUILD_ROOT} ${__CALLING_FILE})
-	
+#	message(STATUS "${__PADDING}get_existing_target(): __CALLING_FILE: ${__CALLING_FILE}")
 #	message(STATUS "${__PADDING}get_existing_target(): Called get_existing_target(${__TEMPLATE_NAME}) on phase ${__GET_TARGET_BEHAVIOR}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "INSIDE_GENERATE_TARGETS")
 		message(FATAL_ERROR "Calling get_existing_target from inside generate_targets is disallowed. To call dependency use declare_dependencies() (in which you cannot define targets).")
@@ -15,7 +19,7 @@ function(get_existing_target __TEMPLATE_NAME)
 	endif()
 	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
 
-	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
+	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
 
 #	__rename_arguments(${__PARENT_ARGS_PREFIX} __DEFAULT_ARGS)
 	
@@ -134,8 +138,14 @@ endfunction()
 
 function(get_target __TEMPLATE_NAME __OUT) 
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
-	set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
+	get_property(__CALLING_FILE GLOBAL PROPERTY __BURAK_CALLEE_PATH)
+#	message(STATUS "get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __CALLING_FILE: \"${__CALLING_FILE}\"")
+	if("${__CALLING_FILE}" STREQUAL "")
+		set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
+#		message(STATUS "get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __CALLING_FILE: \"${__CALLING_FILE}\"")
+	endif()
 	file(RELATIVE_PATH __CALLING_FILE ${SUPERBUILD_ROOT} ${__CALLING_FILE})
+#	message(STATUS "${__PADDING}get_existing_target(): __CALLING_FILE: ${__CALLING_FILE}")
 #	message(STATUS "${__PADDING}get_target(): Called get_target(${__TEMPLATE_NAME}) on phase ${__GET_TARGET_BEHAVIOR}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "INSIDE_GENERATE_TARGETS")
 		message(FATAL_ERROR "Calling get_target from inside generate_targets is disallowed. To call dependency use declare_dependencies() (in which you cannot define targets).")
@@ -145,9 +155,11 @@ function(get_target __TEMPLATE_NAME __OUT)
 	endif()
 	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
 
-	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" ${ARGN})
+	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
+#	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} USE_NETCDF: \"${USE_NETCDF}\" ARGN: ${ARGN}")
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
 	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
+#	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARAMETERS_DIC_USE_NETCDF__TYPE: ${__PARAMETERS_DIC_USE_NETCDF__TYPE} __VARIABLE_DIC_USE_NETCDF: ${__VARIABLE_DIC_USE_NETCDF}")
 	if(__PARENT_ALL_VARIABLES)
 #		message(STATUS "${__PADDING}get_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
 		_blank_variables(__PARENT_ALL_VARIABLES __VARIABLE_DIC__LIST) #Blanks all variables that may have been set by dependee's declare_dependencies().
@@ -159,6 +171,8 @@ function(get_target __TEMPLATE_NAME __OUT)
 		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
 	endif()
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC 0 __INSTANCE_ID __HASH_SOURCE)
+#		_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __SERIALIZED_VARIABLE_DIC)
+#		message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __INSTANCE_ID: ${__INSTANCE_ID} __SERIALIZED_VARIABLE_DIC: ${__SERIALIZED_VARIABLE_DIC}")
 	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES" OR "${__GET_TARGET_BEHAVIOR}" STREQUAL "OUTSIDE_SCOPE")
 		#Add dependencies together with their arguments to the list. They will be instatiated later on, during generate_targets run
 #		message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID} features: ${__PARAMETERS_DIC__LIST_FEATURES} modifiers: ${__PARAMETERS_DIC__LIST_MODIFIERS}" )
@@ -249,7 +263,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	
 	set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 	
-#	message(FATAL_ERROR "Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} with instance name set as «${__INSTANCE_NAME}» ")
+#	message(STATUS "${__PADDING}_get_target_internal() Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} ${__INSTANCE_NAME} with instance name set as «${__INSTANCE_NAME}» ")
 	set(__NO_OP 0)
 
 	generate_targets(${__INSTANCE_NAME} ${__TEMPLATE_NAME})

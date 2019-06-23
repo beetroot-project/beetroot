@@ -116,10 +116,17 @@ function(_dump_instance __INSTANCE_ID __OUT_INSTANCE_ID)
 	
 
 	_retrieve_instance_data(${__INSTANCE_ID} I_CHILDREN __IDEPENDENCIES)
+	_retrieve_instance_data(${__INSTANCE_ID} I_PROMISED_CH __I_PROMISED_CH)
+	
 	foreach(__ICHILD IN LISTS __IDEPENDENCIES)
-		_retrieve_instance_data(${__ICHILD} FEATUREBASE __FCHILD)
+#		_retrieve_instance_data(${__ICHILD} FEATUREBASE __FCHILD)
+		if("${__ICHILD}" IN_LIST __I_PROMISED_CH)
+			set(__DASHES2 "[style=dashed]")
+		else()
+			set(__DASHES2 )
+		endif()
 		_dump_instance(${__ICHILD} __OUT_CHILDID)
-		file(APPEND "${__GRAPH_FILENAME}" "${__INSTANCE_ID_FIXED} -> ${__OUT_CHILDID}\n")
+		file(APPEND "${__GRAPH_FILENAME}" "${__INSTANCE_ID_FIXED} -> ${__OUT_CHILDID}${__DASHES2}\n")
 	endforeach()
 
 endfunction()

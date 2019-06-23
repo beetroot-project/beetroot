@@ -1,4 +1,6 @@
-set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic Serialbox::SerialboxFortranStatic)
+set(ENUM_TARGETS Serialbox::SerialboxStatic Serialbox::SerialboxCStatic
+ Serialbox::SerialboxFortranStatic
+)
 
 set(TARGET_PARAMETERS 
 )

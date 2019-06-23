@@ -99,7 +99,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			
 			
 			_retrieve_instance_data(${__INSTANCE_ID} F_FEATURES __SERIALIZED_FEATURES)
-#			message(STATUS "_get_target_external(): 1 __INSTANCE_NAME: ${__INSTANCE_NAME} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
+			message(STATUS "_get_target_external(): 1 __INSTANCE_NAME: ${__INSTANCE_NAME} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
 			set(__ARGS__LIST_FEATURES "${__ARGS__LIST}")
 			_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
 			set(__ARGS__LIST_MODIFIERS "${__ARGS__LIST}")
@@ -141,7 +141,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT 1)
 		else()
 			if(__REUSED_EXISTING)
-				message(STATUS "External dependency ${__INSTANCE_NAME} is already compiled in subdirectory ${__EXTERNAL_ID} with compatible arguments ${__FEATURES}")
+				message(STATUS "External dependency ${__INSTANCE_NAME} (${__FEATUREBASE_ID}) is already compiled in subdirectory ${__EXTERNAL_ID} with compatible arguments ${__FEATURES}")
 			endif()
 		endif()
 	else()
@@ -266,10 +266,10 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 		# Prepare our identification - check if the installed version has compatible featuresets
 		_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 		_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
-		_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __OUR_ARGS)
-		_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_OUR_ARGS__LIST)
+		_retrieve_featurebase_args(${__FEATUREBASE_ID} F_FEATURES __OUR_ARGS)
+		_retrieve_featurebase_data(${__FEATUREBASE_ID} F_FEATURES __SERIALIZED_OUR_ARGS__LIST)
 #		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __EXTERNAL_ID: ${__EXTERNAL_ID}...")
-#		message(STATUS "_workout_install_dir_for_external(): ... OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
+#		message(STATUS "_workout_install_dir_for_external(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} OUR_ARGS: ${__SERIALIZED_OUR_ARGS__LIST}")
 	
 		# Get the list of all installed versions that maybe compatible with our requirement
 		_get_existing_targets("${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" "${__PATH_HASH}")
@@ -301,7 +301,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	endif()
 	
 	#Prepare the feature file, so other calls to the external project could find us
-	_retrieve_instance_data(${__INSTANCE_ID} I_FEATURES __SERIALIZED_FEATURES__LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} F_FEATURES __SERIALIZED_FEATURES__LIST)
 	set(${__OUT_FEATURES} "${__SERIALIZED_FEATURES__LIST}" PARENT_SCOPE)
 #	message(STATUS "_workout_install_dir_for_external(): __SERIALIZED_MODIFIERS: ${__SERIALIZED_MODIFIERS}")
 	set(__FEATUREFILETMP "${BEETROOT_BUILD_DIR}/${__EXTERNAL_ID}.cmake")

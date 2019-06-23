@@ -104,7 +104,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	endif()
 
 	_put_dependencies_into_stack("${__INSTANCE_ID}")
-	if(NOT __FEATUREBASE_ID)
+	if(NOT __FEATUREBASE_ID) # i.e. this instance still does not have its featurebase
 		set(__LIST ${${__PARS}__LIST_MODIFIERS})
 		list(APPEND __LIST ${${__PARS}__LIST_FEATURES})
 		list(APPEND __LIST ${${__PARS}__LIST_LINKPARS} )
@@ -118,6 +118,12 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		_descend_dependencies_stack()
 		
 		get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
+		get_property(__OLD_CALEE_PATH GLOBAL PROPERTY __BURAK_CALLEE_PATH)
+		set_property(GLOBAL PROPERTY __BURAK_CALLEE_PATH "${__TARGETS_CMAKE_PATH}")
+#		message(STATUS "${__PADDING}_discover_dependencies(): ${__TEMPLATE_NAME} (${__INSTANCE_ID}): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
+
+		set(__OLD_CALEE_PATH "${__TARGETS_CMAKE_PATH}")
+		
 		set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 		set(__PARENT_ALL_VARIABLES ${${__ARGS}__LIST}) #Used by all entry functions like build_target or get_existing_target that define our dependencies to blank all our variables before executing _their_ declare_dependencies()
 
@@ -125,6 +131,8 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 
 
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
+		
+		set_property(GLOBAL PROPERTY __BURAK_CALLEE_PATH "${__OLD_CALEE_PATH}")
 		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
 #		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
@@ -158,8 +166,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 	
 	#... and update the link with the children (i.e. our dependencies)
+	
 	foreach(__DEP_ID IN LISTS __DEP_INSTANCE_IDS)
-		_link_instances_together("${__INSTANCE_ID}" ${__DEP_ID})
+		_link_instances_together("${__INSTANCE_ID}" ${__DEP_ID} 0)
 	endforeach()
 	
 	if(NOT __FEATUREBASE_ID)

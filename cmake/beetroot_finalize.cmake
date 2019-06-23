@@ -226,9 +226,13 @@ function(_resolve_features)
 #		message(STATUS "${__PADDING}_resolve_features(): Beginning of the featurebase resolve round with __ALL_FEATUREBASES: ${__ALL_FEATUREBASES}")
 		set(__SOMETHING_MODIFIED 0)
 		foreach(__FEATUREBASE_ID IN LISTS __ALL_FEATUREBASES)
-			_get_promises_by_featurebase(${__FEATUREBASE_ID} __PROMISE_IDS __MORE_FEATUREBASES)
+			_get_promises_by_featurebase(${__FEATUREBASE_ID} __PROMISE_IDS __MORE_FEATUREBASES) #Although we want to process ${__FEATUREBASE_ID},
+			#we might need to resolve more featurebases, because of JOINED_TARGETS. When a template file has JOINED_TARGETS property,
+			#the parameters and features are obviously shared, and there is a separate featurebase for each template name. 
+			#This is the only place in the beetroot where we need to merge the JOINED_TARGETS and treat them as one.
 #			message(STATUS "${__PADDING}_resolve_features(): __FEATUREBASE_ID \"${__FEATUREBASE_ID}\" got following promises: __PROMISE_IDS: ${__PROMISE_IDS}. List of competing featurebases for these promises: __MORE_FEATUREBASES: ${__MORE_FEATUREBASES}")
-			_resolve_features_for_featurebases(__MORE_FEATUREBASES __PROMISE_IDS __STATUSES)
+			_resolve_features_for_featurebases(__MORE_FEATUREBASES __PROMISE_IDS __STATUSES) #This is the function that does the actual
+			#merging.
 #			message(STATUS "${__PADDING}_resolve_features(): Resolving got status(es) __STATUSES: ${__STATUSES}")
 			list(LENGTH __MORE_FEATUREBASES __PROCESSED_FB_COUNT)
 			math(EXPR __PROCESSED_FB_COUNT "${__PROCESSED_FB_COUNT}-1")
@@ -242,8 +246,7 @@ function(_resolve_features)
 					_remove_property_from_db(GLOBAL ALL FEATUREBASES ${__PROCESSED_FEATUREBASE} )
 				elseif("${__STATUS}" STREQUAL "MODIFIED") #The feature list has been modified. We need to process it again to make sure that this modification agrees with other instances pointing to it
 #					message(STATUS "${__PADDING}_resolve_features(): __PROCESSED_FEATUREBASE: ${__PROCESSED_FEATUREBASE} resolved, status MODIFIED, will retry")
-					_set_property_to_db(FEATUREBASEDB ${__PROCESSED_FEATUREBASE} F_FEATURES "${__SERIALIZED_COMMON_ARGS__LIST}" FORCE)
-					_set_property_to_db(FEATUREBASEDB ${__PROCESSED_FEATUREBASE} COMPAT_INSTANCES "${__FEATURE_INSTANCES}" FORCE)
+#					_set_property_to_db(FEATUREBASEDB ${__PROCESSED_FEATUREBASE} COMPAT_INSTANCES "${__FEATURE_INSTANCES}" FORCE)
 					set(__SOMETHING_MODIFIED 1)
 				elseif("${__STATUS}" STREQUAL "POSTPONED") #We cannot resolve target name, so we decide to postpone in hope that in the new iteration
 					#target will be found.
@@ -269,15 +272,16 @@ function(_resolve_features)
 	endif()
 endfunction()
 
-# Arrive at the common set of features for the given __FEATUREBASE_ID. 
-# If we needed to change the featurebase, set ${__OUT_MODIFIED} in the parent scope.
-# __OUT_SCOPE will be a vector of status strings of the same length as the ${__IN_FEATUREBASE_IDS}
+# Arrive at the common set of features for the given set of __IN_FEATUREBASE_IDS. 
+# If we needed to change the featurebase, set ${__OUT_STATUS} in the parent scope.
+# __OUT_STATUS is a vector of status strings of the same length as the ${__IN_FEATUREBASE_IDS}
 function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES __OUT_STATUS)
 	#Two things in a single loop: get list of the all instances and populate error messages
 #	message(STATUS "${__PADDING}_resolve_features_for_featurebases(): __IN_FEATUREBASE_IDS: ${__IN_FEATUREBASE_IDS}: ${${__IN_FEATUREBASE_IDS}}  __IN_PROMISES: ${__IN_PROMISES}: ${${__IN_PROMISES}}")
 
 	set(__FEATURE_INSTANCES)
 	set(__OUT)
+	#Prepare the data return structure - fill it with (error) values. The function will replace them with correct values.
 	foreach(__FEATUREBASE_ID IN LISTS ${__IN_FEATUREBASE_IDS})
 		list(APPEND __OUT "ERROR") #By default we set error messages, just in case
 #		_get_list_of_instances_that_need_to_be_resolved(${__FEATUREBASE_ID} __LIST)
@@ -314,8 +318,8 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 	#make sure, that each promise is compatible with exaclty one featurebase.
 	foreach(__INSTANCE_ID IN LISTS __FEATURE_INSTANCES)
 		set(__COMP_FB_ID) #compatible featurebase. Empty means no compatible was found
-		set(__NON_COMP_FID)
-		set(__NON_COMP_REASON)
+		set(__NON_COMP_FID) #list of non-compatible instances with __INSTANCE_ID
+		set(__NON_COMP_REASON) #reasons of non-compatibility. Needed for error reporting.
 		foreach(__FEATUREBASE_ID IN LISTS ${__IN_FEATUREBASE_IDS})
 			_is_promise_compatible_with_featurebase(${__INSTANCE_ID} ${__FEATUREBASE_ID} __IS_COMPATIBLE __DIFF)
 #			message(STATUS "${__PADDING}_resolve_features_for_featurebases(): Compatibility between virt. instance ${__INSTANCE_ID} and fb ${__FEATUREBASE_ID} - ${__STATUS}")
@@ -331,7 +335,8 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 				list(APPEND __NON_COMP_REASON ${__DIFF})
 			endif()
 		endforeach()
-		if("${__COMP_FB_ID}" STREQUAL "")
+		#Error handling in case there are no compatible featurebases for this virtual instance
+		if("${__COMP_FB_ID}" STREQUAL "") 
 			list(LENGTH __COMP_FB_ID __COUNT)
 			math(EXPR __COUNT "${__COUNT}-1")
 			set(__FBS)
@@ -345,11 +350,11 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 			nice_list_output(LIST "${__FBS}" OUTVAR __FB_TXT)
 			message(FATAL_ERROR "Beetroot error: The are no non-virtual targets based on the same template as ${__INSTANCE_ID} (required by ${__I_PARENTS}) that can be matched because of different parameters. ${__FB_TXT}")
 		endif()
-		list(APPEND __I2FBS_${__COMP_FB_ID} ${__INSTANCE_ID})
+		list(APPEND __I2FBS_${__COMP_FB_ID} ${__INSTANCE_ID}) #Add the instance to the list of instances compatible with featurebase ${__COMP_FB_ID}
 	endforeach()
 
-	#Now we know that each instance is uniqually matched to the featurebases.
-	#It is time to resolve the features for each featurebase
+	#Now we know that each instance is uniqually matched to the existing featurebase it is compatible with.
+	#It is time to resolve the features for each featurebase and fill the return vector
 	
 #	message(STATUS "${__PADDING}_resolve_features_for_featurebases(): __FEATURE_INSTANCES: ${__FEATURE_INSTANCES} __FEATUREBASE_COUNT: ${__FEATUREBASE_COUNT} ${__IN_FEATUREBASE_IDS}: ${${__IN_FEATUREBASE_IDS}}")
 	set(__OUT)
@@ -439,9 +444,9 @@ function(_resolve_features_for_featurebase __FEATUREBASE_ID __IN_PROMISES __OUT_
 #		message(STATUS "${__PADDING}_resolve_features_for_featurebase(): 0. Serialized parameters: ${__SERIALIZED_PARS}")
 		_make_promoted_featureset("${__FILE_HASH}" "${__VARNAMES}" __PARS __BASE_ARGS __I_ARGS __COMMON_ARGS __OUT_RELATION)
 
-		_serialize_variables(__COMMON_ARGS __COMMON_ARGS__LIST __SERIALIZED_COMMON_ARGS)
+#		_serialize_variables(__COMMON_ARGS __COMMON_ARGS__LIST __SERIALIZED_COMMON_ARGS)
 #		_serialize_variables(__BASE_ARGS __BASE_ARGS__LIST __SERIALIZED_FEATURE_ARGS)
-		_serialize_variables(__I_ARGS __I_ARGS__LIST __SERIALIZED_INSTANCE_ARGS)
+#		_serialize_variables(__I_ARGS __I_ARGS__LIST __SERIALIZED_INSTANCE_ARGS)
 #		message(STATUS "${__PADDING}_resolve_features_for_featurebase(): 1. __INSTANCE_ID: ${__INSTANCE_ID} with ${__SERIALIZED_INSTANCE_ARGS}")
 #		message(STATUS "${__PADDING}_resolve_features_for_featurebase(): 2. __FEATUREBASE_ID: ${__FEATUREBASE_ID} with ${__SERIALIZED_FEATURE_ARGS}")
 #		message(STATUS "${__PADDING}_resolve_features_for_featurebase(): 3. We arrived at the conclusion of ${__SERIALIZED_COMMON_ARGS}. __OUT_RELATION: ${__OUT_RELATION}")
@@ -470,6 +475,7 @@ function(_resolve_features_for_featurebase __FEATUREBASE_ID __IN_PROMISES __OUT_
 	endforeach()
 	_calculate_hash(__BASE_ARGS __BASE_ARGS__LIST "" __BASE_HASH __BASE_HASH_SOURCE)
 	_serialize_variables(__BASE_ARGS __BASE_ARGS__LIST __SERIALIZED_COMMON_ARGS__LIST)
+	#Update the features
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_FEATURES "${__SERIALIZED_COMMON_ARGS__LIST}" FORCE)
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} MODIFIERS __SERIALIZED_MODIFIERS)
 #		message(STATUS "${__PADDING}_resolve_features_for_featurebase(): - - - - - - - - - - - -")
