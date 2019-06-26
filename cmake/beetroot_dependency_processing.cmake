@@ -72,9 +72,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	if(__INCREASE_PADDING)
 		_increase_padding()
 	endif()
-	if("${__INSTANCE_ID}" STREQUAL "LIB_GRIDTOOLS_UPWIND_GPUBC_bd90ae98f168595c8037bf6df1102630")
-		message(FATAL_ERROR "HERE!")
-	endif()
+#	if("${__INSTANCE_ID}" STREQUAL "LIB_GRIDTOOLS_UPWIND_GPUBC_bd90ae98f168595c8037bf6df1102630")
+#		message(FATAL_ERROR "HERE!")
+#	endif()
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID) #Lack of the featurebase_id means that this
 	# is the featurebase has not yet been defined, so it is the first context in which this instance is encountered.
 	# In that case we must a do much more work, since featurebase contains all the information except how to link
