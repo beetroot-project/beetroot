@@ -52,7 +52,7 @@ endfunction()
 function(apply_dependency_to_target DEPENDEE_TARGET_NAME OUR_TARGET_NAME)
 	set(SERIALBOX2PP_PPSER_LOCATION "${Serialbox_SerialboxFortranStatic_INSTALL_DIR}/python/pp_ser/pp_ser.py")
 	
-	message(STATUS "SERIALBOX2PP_PPSER_LOCATION: ${SERIALBOX2PP_PPSER_LOCATION}")
+#	message(STATUS "SERIALBOX2PP_PPSER_LOCATION: ${SERIALBOX2PP_PPSER_LOCATION}")
 	if("${SOURCE}" STREQUAL "")
 		message(FATAL_ERROR "SOURCE cannot be empty")
 	endif()
