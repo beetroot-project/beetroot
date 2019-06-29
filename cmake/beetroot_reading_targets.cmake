@@ -371,7 +371,7 @@ function(_process_postprocess __REF_TARGETS_CMAKE_PATH __ACTION)
 		endif()
 		__find_targets_cmake_by_template_name(${__PPPARS_TEMPLATE_NAME} __TARGETS_CMAKE_PATH __IS_TARGET_FIXED)
 		if("${__IS_TARGET_FIXED}" STREQUAL "MISSING")
-			message(FATAL_ERROR "Missing ${__PPPARS_TEMPLATE_NAME}")
+			message(FATAL_ERROR "Cannot find template/target ${__PPPARS_TEMPLATE_NAME} referenced by ${__REF_TARGETS_CMAKE_PATH}. Check if you misspelled that name and verify that superproject root encapsulates the targets.cmake that defines ${__PPPARS_TEMPLATE_NAME}.")
 		endif()
 #		message(STATUS "_process_postprocess(): descending into include ${__TARGETS_CMAKE_PATH} from ${__REF_TARGETS_CMAKE_PATH}. __PPPARS_ALL_EXCEPT: ${__PPPARS_ALL_EXCEPT} __PPPARS_INCLUDE_ONLY: ${__PPPARS_INCLUDE_ONLY}")
 		
