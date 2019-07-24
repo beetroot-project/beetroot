@@ -5,18 +5,25 @@
 #
 #Must be the macro, because it modifies the POSTPROCESSING list, which is local (not global). 
 macro(include_features_of __TEMPLATE_NAME)
-	include_target_parameters_univ(${__TEMPLATE_NAME} TARGET_FEATURES ${ARGN})
+	include_target_parameters_univ("${__TEMPLATE_NAME}" TARGET_FEATURES ${ARGN})
 endmacro()
 
 macro(include_target_parameters_of __TEMPLATE_NAME)
-	include_target_parameters_univ(${__TEMPLATE_NAME} TARGET_PARAMETERS ${ARGN})
+	include_target_parameters_univ("${__TEMPLATE_NAME}" TARGET_PARAMETERS ${ARGN})
 endmacro()
 
 macro(include_link_parameters_of __TEMPLATE_NAME)
-	include_target_parameters_univ(${__TEMPLATE_NAME} LINK_PARAMETERS ${ARGN})
+	include_target_parameters_univ("${__TEMPLATE_NAME}" LINK_PARAMETERS ${ARGN})
 endmacro()
 
 function(include_target_parameters_univ __TEMPLATE_NAME __TYPE)
+	if("${__SKIP_RECURRENCE}" STREQUAL "2")
+		return() #It means we are not interested in any imported arguments
+	endif()
+	if("${__TEMPLATE_NAME}" STREQUAL "")
+		set_property(GLOBAL PROPERTY __BURAK_VARIABLES_NOT_ADDED 1)
+		return()
+	endif()
 	_is_inside_targets_file(__IS_INSIDE_TARGETS_FILE)
 	if("${__IS_INSIDE_TARGETS_FILE}" STREQUAL 0)
 		message(FATAL_ERROR "Calling include_target_parameters_of(<TEMPLATE_NAME>) is supported only from within targets file (e.g. targets.cmake). ")
@@ -138,7 +145,6 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined
 	endfunction()
 	function(apply_dependency_to_target INSTANCE_NAME DEP_INSTANCE_NAME)
-#		target_link_libraries(${INSTANCE_NAME} ${DEP_INSTANCE_NAME})  <- For dependencies that do not define targets this call does not make sense.
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined, only the default version was used
 #		message(STATUS "default apply_to_target(): calling with INSTANCE_NAME: ${INSTANCE_NAME} and DEP_INSTANCE_NAME: ${DEP_INSTANCE_NAME}")
 	endfunction()
@@ -152,7 +158,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 	_make_path_hash("${__TARGETS_CMAKE_PATH}" __PATH_HASH)
 	set(__POSTPROCESS_${__PATH_HASH}__LIST) #Clear all possible previous postprocessing
 	set(__CURRENT_TARGETS_CMAKE_PATH "${__TARGETS_CMAKE_PATH}")
-#	message(STATUS "_read_targets_file(): Reading in ${__TARGETS_CMAKE_PATH}...")
+#	message(WARNING "_read_targets_file(): Reading in ${__TARGETS_CMAKE_PATH}...")
 	include("${__TARGETS_CMAKE_PATH}" OPTIONAL RESULT_VARIABLE __FILE_LOADED)
 #	message(STATUS "_read_targets_file(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} ENUM_TEMPLATES: ${ENUM_TEMPLATES} ENUM_TARGETS: ${ENUM_TARGETS}")
 
@@ -202,7 +208,7 @@ endfunction()
 
 function(__append_target_from __TARGETS_CMAKE_PATH __EXISTING_TEMPLATES)
 	set(__TEMPLATE_FILENAME "${BEETROOT_BUILD_DIR}/templates.cmake")
-	_read_targets_file("${__TARGETS_CMAKE_PATH}" 1 __TARGETS_VARS_PREFIX __IS_TARGET_FIXED)
+	_read_targets_file("${__TARGETS_CMAKE_PATH}" 2 __TARGETS_VARS_PREFIX __IS_TARGET_FIXED)
 	set(__TEMPLATES__LIST "${${__EXISTING_TEMPLATES}}")
 	if(__TARGETS_VARS_PREFIX_DEFINE_EXTERNAL_PROJECT)
 		set(__EXTERNAL_PROJECT_INFO__LIST "${__TARGETS_VARS_PREFIX_DEFINE_EXTERNAL_PROJECT}")
@@ -248,6 +254,20 @@ function(__prepare_template_list)
 				if("${__NAME1}" STREQUAL "cmake" AND "${__NAME2}" STREQUAL "targets")
 #					message(STATUS "__prepare_template_list(): __EXTERNAL_TARGETS_DIR: ${__EXTERNAL_TARGETS_DIR}")
 					file(GLOB_RECURSE __EXTERNAL_TARGETS_CMAKE_LIST CONFIGURE_DEPENDS "${__EXTERNAL_TARGETS_DIR}/*.cmake")
+					foreach(__FILE IN LISTS __EXTERNAL_TARGETS_CMAKE_LIST)
+						__append_target_from("${__FILE}" __TEMPLATES__LIST)
+					endforeach()
+				endif()
+			endif()
+		endforeach()
+
+		file(GLOB_RECURSE __EXTERNAL_TARGETS_DIRS_LIST LIST_DIRECTORIES true "${SUPERBUILD_ROOT}/*/targets")
+		foreach(__EXTERNAL_TARGETS_DIR IN LISTS __EXTERNAL_TARGETS_DIRS_LIST)
+			if(IS_DIRECTORY "${__EXTERNAL_TARGETS_DIR}")
+				get_filename_component(__NAME2 ${__EXTERNAL_TARGETS_DIR} NAME)
+#				message(STATUS "__NAME2: ${__NAME2}, __EXTERNAL_TARGETS_DIR: ${__EXTERNAL_TARGETS_DIR}" )
+				if("${__NAME2}" STREQUAL "targets")
+					file(GLOB __EXTERNAL_TARGETS_CMAKE_LIST CONFIGURE_DEPENDS "${__EXTERNAL_TARGETS_DIR}/*.cmake")
 					foreach(__FILE IN LISTS __EXTERNAL_TARGETS_CMAKE_LIST)
 						__append_target_from("${__FILE}" __TEMPLATES__LIST)
 					endforeach()

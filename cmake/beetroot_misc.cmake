@@ -133,7 +133,8 @@ function(_parse_file_options __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __TEMPLATE_O
 	cmake_parse_arguments(__PARSED "${__OPTIONS}" "${__oneValueArgs}" "${__multiValueArgs}" ${${__TEMPLATE_OPTIONS__REF}__LIST})
 	set(__unparsed ${__PARSED_UNPARSED_ARGUMENTS})
 	if(__unparsed)
-		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH}: ${__unparsed}")
+		_get_relative_path("${__TARGETS_CMAKE_PATH}" __TARGETS_CMAKE_PATH_REL)
+		message(FATAL_ERROR "Undefined TEMPLATE_OPTIONS in ${__TARGETS_CMAKE_PATH_REL}: ${__unparsed}")
 	endif()
 	
 	#message(STATUS "_parse_file_options(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} ${__TEMPLATE_OPTIONS__REF}__LIST: ${${__TEMPLATE_OPTIONS__REF}__LIST}")

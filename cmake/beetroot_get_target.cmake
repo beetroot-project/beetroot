@@ -23,7 +23,7 @@ function(get_existing_target __TEMPLATE_NAME)
 
 #	__rename_arguments(${__PARENT_ARGS_PREFIX} __DEFAULT_ARGS)
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
 	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
 	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_LINKPARS __TMP_LINKPARS)
 	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_FEATURES __TMP_FEATURES)
@@ -158,7 +158,7 @@ function(get_target __TEMPLATE_NAME __OUT)
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} USE_NETCDF: \"${USE_NETCDF}\" ARGN: ${ARGN}")
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARAMETERS_DIC_USE_NETCDF__TYPE: ${__PARAMETERS_DIC_USE_NETCDF__TYPE} __VARIABLE_DIC_USE_NETCDF: ${__VARIABLE_DIC_USE_NETCDF}")
 	if(__PARENT_ALL_VARIABLES)
 #		message(STATUS "${__PADDING}get_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
@@ -259,10 +259,36 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
 #	message(STATUS "${__PADDING}_get_target_internal() _read_functions_from_targets_file ${__TARGETS_CMAKE_PATH}")
 	_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
-#	message(STATUS "${__PADDING}_get_target_internal() Serialbox_SerialboxCStatic_INSTALL_DIR: ${Serialbox_SerialboxCStatic_INSTALL_DIR}")
+#	message(STATUS "${__PADDING}_get_target_internal() __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
+#	message(STATUS "${__PADDING}_get_target_internal() __TEMPLATE_DIR: ${__TEMPLATE_DIR}")
+
+	get_filename_component(__TARGETS_NAME "${__TARGETS_CMAKE_PATH}" NAME)
+#	message(STATUS "${__PADDING}_get_target_internal() __TARGETS_NAME: ${__TARGETS_NAME}")
+	
+	if(NOT "${__TARGETS_NAME}" STREQUAL "targets.cmake")
+		get_filename_component(__PARENT_NAME "${__TEMPLATE_DIR}" NAME)
+#		message(STATUS "${__PADDING}_get_target_internal() __PARENT_NAME: ${__PARENT_NAME}")
+		if("${__PARENT_NAME}" STREQUAL "targets")
+			get_filename_component(__PARENT_PARENT_DIR "${__TEMPLATE_DIR}" DIRECTORY)
+#			message(STATUS "${__PADDING}_get_target_internal() __PARENT_PARENT_DIR: ${__PARENT_PARENT_DIR}")
+			get_filename_component(__PARENT_PARENT_NAME "${__PARENT_PARENT_DIR}" NAME)
+#			message(STATUS "${__PADDING}_get_target_internal() __PARENT_PARENT_NAME: ${__PARENT_PARENT_NAME}")
+			if("${__PARENT_NAME}" STREQUAL "cmake")
+				get_filename_component(__PARENT_PARENT_PARENT_DIR "${__PARENT_PARENT_DIR}" DIRECTORY)
+				set(__TEMPLATE_DIR "${__PARENT_PARENT_PARENT_DIR}")
+			else()
+				set(__TEMPLATE_DIR "${__PARENT_PARENT_DIR}")
+			endif()
+		else()
+			#Do nothing. targets.cmake loaded by manual path
+		endif()
+			
+	endif()
+	
 	
 	set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
-	
+#	message(STATUS "${__PADDING}_get_target_internal() CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+
 #	message(STATUS "${__PADDING}_get_target_internal() Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} ${__INSTANCE_NAME} with instance name set as «${__INSTANCE_NAME}» ")
 	set(__NO_OP 0)
 

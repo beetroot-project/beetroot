@@ -60,7 +60,7 @@ function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TAR
 			foreach(__VAR IN LISTS ${__PARS}__LIST)
 				set(${__VAR})
 			endforeach()
-			_get_variables("${__TARGETS_CMAKE_PATH}" "defaults" "" 0 __DEFAULTS __TMP_PARS __TMP_TEMPLATE_NAMES __TMP_EXTERNAL_PROJECT_INFO __TMP_IS_TARGET_FIXED __TMP_GLOBAL_OPTIONS)
+			_get_variables("${__TARGETS_CMAKE_PATH}" "defaults" "" 0 1 __DEFAULTS __TMP_PARS __TMP_TEMPLATE_NAMES __TMP_EXTERNAL_PROJECT_INFO __TMP_IS_TARGET_FIXED __TMP_GLOBAL_OPTIONS)
 
 			_instantiate_variables(__DEFAULTS __TMP_PARS "${__DEFAULTS__LIST}")
 #			message(STATUS "${__PADDING}_store_file(): __TEMPLATE_NAME ${__TEMPLATE_NAME} DWARF: ${DWARF}")
