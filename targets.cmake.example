@@ -7,9 +7,8 @@ set(LINK_PARAMETERS
 )
 
 function(declare_dependencies TEMPLATE_NAME)
-#	build_target(Boost::boost 
-#		COMPONENTS filesystem log VERSION 1.67.0)
-	
+#	build_target(Boost 
+#		COMPONENT filesystem VERSION 1.67.0)
 endfunction()
 
 function(generate_targets TARGET_NAME TEMPLATE_NAME)

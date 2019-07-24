@@ -5,7 +5,7 @@ set(TARGET_PARAMETERS
 set(ENUM_TEMPLATES HELLO_2BOOST)
 
 function(declare_dependencies TEMPLATE_NAME)
-	build_target(Boost::program_options )
+	build_target(Boost COMPONENT program_options)
 endfunction()
 
 function(generate_targets TARGET_NAME TEMPLATE_NAME)
