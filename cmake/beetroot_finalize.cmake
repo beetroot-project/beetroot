@@ -463,7 +463,7 @@ function(_resolve_features_for_featurebase __FEATUREBASE_ID __IN_PROMISES __OUT_
 			set(__BASE_ARGS__LIST ${__COMMON_ARGS__LIST})
 		elseif(${__OUT_RELATION} STREQUAL 4)
 			_serialize_variables(__I_ARGS __I_ARGS__LIST __SERIALIZED_I_ARGS)
-			message(FATAL_ERROR "Cannot promote ${__INSTANCE_ID} into a common featurebase, because of the arguments ${__SERIALIZED_COMMON_ARGS__LIST} are not compatible with the requested ${__SERIALIZED_I_ARGS}. While sometimes this rare condition could be in theory fixed automatically by requesting two different copies of the featurebase, it is not supported by the beetroot. The simplest solution is to change the arguments from FEATURES into a TARGET_PARAMETERS.")
+			message(FATAL_ERROR "Cannot promote ${__INSTANCE_ID} into a common featurebase, because of the arguments ${__SERIALIZED_COMMON_ARGS__LIST} are not compatible with the requested ${__SERIALIZED_I_ARGS}. While sometimes this rare condition could be in theory fixed automatically by requesting two different copies of the featurebase, it is not supported by the beetroot. The simplest solution is to change the arguments from FEATURES into a BUILD_PARAMETERS.")
 		else()
 			message(FATAL_ERROR "Internal Beetroot error: unknown __OUT_RELATION ${__OUT_RELATION} returned from _make_promoted_featureset()")
 		endif()

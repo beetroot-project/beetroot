@@ -40,7 +40,7 @@ Write the `targets.cmake` file in any folder inside your project with content th
 ```
 set(ENUM_TEMPLATES HELLO_SIMPLE)
 
-set(TARGET_PARAMETERS 
+set(BUILD_PARAMETERS 
    MYPAR SCALAR STRING "Beetroot"
 )
 

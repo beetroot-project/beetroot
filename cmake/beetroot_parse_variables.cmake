@@ -260,19 +260,19 @@ function(_read_parameters __TARGETS_CMAKE_PATH __EXISTING_ARGS __OUT_PARAMETERS_
 	set(${__OUT_PARAMETERS_PREFIX}__LIST)
 #	message(STATUS "${__PADDING}_read_parameters(): __READ_PREFIX_LINK_PARAMETERS: ${__READ_PREFIX_LINK_PARAMETERS}")
 	
-	_parse_parameters(__READ_PREFIX_TARGET_PARAMETERS ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 0)
+	_parse_parameters(__READ_PREFIX_BUILD_PARAMETERS ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 0)
 	
-#	message(STATUS "${__PADDING}_read_parameters(): __READ_PREFIX_TARGET_PARAMETERS: ${__READ_PREFIX_TARGET_PARAMETERS}")
+#	message(STATUS "${__PADDING}_read_parameters(): __READ_PREFIX_BUILD_PARAMETERS: ${__READ_PREFIX_BUILD_PARAMETERS}")
 #	message(STATUS "${__PADDING}_read_parameters(): ${__OUT_PARAMETERS_PREFIX}__LIST: ${${__OUT_PARAMETERS_PREFIX}__LIST}")
 	set(${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS "${${__OUT_PARAMETERS_PREFIX}__LIST}")
 
 
 	set(${__OUT_PARAMETERS_PREFIX}__LIST)
-	_parse_parameters(__READ_PREFIX_TARGET_FEATURES ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 1)
+	_parse_parameters(__READ_PREFIX_BUILD_FEATURES ${__OUT_ARGUMENTS_PREFIX} ${__OUT_PARAMETERS_PREFIX} "${__TARGETS_CMAKE_PATH}" 1)
 	set(${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES "${${__OUT_PARAMETERS_PREFIX}__LIST}")
 	list_intersect(__INTERSECT ${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS ${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES)
 	if(__INTERSECT)
-		message(FATAL_ERROR "The parameters ${__INTERSECT} are defined both in TARGET_PARAMETERS and TARGET_FEATURES. Parameters in TARGET_FEATURES, TARGET_PARAMETERS and LINK_PARAMETERS share the same namespace and it is illegal to re-define already defined parameter.")
+		message(FATAL_ERROR "The parameters ${__INTERSECT} are defined both in BUILD_PARAMETERS and BUILD_FEATURES. Parameters in BUILD_FEATURES, BUILD_PARAMETERS and LINK_PARAMETERS share the same namespace and it is illegal to re-define already defined parameter.")
 	endif()
 
 	set(${__OUT_PARAMETERS_PREFIX}__LIST)
@@ -281,7 +281,7 @@ function(_read_parameters __TARGETS_CMAKE_PATH __EXISTING_ARGS __OUT_PARAMETERS_
 	set(__LIST ${${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS} ${${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES})
 	list_intersect(__INTERSECT __LIST ${__OUT_PARAMETERS_PREFIX}__LIST_LINKPARS)
 	if(__INTERSECT)
-		message(FATAL_ERROR "The parameters ${__INTERSECT} are defined both in LINK_PARAMETERS and one of TARGET_PARAMETERS and TARGET_FEATURES. Parameters in TARGET_FEATURES, TARGET_PARAMETERS and LINK_PARAMETERS share the same namespace and it is illegal to re-define already defined parameter.")
+		message(FATAL_ERROR "The parameters ${__INTERSECT} are defined both in LINK_PARAMETERS and one of BUILD_PARAMETERS and BUILD_FEATURES. Parameters in BUILD_FEATURES, BUILD_PARAMETERS and LINK_PARAMETERS share the same namespace and it is illegal to re-define already defined parameter.")
 	endif()
 	
 	set(${__OUT_PARAMETERS_PREFIX}__LIST ${${__OUT_PARAMETERS_PREFIX}__LIST_MODIFIERS} ${${__OUT_PARAMETERS_PREFIX}__LIST_FEATURES} ${${__OUT_PARAMETERS_PREFIX}__LIST_LINKPARS})

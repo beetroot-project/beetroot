@@ -1,8 +1,8 @@
-set(TARGET_PARAMETERS 
+set(ENUM_TEMPLATES HELLO_2BOOST)
+
+set(BUILD_PARAMETERS 
 	PAR	SCALAR	STRING	"KLOC"
 )
-
-set(ENUM_TEMPLATES HELLO_2BOOST)
 
 function(declare_dependencies TEMPLATE_NAME)
 	build_target(BOOST COMPONENT program_options)

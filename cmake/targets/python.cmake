@@ -1,6 +1,4 @@
-set(TARGET_PARAMETERS 
-	PYTHON_FAMILY	SCALAR	"CHOICE(2.x:3.x)" "3.x"
-)
+set(ENUM_TARGETS Python::Interpreter)
 
 if("${PYTHON_FAMILY}" STREQUAL "2.x")
 	set(P_NAME "Python 2.x interpreter")
@@ -12,7 +10,9 @@ else()
 	set(SPACK python@3.7.0)
 endif()
 
-set(ENUM_TARGETS Python::Interpreter)
+set(BUILD_PARAMETERS 
+	PYTHON_FAMILY	SCALAR	"CHOICE(2.x:3.x)" "3.x"
+)
 
 set(FILE_OPTIONS
 	NICE_NAME "${P_NAME}"
