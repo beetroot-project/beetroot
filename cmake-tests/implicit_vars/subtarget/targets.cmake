@@ -11,9 +11,6 @@ set(LINK_PARAMETERS
 	IMPLICIT_LINK	SCALAR	STRING	"default_implicit_link"
 )
 
-set(TEMPLATE_OPTIONS
-)
-
 function(declare_dependencies TEMPLATE_NAME)
 	if("${IMPLICIT_GLOBAL}" STREQUAL "default_implicit_global")
 		message(FATAL_ERROR "IMPLICIT_GLOBAL was not overriden")
