@@ -33,7 +33,7 @@ set(TARGET_FEATURES
 	COMPONENTS	VECTOR	STRING	"filesystem;log"
 )
 
-set(TEMPLATE_OPTIONS
+set(FILE_OPTIONS
 	SINGLETON_TARGETS  #If set requires TARGET_TEMPLATE and generates error if ENUM_TEMPLATES is specified
 	NO_TARGETS #If set it declares that no targets will be generated. Generates error if `generate_targets()` is defined by the user.
 	LINK_TO_DEPENDEE #calls `target_link_libraries()`, even if the function `apply_dependency_to_target()` is defined

@@ -15,9 +15,6 @@ set(LINK_PARAMETERS
 	NONSIGINIFICANT	SCALAR	STRING	"foo"
 )
 
-set(TEMPLATE_OPTIONS
-)
-
 function(declare_dependencies TEMPLATE_NAME)
 	build_target(LIBHELLO KTO ${LIBKTO})
 	build_target(EMPTY_LIB)
