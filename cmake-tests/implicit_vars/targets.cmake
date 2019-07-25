@@ -1,6 +1,6 @@
 set(ENUM_TEMPLATES IMPLICIT_VARS)
 
-include_features_of(JUST_VAR_LIB)
+include_build_features_of(JUST_VAR_LIB)
 
 set(LINK_PARAMETERS 
 	LINKPAR1 SCALAR INTEGER 0

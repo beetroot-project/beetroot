@@ -1,6 +1,6 @@
 set(ENUM_TEMPLATES IMPLICIT_VARS_SUBTARGET)
 
-include_features_of(JUST_VAR_LIB)
+include_build_features_of(JUST_VAR_LIB)
 
 set(BUILD_PARAMETERS 
 	IMPLICIT_GLOBAL	SCALAR	STRING	"default_implicit_global"

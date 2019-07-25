@@ -1,6 +1,6 @@
 set(ENUM_TEMPLATES SERIALBOX_C_TEST2)
 
-include_features_of(Serialbox)
+include_build_features_of(Serialbox)
 
 set(BUILD_FEATURES 
 	PAM_TARAM SCALAR	"STRING" "WARTOSC"

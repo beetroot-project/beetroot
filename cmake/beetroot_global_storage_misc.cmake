@@ -10,9 +10,9 @@
 # __BURAK_INSIDE_TARGETS_FILE - TRUE or nothing. TRUE only inside reading targets.cmake. 
 #
 # __BURAK_TCRB_FOR_DEPENDENCIES - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_DEPENDENCIES. lists all FEATUREBASES included in the current dependency call stack.
-# __BURAK_TCRB_FOR_PREPROCESS - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_PREPROCESS. lists all targets files included by using include_target_parameters_of() or similar functions when reading them.
+# __BURAK_TCRB_FOR_PREPROCESS - full name: TARGET_CMAKE_RECURRENCE_BREAKER_FOR_PREPROCESS. lists all targets files included by using include_build_parameters_of() or similar functions when reading them.
 # __BURAK_LOADED - true if the beetroot is loaded. It prevents reading in beetroot more than once (which is important, because beetroot overrides one built-in function)
-# __BURAK_VARIABLES_NOT_ADDED - if set, it means that the include_target_parameters_univ() did not properly included variables, probably because the target name depended on some variable itself.
+# __BURAK_VARIABLES_NOT_ADDED - if set, it means that the include_parameters() did not properly included variables, probably because the target name depended on some variable itself.
 
 function(_descend_dependencies_stack )
 	get_property(__STACK_TOP GLOBAL PROPERTY __BURAK_STACK_TOP)
