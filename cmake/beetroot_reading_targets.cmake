@@ -263,6 +263,13 @@ function(__prepare_template_list)
 #			endif()
 #		endforeach()
 
+      if(IS_DIRECTORY ${SUPERBUILD_ROOT}/targets)
+			file(GLOB __EXTERNAL_TARGETS_CMAKE_LIST CONFIGURE_DEPENDS "${SUPERBUILD_ROOT}/targets/*.cmake")
+			foreach(__FILE IN LISTS __EXTERNAL_TARGETS_CMAKE_LIST)
+				__append_target_from("${__FILE}" __TEMPLATES__LIST)
+			endforeach()
+      endif()
+
 		file(GLOB_RECURSE __EXTERNAL_TARGETS_DIRS_LIST LIST_DIRECTORIES true "${SUPERBUILD_ROOT}/*/targets")
 		foreach(__EXTERNAL_TARGETS_DIR IN LISTS __EXTERNAL_TARGETS_DIRS_LIST)
 			if(IS_DIRECTORY "${__EXTERNAL_TARGETS_DIR}")
