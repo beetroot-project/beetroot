@@ -14,7 +14,7 @@ endif()
 
 set(ENUM_TARGETS Python::Interpreter)
 
-set(TEMPLATE_OPTIONS
+set(FILE_OPTIONS
 	NICE_NAME "${P_NAME}"
 )
 

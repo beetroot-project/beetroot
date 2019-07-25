@@ -23,7 +23,7 @@ function(get_existing_target __TEMPLATE_NAME)
 
 #	__rename_arguments(${__PARENT_ARGS_PREFIX} __DEFAULT_ARGS)
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
 	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
 	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_LINKPARS __TMP_LINKPARS)
 	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_FEATURES __TMP_FEATURES)
@@ -92,7 +92,7 @@ function(get_existing_target __TEMPLATE_NAME)
 			${__IS_TARGET_FIXED}
 			__EXTERNAL_PROJECT_INFO
 			${__TARGET_REQUIRED}  
-			__TEMPLATE_OPTIONS 
+			__FILE_OPTIONS 
 			"${__TEMPLATES}" 
 			__FILE_HASH
 		)
@@ -158,14 +158,14 @@ function(get_target __TEMPLATE_NAME __OUT)
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} USE_NETCDF: \"${USE_NETCDF}\" ARGN: ${ARGN}")
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __TEMPLATE_OPTIONS__LIST ${ARGN})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARAMETERS_DIC_USE_NETCDF__TYPE: ${__PARAMETERS_DIC_USE_NETCDF__TYPE} __VARIABLE_DIC_USE_NETCDF: ${__VARIABLE_DIC_USE_NETCDF}")
 	if(__PARENT_ALL_VARIABLES)
 #		message(STATUS "${__PADDING}get_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
 		_blank_variables(__PARENT_ALL_VARIABLES __VARIABLE_DIC__LIST) #Blanks all variables that may have been set by dependee's declare_dependencies().
 	endif()
-#	if(__TEMPLATE_OPTIONS)
-#		message(STATUS "${__PADDING}get_target(): __TEMPLATE_OPTIONS: ${__TEMPLATE_OPTIONS}")
+#	if(__FILE_OPTIONS)
+#		message(STATUS "${__PADDING}get_target(): __FILE_OPTIONS: ${__FILE_OPTIONS}")
 #	endif()
 	if("${__VARIABLE_DIC_VERSION}" STREQUAL "KUC")
 		message(FATAL_ERROR "__VARIABLE_DIC_VERSION: ${__VARIABLE_DIC_VERSION}")
@@ -178,7 +178,7 @@ function(get_target __TEMPLATE_NAME __OUT)
 #		message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID} features: ${__PARAMETERS_DIC__LIST_FEATURES} modifiers: ${__PARAMETERS_DIC__LIST_MODIFIERS}" )
 #		message(STATUS "${__PADDING}get_target(): __INSTANCE_ID: ${__INSTANCE_ID} list of params: ${__PARAMETERS_DIC__LIST}" )
 #		message(STATUS "${__PADDING}get_target(): __INSTANCE_ID: ${__INSTANCE_ID} list of modifiers: ${__PARAMETERS_DIC__LIST_MODIFIERS}" )
-		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __TEMPLATE_OPTIONS "${__TEMPLATES}" 1)
+		_discover_dependencies(${__INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __VARIABLE_DIC __PARAMETERS_DIC __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __FILE_OPTIONS "${__TEMPLATES}" 1)
 #		_debug_show_instance(${__INSTANCE_ID} 2 "" __MESSAGE __ERROR)
 #		message("${__MESSAGE}")
 #		if(__ERROR)
@@ -303,7 +303,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 			message(FATAL_ERROR "File ${CMAKE_CURRENT_SOURCE_DIR}/targets.cmake did not define generate_targets() function.")
 		endif()
 		if(__TARGETS_REQUIRED AND NOT __NO_TARGETS)
-			message(FATAL_ERROR "File ${CMAKE_CURRENT_SOURCE_DIR}/targets.cmake did not define generate_targets() function. If you cannot produce targets, please add NO_TARGETS option to TEMPLATE_OPTIONS variable defined in this file.")
+			message(FATAL_ERROR "File ${CMAKE_CURRENT_SOURCE_DIR}/targets.cmake did not define generate_targets() function. If you cannot produce targets, please add NO_TARGETS option to FILE_OPTIONS variable defined in this file.")
 		endif()
 		set(${__OUT_FUNCTION_EXISTS} 0 PARENT_SCOPE)
 	else()
@@ -313,7 +313,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		if(NOT __NO_TARGETS AND __TARGETS_REQUIRED AND NOT TARGET "${${__TEMPLATE_NAME}_TARGET_NAME}")
 			_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH )
 			if(TEST "${${__TEMPLATE_NAME}_TARGET_NAME}")
-				message(FATAL_ERROR "Function generate_targets() defined in ${__TARGETS_CMAKE_PATH} defined a TEST not a TARGET. TEST is not a target - please add an option NO_TARGETS to that file (i.e. add it to the TEMPLATE_OPTIONS variable like that: `set(TEMPLATE_OPTIONS NO_TARGETS)`") 
+				message(FATAL_ERROR "Function generate_targets() defined in ${__TARGETS_CMAKE_PATH} defined a TEST not a TARGET. TEST is not a target - please add an option NO_TARGETS to that file (i.e. add it to the FILE_OPTIONS variable like that: `set(FILE_OPTIONS NO_TARGETS)`") 
 			endif()
 			message(FATAL_ERROR "Called ${__TARGETS_CMAKE_PATH}:generate_targets(${__TEMPLATE_NAME}) which did not produce the target with name TARGET_NAME = \"${TARGET_NAME}\"" )
 		endif()

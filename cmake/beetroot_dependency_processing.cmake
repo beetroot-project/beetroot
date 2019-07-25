@@ -41,7 +41,7 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
 	_retrieve_instance_data(${__INSTANCE_ID} TARGET_FIXED __IS_TARGET_FIXED)
 	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_PROJECT_INFO__LIST)
-	_retrieve_instance_data(${__INSTANCE_ID} TEMPLATE_OPTIONS __TEMPLATE_OPTIONS__LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} FILE_OPTIONS __FILE_OPTIONS__LIST)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE)
 	_retrieve_instance_pars(${__INSTANCE_ID} PARS __PARS)
 		
@@ -59,7 +59,7 @@ function(_rediscover_dependencies __INSTANCE_ID __NEW_FEATURES_SERIALIZED__REF _
 	
 	
 	set(__PARENT_DISCOVERY_DEPTH 1)
-	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __TEMPLATE_OPTIONS "" 0)
+	_discover_dependencies(${__NEW_INSTANCE_ID} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" __ARGS __PARS __EXTERNAL_PROJECT_INFO ${__IS_TARGET_FIXED} __FILE_OPTIONS "" 0)
 
 	_move_instance(${__INSTANCE_ID} ${__NEW_INSTANCE_ID})
 	_add_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} COMPAT_INSTANCES ${__NEW_INSTANCE_ID})
@@ -68,7 +68,7 @@ endfunction()
 
 # Function that calls declare_dependencies() and gathers all dependencies into the global storage. The dependency information is sufficient to properly call generate_target() or apply_to_target() user functions. 
 # After the dependencies are gathered, the dependee instance is saved and is linked with those already declared dependencies (child instances)
-function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO__REF __IS_TARGET_FIXED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __INCREASE_PADDING)
+function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PATH __ARGS __PARS __EXTERNAL_PROJECT_INFO__REF __IS_TARGET_FIXED __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __INCREASE_PADDING)
 	if(__INCREASE_PADDING)
 		_increase_padding()
 	endif()
@@ -162,7 +162,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__IS_TARGET_FIXED}  
 		 ${__EXTERNAL_PROJECT_INFO__REF} 
 		 ${__TARGET_REQUIRED} 
-		 ${__TEMPLATE_OPTIONS__REF} 
+		 ${__FILE_OPTIONS__REF} 
 		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 	
 	#... and update the link with the children (i.e. our dependencies)
@@ -283,7 +283,7 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		if(TARGET "${__DEP_TARGET_NAME}" AND __FUNCTION_EXISTS AND NOT __DONT_LINK_TO_DEPENDEE AND NOT __LINK_TO_DEPENDEE)
 			_retrieve_instance_data(${__DEP_INSTANCE_ID} PATH __CMAKE_TARGETS_PATH)
 			_get_nice_instance_name_with_deps(__INSTANCE_ID __NICE_INSTANCE_NAME)
-			message(FATAL_ERROR "Beetroot error: User defined `apply_dependency_to_target()` in ${__CMAKE_TARGETS_PATH} (which was applied in context of the dependee target ${__NICE_INSTANCE_NAME}) and did not specified neither LINK_TO_DEPENDEE nor DONT_LINK_TO_DEPENDEE template option. Please decide whether you wish Beetroot to call `target_link_libraries()` after executing this function by setting the appropriate flag in the TEMPLATE_OPTIONS variable.")
+			message(FATAL_ERROR "Beetroot error: User defined `apply_dependency_to_target()` in ${__CMAKE_TARGETS_PATH} (which was applied in context of the dependee target ${__NICE_INSTANCE_NAME}) and did not specified neither LINK_TO_DEPENDEE nor DONT_LINK_TO_DEPENDEE template option. Please decide whether you wish Beetroot to call `target_link_libraries()` after executing this function by setting the appropriate flag in the FILE_OPTIONS variable.")
 		endif()
 		_retrieve_instance_data(${__DEP_INSTANCE_ID} NO_TARGETS __NO_TARGETS)
 #		message(STATUS "${__PADDING}_link_to_target(): __TARGET_NAME: ${__TARGET_NAME} __DEP_TARGET_NAME: ${__DEP_TARGET_NAME} __FUNCTION_EXISTS: ${__FUNCTION_EXISTS} __LINK_TO_DEPENDEE: ${__LINK_TO_DEPENDEE}" )
@@ -310,7 +310,7 @@ function(_link_to_target __INSTANCE_ID __DEP_INSTANCE_ID __OUT_FUNCTION_EXISTS)
 						message(STATUS "Serialbox::SerialboxFortranStatic - is NOT existing")
 					endif()
 					_get_nice_instance_name_with_deps(__DEP_INSTANCE_ID __NICE_INSTANCE_NAME)
-					message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} defined in ${__CMAKE_TARGETS_PATH} did not produce target ${__DEP_TARGET_NAME} (${__NICE_INSTANCE_NAME}) and it does not define apply_dependency_to_target(). You must either define targets by defining generate_targets(TARGET_NAME TEMPLATE_NAME), or adding \"NO_TARGETS\" to CMake variable TEMPLATE_OPTIONS.")
+					message(FATAL_ERROR "${__DEP_TEMPLATE_NAME} defined in ${__CMAKE_TARGETS_PATH} did not produce target ${__DEP_TARGET_NAME} (${__NICE_INSTANCE_NAME}) and it does not define apply_dependency_to_target(). You must either define targets by defining generate_targets(TARGET_NAME TEMPLATE_NAME), or adding \"NO_TARGETS\" to CMake variable FILE_OPTIONS.")
 				endif()
 			endif()
 		endif()

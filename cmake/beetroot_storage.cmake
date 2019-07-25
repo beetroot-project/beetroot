@@ -1,5 +1,5 @@
 #Function stores all entries to the filedb. 
-function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_JOINED_TARGETS)
+function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_JOINED_TARGETS)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH)
 	set(${__OUT_FILE_HASH} "${__PATH_HASH}" PARENT_SCOPE)
 	_retrieve_file_data(${__PATH_HASH} PATH __TARGETS_CMAKE_PATH_CHECK)
@@ -8,7 +8,7 @@ function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TAR
 	endif()
 #	message(STATUS "${__PADDING}_store_file() __PATH_HASH: ${__PATH_HASH} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES}")
 
-	_parse_file_options( "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__TEMPLATE_OPTIONS__REF} __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS __LINK_TO_DEPENDEE __DONT_LINK_TO_DEPENDEE __GENERATE_TARGETS_INCLUDE_LINKPARS __JOINED_TARGETS)
+	_parse_file_options( "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__FILE_OPTIONS__REF} __SINGLETON_TARGETS __NO_TARGETS __LANGUAGES __NICE_NAME __EXPORTED_VARS __LINK_TO_DEPENDEE __DONT_LINK_TO_DEPENDEE __GENERATE_TARGETS_INCLUDE_LINKPARS __JOINED_TARGETS)
 	if(__EXPORTED_VARS)
 		foreach(__EVAR IN LISTS __EXPORTED_VARS)
 			if(NOT "${__EVAR}" IN_LIST ${__PARS}__LIST)
@@ -86,7 +86,7 @@ function(_store_file __ARGS __PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TAR
 	_set_property_to_db(FILEDB     ${__PATH_HASH} LINK_TO_DEPENDEE      "${__LINK_TO_DEPENDEE}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} DONT_LINK_TO_DEPENDEE "${__DONT_LINK_TO_DEPENDEE}")
 	_set_property_to_db(FILEDB     ${__PATH_HASH} GENERATE_TARGETS_INCLUDE_LINKPARS     "${__GENERATE_TARGETS_INCLUDE_LINKPARS}")	
-	_set_property_to_db(FILEDB     ${__PATH_HASH} TEMPLATE_OPTIONS      "${__TEMPLATE_OPTIONS}")
+	_set_property_to_db(FILEDB     ${__PATH_HASH} FILE_OPTIONS      "${__FILE_OPTIONS}")
 	
 endfunction()
 
@@ -199,7 +199,7 @@ function(_store_instance_data __INSTANCE_ID __ARGS __PARS __TEMPLATE_NAME __IS_T
 endfunction()
 
 #Makes sure a given instance is stored in the memory as a promise. It does not link the instance with the parent - for that use _link_instances_together()
-function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH)
+function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH)
 #	message(STATUS "${__PADDING}_store_virtual_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __ALL_TEMPLATE_NAMES: ${__ALL_TEMPLATE_NAMES} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ")
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
 	if("${__IS_PROMISE_BEFORE}" STREQUAL "1" OR "${__IS_PROMISE_BEFORE}" STREQUAL "0")
@@ -207,7 +207,7 @@ function(_store_virtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLA
 		#Nothing to do - either the promise is already set or we are not going to overwrite promise on top of actual instance
 		return()
 	endif()
-	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __JOINED_TARGETS)
+	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__FILE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __JOINED_TARGETS)
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
 	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
@@ -262,13 +262,13 @@ endfunction()
 
 # Makes sure a given instance is stored in the memory and creates/links with the featurebase structure. 
 # It does not link the instance with the parent - for that use _link_instances_together()
-function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __TEMPLATE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
+function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
 	if("${__TARGETS_CMAKE_PATH}" STREQUAL "")
 		message(FATAL_ERROR "Internal beetroot error: __TARGETS_CMAKE_PATH cannot be empty")
 	endif()
 #	message(STATUS "${__PADDING}_store_nonvirtual_instance_data(): __INSTANCE_ID: ${__INSTANCE_ID} __IS_PROMISE_BEFORE: ${__IS_PROMISE_BEFORE}")
-	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__TEMPLATE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __JOINED_TARGETS)
+	_store_file(${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} "${__TARGETS_CMAKE_PATH}" ${__IS_TARGET_FIXED} ${__EXTERNAL_PROJECT_INFO__REF} ${__TARGET_REQUIRED} ${__FILE_OPTIONS__REF} "${__ALL_TEMPLATE_NAMES}" __FILE_HASH __JOINED_TARGETS)
 	set(${__OUT_FILE_HASH} "${__FILE_HASH}" PARENT_SCOPE)
 	
 	if(${__EXTERNAL_PROJECT_INFO__REF}__LIST)
