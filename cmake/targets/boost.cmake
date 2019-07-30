@@ -1,44 +1,30 @@
-set(ENUM_TEMPLATES BOOST)
-
-set(BUILD_FEATURES
-	MIN_VERSION SCALAR VERSION 1.68.0
-)
-
-set(BUILD_PARAMETERS
-	COMPONENT SCALAR STRING ""
-	REQUIRED OPTION BOOL OFF
+set(BUILD_PARAMETERS 
+	COMPONENTS VECTOR STRING "filesystem:system:log:date_time:thread:chrono:atomic:program_options"
+	VERSION SCALAR STRING "1.68"
 )
 
 set(LINK_PARAMETERS 
-	FUSION_MAX_VECTOR_SIZE	SCALAR	"CHOICE(:20:40:60)" ""
-	NO_PREPROCESSED_HEADERS OPTION BOOL OFF
+	FUSION_MAX_VECTOR_SIZE	SCALAR	"CHOICE(20:40:60)" 20
 )
+
+set(ENUM_TARGETS Boost::boost Boost::filesystem Boost::system Boost::log Boost::date_time Boost::thread Boost::chrono Boost::atomic Boost::program_options)
 
 set(FILE_OPTIONS
-	NICE_NAME "Boost library"
-	DONT_LINK_TO_DEPENDEE
-	NO_TARGETS
+	NICE_NAME "Boost libraries version ${BOOST_VERSION}"
 )
 
-function(apply_dependency_to_target DEPENDEE_TARGET TARGET_NAME)
-	if(REQUIRED)
-		set(REQUIRED REQUIRED)
-	else()
-		set(REQUIRED )
-	endif()
-	find_package( Boost ${MIN_VERSION} COMPONENTS "${COMPONENT}" ${REQUIRED} )
-	if(TARGET "Boost::${COMPONENT}")
-		target_link_libraries(${DEPENDEE_TARGET} ${KEYWORD} "Boost::${COMPONENT}")
-	else()
-	   target_include_directories(${DEPENDEE_TARGET} ${KEYWORD} ${Boost_INCLUDE_DIRS} )
-		target_link_libraries(${DEPENDEE_TARGET} ${KEYWORD} "${Boost_LIBRARIES}")
-	endif()
-	
-	if(NO_PREPROCESSED_HEADERS)
-		target_compile_definitions(${DEPENDEE_TARGET} ${KEYWORD} "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
-	endif()
-	if(NOT "${FUSION_MAX_VECTOR_SIZE}" STREQUAL "")
-		target_compile_definitions(${DEPENDEE_TARGET} ${KEYWORD} "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
-	endif()
+set(DEFINE_EXTERNAL_PROJECT 
+	LINK_TO_DEPENDEE
+	ASSUME_INSTALLED
+	NAME Boost
+	COMPONENTS "filesystem;system;log;date_time;thread;chrono;atomic;program_options"
+#	APT_PACKAGES libboost-all-dev
+	APT_PACKAGES "libboost-filesystem-dev;libboost-system-dev;libboost-log-dev;libboost-date_time-dev;libboost-thread-dev;libboost-chrono-dev;libboost-atomic-dev;libboost-program_options-dev"
+	SPACK_PACKAGES boost
+)
+
+function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
+	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS=1")
+	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
 endfunction()
 

@@ -287,6 +287,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	
 	
 	set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
+	set(SOURCE_DIR "${__TEMPLATE_DIR}")
 #	message(STATUS "${__PADDING}_get_target_internal() CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
 #	message(STATUS "${__PADDING}_get_target_internal() Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} ${__INSTANCE_NAME} with instance name set as «${__INSTANCE_NAME}» ")
