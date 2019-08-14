@@ -48,6 +48,8 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT         - Boolean indicating that this particular FEATUREBASE has been defined in CMake, 
 #                                                        and perhaps (if no NO_TARGETS) targets already exist. Empty for featurebase promises.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_HASH_SOURCE        - String used to get an FEATURESET_ID (by hashing)
+# __FEATUREBASEDB_<FEATURESET_ID>_TARGET_NAME_HINT     - Hint for the target name. By default the hint is a template name in lowercase.
+
 
 #
 # __FILEDB_<PATH_HASH>_PATH                - Path to the file that defines this template
@@ -119,6 +121,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_TARGET_BUILT           FEATUREBASEDB )
 	set(${__COLS}_F_TARGET_NAMES         FEATUREBASEDB )
 	set(${__COLS}_F_HASH_SOURCE          FEATUREBASEDB )
+	set(${__COLS}_TARGET_NAME_HINT       FEATUREBASEDB )
 	
 	
 	set(${__COLS}_PATH                                            FILEDB )

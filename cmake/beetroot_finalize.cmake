@@ -309,6 +309,7 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 	if("${__FEATURE_INSTANCES}" STREQUAL "")
 		#Just a meaningful error message
 		#TODO: Add "... and make sure the parameters (list of the parameters) match"
+   	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __I_PARENTS)
 		message(FATAL_ERROR "Beetroot error: Cannot find any non-virtual targets that satisfy the virtual dependency ${__INSTANCE_ID} (required by ${__I_PARENTS}). Define the target that will fit it using `get_target()` somewhere, or replace the call to the `get_existing_target()` with `get_target()`.")
 	endif()
 #	message(STATUS "${__PADDING}_resolve_features_for_featurebases(): promises to check (__FEATURE_INSTANCES): ${__FEATURE_INSTANCES}, __IN_FEATUREBASE_IDS->${__IN_FEATUREBASE_IDS}->${${__IN_FEATUREBASE_IDS}}")
@@ -328,6 +329,7 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 					set(__COMP_FB_ID "${__FEATUREBASE_ID}")
 				else()
 					#TODO: Fill this error message
+            	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __I_PARENTS)
 					message(FATAL_ERROR "Beetroot error: Virtual dependency ${__INSTANCE_ID} (required by ${__I_PARENTS}) can be successfully instantiated by at least two targets: ${__COMP_FB_ID} and ${__FEATUREBASE_ID}. Please use target parameters in such a way as to uniqually fit this dependency to exactly one target, or remove the conflicting targets (or combination of both actions).")
 				endif()
 			else()
@@ -348,6 +350,7 @@ function(_resolve_features_for_featurebases __IN_FEATUREBASE_IDS __IN_PROMISES _
 				list(APPEND __FBS "${__FB_TXT}")
 			endforeach()
 			nice_list_output(LIST "${__FBS}" OUTVAR __FB_TXT)
+      	_retrieve_instance_data(${__INSTANCE_ID} I_PARENTS __I_PARENTS)
 			message(FATAL_ERROR "Beetroot error: The are no non-virtual targets based on the same template as ${__INSTANCE_ID} (required by ${__I_PARENTS}) that can be matched because of different parameters. ${__FB_TXT}")
 		endif()
 		list(APPEND __I2FBS_${__COMP_FB_ID} ${__INSTANCE_ID}) #Add the instance to the list of instances compatible with featurebase ${__COMP_FB_ID}

@@ -97,7 +97,7 @@ endfunction()
 #Function sets the featurebase (and returns its ID). It does not make any connection between the featurebase and the instance
 #
 #TEMPLATE_NAME is needed for the ability to automatically naming the actual targets.
-function(_store_featurebase __ARGS __PARS __TEMPLATE_NAMES __TARGETS_CMAKE_PATH __JOINT_TARGETS __OUT_FEATUREBASE_ID)
+function(_store_featurebase __ARGS __PARS __TEMPLATE_NAMES __TARGETS_CMAKE_PATH __JOINT_TARGETS __TARGET_NAME_HINT __OUT_FEATUREBASE_ID)
 #	message(STATUS "${__PADDING}_store_featurebase(): __ARGS: ${__ARGS} __PARS: ${__PARS}")
 
 	_serialize_variables(${__ARGS} ${__PARS}__LIST_MODIFIERS __SERIALIZED_MODIFIERS)
@@ -139,6 +139,9 @@ function(_store_featurebase __ARGS __PARS __TEMPLATE_NAMES __TARGETS_CMAKE_PATH 
 #	message(STATUS "${__PADDING}_store_featurebase(): saving F_PATH for featurebase id: ${__FEATUREBASE_ID}: __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_PATH               "${__TARGETS_CMAKE_PATH}")
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT          0)
+	if(NOT "${__TARGET_NAME_HINT}" STREQUAL "")
+   	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_NAME_HINT  "${__TARGET_NAME_HINT}")
+   endif()
 	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} F_HASH_SOURCE         "${__FEATUREBASE_HASH_SOURCE}")
 	
 	if(__IS_TARGET_FIXED)
@@ -262,7 +265,7 @@ endfunction()
 
 # Makes sure a given instance is stored in the memory and creates/links with the featurebase structure. 
 # It does not link the instance with the parent - for that use _link_instances_together()
-function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED  __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
+function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEMPLATE_NAME __TARGETS_CMAKE_PATH __IS_TARGET_FIXED  __EXTERNAL_PROJECT_INFO__REF __TARGET_REQUIRED __TARGET_NAME_HINT  __FILE_OPTIONS__REF __ALL_TEMPLATE_NAMES __OUT_FILE_HASH __OUT_FEATUREBASE_ID)
 	_retrieve_instance_data(${__INSTANCE_ID} IS_PROMISE __IS_PROMISE_BEFORE)
 	if("${__TARGETS_CMAKE_PATH}" STREQUAL "")
 		message(FATAL_ERROR "Internal beetroot error: __TARGETS_CMAKE_PATH cannot be empty")
@@ -286,7 +289,7 @@ function(_store_nonvirtual_instance_data __INSTANCE_ID __IN_ARGS __IN_PARS __TEM
 	endif()
 	
 #	message(STATUS "${__PADDING}_store_nonvirtual_instance_data(): _store_featurebase(${__IN_ARGS} ${__IN_PARS} \"${__ALL_TEMPLATE_NAMES}\" \"${__TARGETS_CMAKE_PATH}\" ${__JOINT_TARGETS} __FEATUREBASE_ID)")
-	_store_featurebase(${__IN_ARGS} ${__IN_PARS} "${__ALL_TEMPLATE_NAMES}" "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} __FEATUREBASE_ID)
+	_store_featurebase(${__IN_ARGS} ${__IN_PARS} "${__ALL_TEMPLATE_NAMES}" "${__TARGETS_CMAKE_PATH}" ${__JOINT_TARGETS} "${__TARGET_NAME_HINT}" __FEATUREBASE_ID)
 #	message(STATUS "${__PADDING}_store_nonvirtual_instance_data(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} __FILE_HASH: ${__FILE_HASH}")
 	_link_file_with_featurebase(${__FEATUREBASE_ID} ${__FILE_HASH})
 	_store_instance_data(${__INSTANCE_ID} ${__IN_ARGS} ${__IN_PARS} ${__TEMPLATE_NAME} ${__IS_TARGET_FIXED} 0 "${__TARGETS_CMAKE_PATH}")

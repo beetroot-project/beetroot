@@ -79,7 +79,7 @@ function(get_existing_target __TEMPLATE_NAME)
 #		_descend_dependencies_stack()
 #		_ascend_dependencies_stack()
 		
-		_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
+#		_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 #		message(STATUS "${__PADDING}get_existing_target(): __PARENT_INSTANCE_ID: ${__PARENT_INSTANCE_ID}")
 		
 #		message(STATUS "${__PADDING}get_existing_target(): _store_instance_link_data(${__INSTANCE_ID} \"${__PARENT_INSTANCE_ID}\" __VARIABLE_DIC __PARAMETERS_DIC ${__TEMPLATE_NAME} ${__TARGETS_CMAKE_PATH} ${__IS_TARGET_FIXED})")

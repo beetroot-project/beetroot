@@ -135,6 +135,9 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		set_property(GLOBAL PROPERTY __BURAK_CALLEE_PATH "${__OLD_CALEE_PATH}")
 		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
+		
+#		_get_value_from_stack(TARGET_NAME_HINT __TARGET_NAME_HINT)
+   	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with __TARGET_NAME_HINT: ${__TARGET_NAME_HINT}")
 #		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
 
@@ -146,13 +149,14 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	else()
 		set(__TARGET_REQUIRED 0)
 	endif()
-	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
+#	_get_parent_dependency_from_stack(__PARENT_INSTANCE_ID)
 #	message(STATUS "${__PADDING}_discover_dependencies(): Acquired parent instance id: ${__PARENT_INSTANCE_ID} for ${__INSTANCE_ID}")
 #	message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_FUNNAME: ${${__ARGS}_FUNNAME} ${__PARS}__LIST_FEATURES: ${${__PARS}__LIST_FEATURES}")
 #	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with ${__ARGS}_HALO_SIZE = ${${__ARGS}_HALO_SIZE}")
 
 	# Now we know our dependencies and we can finally and properly save our instance. 
 	# (or just confirm what we know in case we were called by rediscover_dependencies)..
+	
 	_store_nonvirtual_instance_data(
 		 ${__INSTANCE_ID} 
 		 ${__ARGS} 
@@ -162,6 +166,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__IS_TARGET_FIXED}  
 		 ${__EXTERNAL_PROJECT_INFO__REF} 
 		 ${__TARGET_REQUIRED} 
+		"${__TARGET_NAME_HINT}"
 		 ${__FILE_OPTIONS__REF} 
 		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 	

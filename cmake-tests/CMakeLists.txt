@@ -18,9 +18,9 @@ build_target(HELLO LIBKTO Mama NONSIGINIFICANT boo)
 build_target(HELLO LIBKTO Sofia NONSIGINIFICANT boo)
 build_target(fiksik)
 ##build_target(fiksik NONSIGINIFICANT X LIBKTO Mik )  #generates error
-build_target(HELLO_BOOST)
-build_target(HELLO_2BOOST)
-build_target(HELLO_2BOOST PAR KUC)
+#build_target(HELLO_BOOST)
+#build_target(HELLO_2BOOST)
+#build_target(HELLO_2BOOST PAR KUC)
 build_target(HEADER_CONSUMER)
 
 build_target(BOOTSTRAPPED_HELLO_SIMPLE)
