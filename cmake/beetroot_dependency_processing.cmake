@@ -136,8 +136,8 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
 		
-#		_get_value_from_stack(TARGET_NAME_HINT __TARGET_NAME_HINT)
-   	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with __TARGET_NAME_HINT: ${__TARGET_NAME_HINT}")
+		_get_value_from_stack(NAME_HINT __TARGET_NAME_HINT)
+#   	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with __TARGET_NAME_HINT: ${__TARGET_NAME_HINT}")
 #		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
 		_ascend_dependencies_stack()
 

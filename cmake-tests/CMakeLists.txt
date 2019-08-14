@@ -22,6 +22,8 @@ build_target(fiksik)
 #build_target(HELLO_2BOOST)
 #build_target(HELLO_2BOOST PAR KUC)
 build_target(HEADER_CONSUMER)
+build_target(HINTED_TARGET)
+build_target(HINTED_TARGET PAR 2)
 
 build_target(BOOTSTRAPPED_HELLO_SIMPLE)
 
