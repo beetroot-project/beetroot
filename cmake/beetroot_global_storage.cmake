@@ -258,6 +258,24 @@ macro(_retrieve_instance_pars __INSTANCE_ID __OUT)
 	_unserialize_parameters(__TMP_SER_PARS ${__OUT})
 endmacro()
 
+function(_get_featurebases_from_target_hint __TARGET_HINT __OUT)
+    string(TOUPPER "${__TARGET_HINT}" __TARGET_HINT)
+	get_property(__TMP GLOBAL PROPERTY __HINTS_FOR_FEATUREABESE_${__TARGET_HINT})
+	set(${__OUT} ${__TMP} PARENT_SCOPE)
+endfunction()
+
+function(_add_featurebase_to_target_hint __TARGET_HINT __FEATUREBASE)
+    if("${__TARGET_HINT}" STREQUAL "")
+        message(FATAL_ERROR "Internal Beetroot error: cannot have empty target hint here.")
+    endif()
+    string(TOUPPER "${__TARGET_HINT}" __TARGET_HINT)
+	get_property(__TMP GLOBAL PROPERTY __HINTS_FOR_FEATUREABESE_${__TARGET_HINT})
+	if(NOT "${__FEATUREBASE}" IN_LIST __TMP)
+		message(STATUS "${__PADDING}_add_featurebase_to_target_hint(): Adding ${__FEATUREBASE} to target hints for ${__TARGET_HINT} that now equal to ${__TMP}")
+	    set_property(GLOBAL APPEND PROPERTY __HINTS_FOR_FEATUREABESE_${__TARGET_HINT} "${__FEATUREBASE}")
+	endif()
+endfunction()
+
 
 
 #Function ignores information about which parameters are modifiers.

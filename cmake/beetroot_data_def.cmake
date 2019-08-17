@@ -86,7 +86,12 @@
 # __TEMPLATEDB_<TEMPLATE_NAME>_VIRTUAL_INSTANCES - List of all virtual (i.e. created using get_existing_target()) for that template
 # __TEMPLATEDB_<TEMPLATE_NAME>_T_PATH            - Path to the file that defines it
 # __TEMPLATEDB_<TEMPLATE_NAME>_T_FEATUREBASE     - List of all featurebases that implement it. 
-# 
+#
+#
+#Target Hint DB is a simple table used for registering target hints. These are then used for generating automatic target names.
+# __TARGET_HINT_<TARGET_HINT>_HINTS_FOR_FEATUREABESE - List of all target hint names registered for this particular template name. 
+#                                                      Used for automatic naming targets.
+
 # __GLOBAL_ALL_INSTANCES - list of all instance ID that are required by the top level
 # __GLOBAL_ALL_LANGUAGES - list of all languages required by the built instances
 # __GLOBAL_ALL_FEATUREBASES - list of all featurebases that still need to be processed to make sure they agree with the instances' features.
@@ -153,6 +158,8 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_TEMPLATE_FEATUREBASES  TEMPLATEDB )
 	set(${__COLS}_VIRTUAL_INSTANCES      TEMPLATEDB )
 	set(${__COLS}_T_PATH                 TEMPLATEDB )
+
+	set(${__COLS}_HINTS_FOR_FEATUREABESE TARGET_HINT )
 
 	set(${__COLS}_INSTANCES              GLOBAL)
 	set(${__COLS}_ALL_LANGUAGES          GLOBAL)
