@@ -10,11 +10,11 @@ project(hello)
 
 set(WYBOR "BLU")
 
-get_target(HELLO __OUT_INSTANCE_NAME)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO from_arg_CMakeLists)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Mama NONSIGINIFICANT boo)
-#get_target(HELLO __OUT_INSTANCE_NAME LIBKTO Sofia NONSIGINIFICANT boo)
+build_target(HELLO)
+#build_target(HELLO LIBKTO from_arg_CMakeLists)
+#build_target(HELLO LIBKTO Mama)
+#build_target(HELLO LIBKTO Mama NONSIGINIFICANT boo)
+#build_target(HELLO LIBKTO Sofia NONSIGINIFICANT boo)
 
 
 finalizer()

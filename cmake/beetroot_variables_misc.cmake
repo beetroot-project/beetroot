@@ -64,7 +64,9 @@ function(_make_cmake_args __PARS __ARGS __ARGS_LIST __OUT_CMAKE_ARGS)
 	set(${__OUT_CMAKE_ARGS} ${__CMAKE_ARGS} PARENT_SCOPE)
 endfunction()
 
-
+# __FILE_HASH - file identifier needed for default values of the parameters.
+#
+# Return value __OUT_RELATION: 0 - the same, 1 - ARG1 has more features, 2 - ARG2 has more features, 3 - both ARG1 and ARG2 should be promoted 4 - No way to promote either of them
 function(_single_feature_relation __FILE_HASH __VARNAME __PARS_PREFIX __ARG1_PREFIX __ARG2_PREFIX __OUT_RELATION)
 #	message(STATUS "${__PADDING}_single_feature_relation(): __FILE_HASH: ${__FILE_HASH} __VARNAME: ${__VARNAME} __PARS_PREFIX: ${__PARS_PREFIX} __ARG1_PREFIX: ${__ARG1_PREFIX} __ARG2_PREFIX: ${__ARG2_PREFIX}")
 #	message(STATUS "${__PADDING}_single_feature_relation(): __FILE_HASH: ${__FILE_HASH} ${__ARG1_PREFIX}_${__VARNAME}: ${${__ARG1_PREFIX}_${__VARNAME}} ${__ARG2_PREFIX}_${__VARNAME}: ${${__ARG2_PREFIX}_${__VARNAME}}")

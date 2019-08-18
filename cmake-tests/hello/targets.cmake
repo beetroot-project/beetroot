@@ -17,7 +17,8 @@ set(LINK_PARAMETERS
 
 function(declare_dependencies TEMPLATE_NAME)
 	build_target(LIBHELLO KTO ${LIBKTO})
-	build_target(EMPTY_LIB)
+	build_target(EMPTY_LIB LIBPAR 2 LIBBUILDPAR 2)
+	build_target(EMPTY_LIB LIBPAR 1 LIBBUILDPAR 1)
 endfunction()
 
 function(generate_targets TARGET_NAME TEMPLATE_NAME)
@@ -29,5 +30,11 @@ function(generate_targets TARGET_NAME TEMPLATE_NAME)
 	message(STATUS "Inside generate_targets trying to define ${TARGET_NAME} with BLA=${BLA}")
 	add_executable(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/source.cpp")
 	target_compile_definitions(${TARGET_NAME} PRIVATE "BLA=${BLA}")
+	set(LIBPAR)
+#	get_name_of_dependency_targets(LIBHELLO LIBHELLO_NAME)
+#	message(STATUS "LIBHELLO_NAME: ${LIBHELLO_NAME}")
+	get_names_of_dependency_targets(EMPTY_LIB EMPTY_LIB_NAME LIBPAR 2)
+	
+	message(STATUS "EMPTY_LIB_NAME: ${EMPTY_LIB_NAME}")
 endfunction()
 

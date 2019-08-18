@@ -47,7 +47,8 @@ function(_get_nice_instance_name __INSTANCE_ID __OUT_NICE_NAME)
 #		message(STATUS "_get_nice_instance_name(): __NICE_NAME: ${__NICE_NAME}")
 	else()
 		if(__IS_PROMISE)
-			set(__OUT "${__TEMPLATE_NAME} with no target assigned yet")
+#			set(__OUT "${__TEMPLATE_NAME} with no target assigned yet")
+			set(__OUT "${__TEMPLATE_NAME}")
 		else()
 			_retrieve_instance_data(${__INSTANCE_ID} I_TARGET_NAME __TARGET_NAME)
 			if(__TARGET_NAME)
@@ -157,7 +158,7 @@ function(_get_nice_featurebase_name __FEATUREBASE_ID __OUT_NICE_NAME)
 	
 	
 	_retrieve_featurebase_data(${__FEATUREBASE_ID} F_PATH __F_PATH)
-	message(STATUS "${__PADDING}_get_nice_featurebase_name(): __F_PATH: ${__F_PATH}")
+#	message(STATUS "${__PADDING}_get_nice_featurebase_name(): __F_PATH: ${__F_PATH}")
 	_get_relative_path("${__F_PATH}" __REL_PATH)
 	set(${__OUT_NICE_NAME} "${__OUT} defined by ${__INSTANCES_NICE}" PARENT_SCOPE)
 	

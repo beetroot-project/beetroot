@@ -1,12 +1,22 @@
 
 function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID __OUT_FUNCTION_EXISTS)
+#	message(STATUS "_invoke_apply_dependency_to_target() __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID}")
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
 	_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
+
+#	    _serialize_variables(__ARGS __ARGS__LIST __ARGS_SERIALIZED)
+#	    message(STATUS "_invoke_apply_dependency_to_target() MODIFIERS list: ${__ARGS_SERIALIZED}")
+
 	set(__TMP_LIST "${__ARGS__LIST}")
 	_retrieve_instance_args(${__INSTANCE_ID} I_FEATURES __ARGS)
+#	    _serialize_variables(__ARGS __ARGS__LIST __ARGS_SERIALIZED)
+#	    message(STATUS "_invoke_apply_dependency_to_target() FEATURES list: ${__ARGS_SERIALIZED}")
 	list(APPEND __TMP_LIST ${__ARGS__LIST})
 	_retrieve_instance_args(${__INSTANCE_ID} LINKPARS __ARGS)
+#	    _serialize_variables(__ARGS __ARGS__LIST __ARGS_SERIALIZED)
+#	    message(STATUS "_invoke_apply_dependency_to_target() LINKPARS list: ${__ARGS_SERIALIZED}")
 	_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
+#	message(STATUS "_invoke_apply_dependency_to_target() linkpar list: ${__ARGS__LIST}")
 	list(APPEND __TMP_LIST ${__ARGS__LIST})
 	set(__ARGS__LIST ${__TMP_LIST})
 	if(__DEPENDEE_INSTANCE_ID)
@@ -21,6 +31,10 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 		set(__DEP_INSTANCE_NAME)
 		set(KEYWORD "NONE")
 	endif()
+	
+#	_serialize_variables(__ARGS __TMP_LIST __ARGS_SERIALIZED)
+#	message(STATUS "_invoke_apply_dependency_to_target() Got variables: ${__ARGS_SERIALIZED}")
+	
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_ID_LIST)
@@ -28,7 +42,7 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 
 	get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
 	_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
-#	message(STATUS "_get_target_internal()3 Serialbox_SerialboxCStatic_INSTALL_DIR: ${Serialbox_SerialboxCStatic_INSTALL_DIR}")
+#	message(STATUS "_invoke_apply_dependency_to_target() Serialbox_SerialboxCStatic_INSTALL_DIR: ${Serialbox_SerialboxCStatic_INSTALL_DIR}")
 	
 	set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 

@@ -23,13 +23,13 @@ function(get_existing_target __TEMPLATE_NAME)
 
 #	__rename_arguments(${__PARENT_ARGS_PREFIX} __DEFAULT_ARGS)
 	
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
-	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
-	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_LINKPARS __TMP_LINKPARS)
-	_serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_FEATURES __TMP_FEATURES)
-#	message(STATUS "${__PADDING}get_existing_target(): got the following modifiers: __TMP_MODIFIERS: ${__TMP_MODIFIERS}")
-#	message(STATUS "${__PADDING}get_existing_target(): got the following linkpars: __TMP_LINKPARS: ${__TMP_LINKPARS}")
-#	message(STATUS "${__PADDING}get_existing_target(): got the following features: __TMP_FEATURES: ${__TMP_FEATURES}")
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
+#	    _serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
+#	    _serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_LINKPARS __TMP_LINKPARS)
+#	    _serialize_variables(__VARIABLE_DIC __PARAMETERS_DIC__LIST_FEATURES __TMP_FEATURES)
+#	    message(STATUS "${__PADDING}get_existing_target(): ${__TEMPLATE_NAME} got the following modifiers: __TMP_MODIFIERS: ${__TMP_MODIFIERS}")
+#	    message(STATUS "${__PADDING}get_existing_target(): ${__TEMPLATE_NAME} got the following linkpars: __TMP_LINKPARS: ${__TMP_LINKPARS}")
+#	    message(STATUS "${__PADDING}get_existing_target(): ${__TEMPLATE_NAME} got the following features: __TMP_FEATURES: ${__TMP_FEATURES}")
 
 #	message(STATUS "${__PADDING}get_existing_target(): __PARAMETERS_DIC_MYPAR__DEFAULT: ${__PARAMETERS_DIC_MYPAR__DEFAULT} __PARAMETERS_DIC_MYPAR__CONTAINER: ${__PARAMETERS_DIC_MYPAR__CONTAINER}")
 	if(__PARENT_ARGS_PREFIX) #It will not be set if get_existing_target is called directly from CMakeLists.txt
@@ -49,7 +49,7 @@ function(get_existing_target __TEMPLATE_NAME)
 #		message(STATUS "${__PADDING}get_existing_target(): after _blank_variables __TEMPLATE_NAME: ${__TEMPLATE_NAME} __SERIALIZED_VARIABLES: ${__SERIALIZED_VARIABLES}")
 	endif()
 	
-	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
+#	_serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST_MODIFIERS __TMP_MODIFIERS)
 #	message(STATUS "${__PADDING}get_existing_target(): modifiers after removal of deafaults: __TMP_MODIFIERS: ${__TMP_MODIFIERS}")
 
 	_make_instance_id(${__TEMPLATE_NAME} __VARIABLE_DIC 1 __INSTANCE_ID __HASH_SOURCE) 
@@ -144,6 +144,140 @@ function(get_target_name __TEMPLATE_NAME __OUT)
    _get_target(${__TEMPLATE_NAME} __TMP_INSTANCE_NAME ${ARGN})
 endfunction()
 
+# To be called only within generate_targets(). Usefull if target has dependencies and user wants to do something using their name. 
+# Beetroot is designed in such a way that it can name targets by itself (using naming hints from the user) to ensure
+# unique target names for templates. 
+# This function allows to bring names of the *immidiate dependencies* into the generate_targets() function. 
+# It should be relatively easy to modify this function so it also searches recursively down the dependency tree for nested
+# targets, but at the moment it is not implemented.
+function(get_names_of_dependency_targets __TEMPLATE_NAME __OUT)
+	_get_target_behavior(__GET_TARGET_BEHAVIOR)
+	if("${__GET_TARGET_BEHAVIOR}" STREQUAL "GATHERING_DEPENDENCIES")
+		message(FATAL_ERROR "You cannot get name of the target inside declare_dependencies(), because they are still not known. Fix the name of the target or fill the GitHub issue to relax this requirements for singleton targets.")
+	endif()
+	get_property(__CALLING_FILE GLOBAL PROPERTY __BURAK_CALLEE_PATH)
+	if("${__CALLING_FILE}" STREQUAL "")
+		set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
+	endif()
+
+	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
+
+	file(RELATIVE_PATH __CALLING_FILE ${SUPERBUILD_ROOT} ${__CALLING_FILE})
+
+	if(NOT __TEMPLATE_NAME)
+		message(FATAL_ERROR "get_error was called without any arguments")
+	endif()
+	string(REPLACE "-" "_" __TEMPLATE_NAME "${__TEMPLATE_NAME}")
+
+#    _read_parameters("${__TARGETS_CMAKE_PATH}" "" __PARAMETERS_DIC __VARIABLE_DIC __IGNORE_VAR_1 __IGNORE_VAR_2 __IGNORE_VAR_3 __IGNORE_VAR_4)   
+#	_read_variables_from_args(__PARS __ARGS "${__CALLING_FILE}" "${__TARGETS_CMAKE_PATH}" __ARGS ${ARGN}) #Stores and verifies all immidiate parameters into the __VARIABLE_DIC arg structure and __PARAMETERS_DIC declarations.
+#    message(STATUS "${__PADDING}get_names_of_dependency_targets(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
+
+
+    _get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 0 0 1 __VARIABLE_DIC __PARAMETERS_DIC __IGNORE_1 __IGNORE_2 __IGNORE_3 __IGNORE_4 ${ARGN})
+
+	#_remove_variables_with_default_value(__VARIABLE_DIC __PARAMETERS_DIC __VARIABLE_DIC__LIST_MODIFIERS __VARIABLE_DIC__LIST_MODIFIERS) #Removes all modifiers which value user has not changed in his declare_dependencies().
+
+#	    _serialize_variables(__VARIABLE_DIC __VARIABLE_DIC__LIST __TMP_VARS)
+#        message(STATUS "${__PADDING}get_names_of_dependency_targets(): __PARAMETERS_DIC__LIST: ${__PARAMETERS_DIC__LIST}")
+#        message(STATUS "${__PADDING}get_names_of_dependency_targets(): __TMP_VARS: ${__TMP_VARS}")
+#        message(STATUS "${__PADDING}get_names_of_dependency_targets(): __PARAMETERS_DIC__LIST_MODIFIERS: ${__PARAMETERS_DIC__LIST_MODIFIERS}")
+    
+    _retrieve_instance_data(${__INSTANCE_ID} I_CHILDREN __DEPENDENCY_LIST)
+    set(__OUT_LIST)
+        _retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __PARENT_NAME)
+#        message(STATUS "${__PADDING}get_names_of_dependency_targets(): __DEPENDENCY_LIST: ${__DEPENDENCY_LIST} of __PARENT_NAME: ${__PARENT_NAME}")
+    foreach(__DEP_INSTANCE IN LISTS __DEPENDENCY_LIST)
+        set(__NO_MATCH 0)
+        _retrieve_instance_data(${__DEP_INSTANCE} I_TEMPLATE_NAME __DEPENDENCY_NAME)
+#        message(STATUS "${__PADDING}get_names_of_dependency_targets(): __DEPENDENCY_NAME: ${__DEPENDENCY_NAME}")
+        if("${__DEPENDENCY_NAME}" STREQUAL "${__TEMPLATE_NAME}")
+            # We have a template name match. Now we must check if the parameters match too. 
+            # First we need to load the actual parameters with which the dependency was invoked.
+            # We start with linkpars
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): Processing ${__DEPENDENCY_NAME} as required dependency name of ${__PARENT_NAME}:")
+            _retrieve_instance_args(${__DEP_INSTANCE} LINKPARS __ACTUAL_LINKPARS)
+            _retrieve_instance_args(${__DEP_INSTANCE} DEFAULTS __DEFAULT_ARGS)
+            # Then we iterate over them. They must match exactly.
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): __ACTUAL_LINKPARS__LIST: ${__ACTUAL_LINKPARS__LIST}")
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): __PARAMETERS_DIC__LIST_LINKPARS: ${__PARAMETERS_DIC__LIST_LINKPARS}")
+            foreach(__PAR IN LISTS __PARAMETERS_DIC__LIST_LINKPARS)
+                #For link parameters we require that they fully agree.
+                if(NOT "${__VARIABLE_DIC_${__PAR}}" STREQUAL "${__DEFAULT_ARGS_${__PAR}}")
+                    if(NOT "${__VARIABLE_DIC_${__PAR}}" STREQUAL "${__ACTUAL_LINKPARS_${__PAR}}")
+#                        message(STATUS "${__PADDING}get_names_of_dependency_targets(): WRONG LINKPAR ${__PAR}. Got ${__VARIABLE_DIC_${__PAR}}, but required ${__ACTUAL_LINKPARS_${__PAR}}. Default value: ${__DEFAULT_ARGS_${__PAR}}")
+#                        message(STATUS "Source of ${__PAR}: ${__VARIABLE_DIC__SRC_${__PAR}}")
+                        set(__NO_MATCH 1) #To skip other checks
+                        break()
+                    endif()
+                endif()
+            endforeach()
+            if(__NO_MATCH)
+                continue()
+            endif()
+            
+            #Now it is time for build parameters. 
+            _retrieve_instance_args(${__DEP_INSTANCE} MODIFIERS __ACTUAL_BUILDPARS)
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): __ACTUAL_BUILDPARS__LIST: ${__ACTUAL_BUILDPARS__LIST}")
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): __PARAMETERS_DIC__LIST_MODIFIERS: ${__PARAMETERS_DIC__LIST_MODIFIERS}")
+            foreach(__PAR IN LISTS __PARAMETERS_DIC__LIST_MODIFIERS)
+                #For build parameters we also require that they fully agree.
+                    if("${__PAR}" STREQUAL "STENCIL_NR_UPPER_LIMIT")
+#                    message(STATUS "${__PADDING}get_names_of_dependency_targets(): __VARIABLE_DIC_${__PAR}: ${__VARIABLE_DIC_${__PAR}}, __DEFAULT_ARGS_${__PAR}: ${__DEFAULT_ARGS_${__PAR}}, __ACTUAL_BUILDPARS${__PAR}: ${__ACTUAL_BUILDPARS${__PAR}}")
+                    endif()
+                if(NOT "${__VARIABLE_DIC_${__PAR}}" STREQUAL "${__DEFAULT_ARGS_${__PAR}}")
+                    if(NOT "${__VARIABLE_DIC_${__PAR}}" STREQUAL "${__ACTUAL_BUILDPARS_${__PAR}}")
+#                        message(STATUS "${__PADDING}get_names_of_dependency_targets(): WRONG BUILDPAR ${__PAR}. Got ${__VARIABLE_DIC_${__PAR}}, but required ${__ACTUAL_BUILDPARS_${__PAR}}")
+                        set(__NO_MATCH 1) #To skip other checks
+                        break()
+                    endif()
+                endif()
+            endforeach()
+            if(__NO_MATCH)
+                continue()
+            endif()
+            
+            #Now it is time for features. Features must be matched using ordered comparison
+            _retrieve_instance_args(${__DEP_INSTANCE} F_FEATURES __ACTUAL_FEATURES)
+            _retrieve_instance_data(${__DEP_INSTANCE} F_PATH __F_PATH)
+            _make_path_hash("${__F_PATH}" __FILE_HASH)
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): __ACTUAL_FEATURES__LIST: ${__ACTUAL_FEATURES__LIST}")
+            foreach(__PAR IN LISTS __PARAMETERS_DIC__LIST_FEATURES)
+                #For build parameters we also require that they fully agree.
+                if(NOT "${__VARIABLE_DIC_${__PAR}}" STREQUAL "${__DEFAULT_ARGS_${__PAR}}")
+                    _single_feature_relation("${__FILE_HASH}" "${__PAR}" __PARAMETERS_DIC __VARIABLE_DIC __ACTUAL_FEATURES __THE_RELATION)
+                    # Return value __OUT_RELATION: 0 - the same, 1 - ARG1 has more features, 2 - ARG2 has more features, 3 - both ARG1 and ARG2 should be promoted 4 - No way to promote either of them
+                    if("${__THE_RELATION}" STREQUAL "1" OR "${__THE_RELATION}" STREQUAL "3" OR "${__THE_RELATION}" STREQUAL "4" )
+                        #We ask for features that are not present in the __DEP_INSTANCE. 
+#                        message(STATUS "${__PADDING}get_names_of_dependency_targets(): WRONG FEATURE")
+                        set(__NO_MATCH 1) #To skip other checks
+                        break()
+                    endif()
+                endif()
+            endforeach()
+            if(__NO_MATCH)
+                continue()
+            endif()
+            
+            list(APPEND __OUT_LIST "${__DEP_INSTANCE}")
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): Adding solution: ${__DEP_INSTANCE}")
+        endif()
+    endforeach()
+    
+#    message(STATUS "${__PADDING}get_names_of_dependency_targets(): List of all matched dependencies: ${__OUT_LIST}")
+    if(__OUT_LIST)
+        set(__OUT_TARGETS)
+        foreach(__DEP_INSTANCE IN LISTS __OUT_LIST)
+            _retrieve_instance_data(${__DEP_INSTANCE} I_TARGET_NAME __TARGET_NAME)
+#            message(STATUS "${__PADDING}get_names_of_dependency_targets(): For ${__DEP_INSTANCE} got __TARGET_NAME: ${__TARGET_NAME}")
+            list(APPEND __OUT_TARGETS "${__TARGET_NAME}")
+        endforeach()
+    else()
+        set(__OUT_TARGETS) #Return nothing
+    endif()
+    set(${__OUT} ${__OUT_TARGETS} PARENT_SCOPE) 
+endfunction()
+
 function(_get_target __TEMPLATE_NAME __OUT) 
 	_get_target_behavior(__GET_TARGET_BEHAVIOR)
 	get_property(__CALLING_FILE GLOBAL PROPERTY __BURAK_CALLEE_PATH)
@@ -166,7 +300,7 @@ function(_get_target __TEMPLATE_NAME __OUT)
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} USE_NETCDF: \"${USE_NETCDF}\" ARGN: ${ARGN}")
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} ARGN: ${ARGN}")
-	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN})
+	_get_variables("${__TARGETS_CMAKE_PATH}" "${__CALLING_FILE}" "" 1 0 0 __VARIABLE_DIC __PARAMETERS_DIC __TEMPLATES __EXTERNAL_PROJECT_INFO__LIST __IS_TARGET_FIXED __FILE_OPTIONS__LIST ${ARGN})
 #	message(STATUS "${__PADDING}get_target(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARAMETERS_DIC_USE_NETCDF__TYPE: ${__PARAMETERS_DIC_USE_NETCDF__TYPE} __VARIABLE_DIC_USE_NETCDF: ${__VARIABLE_DIC_USE_NETCDF}")
 	if(__PARENT_ALL_VARIABLES)
 #		message(STATUS "${__PADDING}get_target(): XXXXX __TEMPLATE_NAME: ${__TEMPLATE_NAME} __PARENT_ALL_VARIABLES: ${__PARENT_ALL_VARIABLES}  FLOAT_PRECISION: ${FLOAT_PRECISION}")
