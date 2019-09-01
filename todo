@@ -1,0 +1,1 @@
+Add build_target_private and/or build_target_public that reflect the default linking with target_link_libraries(). 
