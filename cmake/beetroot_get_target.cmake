@@ -160,6 +160,7 @@ function(get_names_of_dependency_targets __TEMPLATE_NAME __OUT)
 		set(__CALLING_FILE "${CMAKE_PARENT_LIST_FILE}")
 	endif()
 
+    #message(STATUS "${__PADDING}get_names_of_dependency_targets(): __TEMPLATE_NAME: ${__TEMPLATE_NAME} __CALLING_FILE: ${__CALLING_FILE} ARGN: ${ARGN}")
 	_parse_TARGETS_PATH("${__TEMPLATE_NAME}" "${__CALLING_FILE}" ${ARGN})
 
 	file(RELATIVE_PATH __CALLING_FILE ${SUPERBUILD_ROOT} ${__CALLING_FILE})
