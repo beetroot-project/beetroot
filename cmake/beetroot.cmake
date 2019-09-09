@@ -113,3 +113,7 @@ if(NOT __BURAK_LOADED)
 	set_property(GLOBAL PROPERTY __BURAK_LOADED 1) #To prevent loading this file again
 endif()
 
+define_property(TARGET PROPERTY TEMPLATE_DIR 
+              BRIEF_DOCS "Directory where the targets.cmake lives that defines this target"
+              FULL_DOCS "Directory where the targets.cmake lives that defines this target")
+

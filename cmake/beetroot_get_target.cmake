@@ -463,6 +463,12 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		endif()
 		set(${__OUT_FUNCTION_EXISTS} 1 PARENT_SCOPE)
 	endif()
+   if(TARGET ${__INSTANCE_NAME})
+      get_target_property(__INSTANCE_TYPE ${__INSTANCE_NAME} TYPE)
+      if(NOT "${__INSTANCE_TYPE}" STREQUAL "INTERFACE_LIBRARY")
+         set_target_properties(${__INSTANCE_NAME} PROPERTIES TEMPLATE_DIR "${__TEMPLATE_DIR}")	
+      endif()
+   endif()
 endfunction()
 
 #Inserts variables from dependencies that export them.
