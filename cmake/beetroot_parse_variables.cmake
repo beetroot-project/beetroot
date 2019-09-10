@@ -38,29 +38,42 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 	set(__OVERRIDEN_ARGS "") #List of all args that are non-default
 #	message(STATUS "${__PADDING}_get_variables(): ARGN: ${ARGN}")
 
-#	set(__DEBUG_VAR_NAME USE_NETCDF)
+#	set(__DEBUG_VAR_NAME TEST_NAME)
 	set(__DEBUG_VAR_NAME )
 	if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+#__FLAG_IGNORE_CACHE_VARIABLES
+		message(STATUS "${__PADDING}_get_variables(): DEBUG_RUN for ${__DEBUG_VAR_NAME}. __FLAG_IGNORE_CACHE_VARIABLES: ${__FLAG_IGNORE_CACHE_VARIABLES}")
 		message(STATUS "${__PADDING}_get_variables(): __ARGS_${__DEBUG_VAR_NAME} is set to ${__ARGS_${__DEBUG_VAR_NAME}}")
+		message(STATUS "${__PADDING}_get_variables(): ${__DEBUG_VAR_NAME}: ${${__DEBUG_VAR_NAME}}")
 	endif()
 #	message(STATUS "${__PADDING}_get_variables(): __ARGS_IN: ${__ARGS_IN}: ${${__ARGS_IN}__LIST} __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
 #	message(STATUS "${__PADDING}_get_variables(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __CALLING_FILE: ${__CALLING_FILE}")
 	foreach(__ITERATION RANGE 10)
 		if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
-			message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, phase 1, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
+			message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, beggining of the loop, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
 		endif()
 		set_property(GLOBAL PROPERTY __BURAK_VARIABLES_NOT_ADDED 0)
+
+
+
+	   #Reads parameters from targets.cmake.
 		if(${__ITERATION} EQUAL 0)
 			_read_parameters("${__TARGETS_CMAKE_PATH}" "${__ARGS_IN}" __PARS __ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
 			if(__FLAG_IGNORE_CACHE_VARIABLES)
     		    _blank_variables(__PARS__LIST "")
     		endif()
+ 			if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+ 			   if(NOT "${__DEBUG_VAR_NAME}" IN_LIST __PARS__LIST)
+      			message(STATUS "${__PADDING}_get_variables(): NOT debugging variable ${__DEBUG_VAR_NAME} here.")
+		      	set(__DEBUG_VAR_NAME )
+            endif()
+ 			endif()
+
 		else()
 			_read_parameters("${__TARGETS_CMAKE_PATH}" __ARGS __PARS __ARGS __IN_TEMPLATE_NAMES __IN_EXTERNAL_PROJECT_INFO __IN_IS_TARGET_FIXED __GLOBAL_OPTIONS)
 		endif()
-
 		if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
-			message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, phase 2, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
+			message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, after parsing cmake, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
 			message(STATUS "${__PADDING}_get_variables(): __PARS_${__DEBUG_VAR_NAME}__TYPE: ${__PARS_${__DEBUG_VAR_NAME}__TYPE}")
 			message(STATUS "${__PADDING}_get_variables(): __PARS_${__DEBUG_VAR_NAME}__CONTAINER: ${__PARS_${__DEBUG_VAR_NAME}__CONTAINER}")
 			message(STATUS "${__PADDING}_get_variables(): __PARS_${__DEBUG_VAR_NAME}: ${__PARS_${__DEBUG_VAR_NAME}}")
@@ -73,25 +86,39 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 			endif()
 			break() #no variables
 		endif()
-	    _read_variables_from_cache(__PARS __ARGS "" cache __ARGS)
-		    if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
-			    message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, phase 3, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}} ARGN: ${ARGN}")
-		    endif()
+
+
+
+	   #Reads parameters from cache
+      _read_variables_from_cache(__PARS __ARGS "" cache __ARGS)
+	       if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+		       message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, after reading from cache, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
+	       endif()
 #			message(STATUS "${__PADDING}_get_variables(): ARGN: ${__ARG_LIST}")
-        
+
+
+      #Reads parameters from args. These have the highest priority and cannot be overriden.
 		_read_variables_from_args(__PARS __ARGS "${__CALLING_FILE}" "${__TARGETS_CMAKE_PATH}" __ARGS ${__ARG_LIST})
 			if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
-				message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, phase 4, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
-			endif()
+   			message(STATUS "${__PADDING}_get_variables(): __ITERATION: ${__ITERATION}, after reading from args, __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}, ARGN: ${ARGN}")
+   		endif()
 #			message(STATUS "${__PADDING}_get_variables(): __ARGS__SRC_BCTYPE: ${__ARGS__SRC_BCTYPE}")
 		_calculate_hash(__ARGS __ARGS__LIST "_getvars_" __ARGUMENT_HASH_NEW __HASH_SOURCE)
 		
-#		message(STATUS "${__PADDING}_get_variables(): __ARGUMENT_HASH_OLD: ${__ARGUMENT_HASH_OLD}, __ARGUMENT_HASH_NEW: ${__ARGUMENT_HASH_NEW}, __IN_EXTERNAL_PROJECT_INFO: ${__IN_EXTERNAL_PROJECT_INFO}")
+      if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+		   message(STATUS "${__PADDING}_get_variables(): __ARGUMENT_HASH_OLD: ${__ARGUMENT_HASH_OLD}, __ARGUMENT_HASH_NEW: ${__ARGUMENT_HASH_NEW}, __HASH_SOURCE: ${__HASH_SOURCE}")
+		endif()
 		if("${__ARGUMENT_HASH_NEW}" STREQUAL "${__ARGUMENT_HASH_OLD}")
 			break()
 		endif()
 		set(__ARGUMENT_HASH_OLD "${__ARGUMENT_HASH_NEW}")
 	endforeach()
+	
+	if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+   	_serialize_variables(__ARGS __ARGS__LIST __TMP_SERIALIZED)
+		message(STATUS "${__PADDING}_get_variables(): finally: ${__TMP_SERIALIZED}")
+   endif()
+
 	
 	if(NOT __FLAG_IGNORE_INCLUDE_ERRORS)
 		get_property(__ERROR_IN_INCLUDE GLOBAL PROPERTY __BURAK_VARIABLES_NOT_ADDED)
@@ -101,10 +128,6 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 		endif()
 	endif()
 	
-	if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
-		message(STATUS "${__PADDING}_get_variables(): finally: __ARGS_${__DEBUG_VAR_NAME}: ${__ARGS_${__DEBUG_VAR_NAME}}")
-	endif()
-
 #	if("${__TARGETS_CMAKE_PATH}" MATCHES "/serialbox.cmake")
 #		message(WARNING "_get_variables(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __IN_EXTERNAL_PROJECT_INFO: ${__IN_EXTERNAL_PROJECT_INFO} __IN_TEMPLATE_NAMES: ${__IN_TEMPLATE_NAMES} __OUT_EXTERNAL_PROJECT_INFO: ${__OUT_EXTERNAL_PROJECT_INFO}")
 #	else()
@@ -131,7 +154,12 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 		else()
 			set(__BOOL_FEATURES 0)
 		endif()
-		_verify_parameter("${__VAR_NAME}" "${__SRC}" "${__PARS_${__VAR_NAME}__CONTAINER}" "${__PARS_${__VAR_NAME}__TYPE}" "${__ARGS_${__VAR_NAME}}" ${__BOOL_FEATURES} "${__TARGETS_CMAKE_PATH}" "${__FLAG_VERIFY}" __VAR_BETTER_VALUE)
+		if("${__ARGS__SRC_${__VAR_NAME}}" STREQUAL "default")
+		   set(__ACTUAL_FLAG_VERIFY 0)
+		else()
+		   set(__ACTUAL_FLAG_VERIFY "${__FLAG_VERIFY}")
+		endif()
+		_verify_parameter("${__VAR_NAME}" "${__SRC}" "${__PARS_${__VAR_NAME}__CONTAINER}" "${__PARS_${__VAR_NAME}__TYPE}" "${__ARGS_${__VAR_NAME}}" ${__BOOL_FEATURES} "${__TARGETS_CMAKE_PATH}" "${__ACTUAL_FLAG_VERIFY}" __VAR_BETTER_VALUE)
 #		message(STATUS "${__PADDING}_get_variables(): After verification of ${__VAR_NAME} \"${__ARGS_${__VAR_NAME}}\" -> \"${__VAR_BETTER_VALUE}\".")
 		set(__ARGS_${__VAR_NAME} ${__VAR_BETTER_VALUE})
 	endforeach()
@@ -142,6 +170,11 @@ function(_get_variables __TARGETS_CMAKE_PATH __CALLING_FILE __ARGS_IN __FLAG_VER
 
 	_pass_arguments_higher(__ARGS ${__OUT_VARIABLE_DIC})
 	_pass_parameters_higher(__PARS ${__OUT_PARAMETERS_DIC})
+	
+	if(NOT "${__DEBUG_VAR_NAME}" STREQUAL "")
+   	_serialize_variables(__ARGS __ARGS__LIST __TMP_SERIALIZED)
+		message(STATUS "${__PADDING}_get_variables(): finally: ${__TMP_SERIALIZED}")
+   endif()
 	
 	set(${__OUT_TEMPLATE_NAMES} "${__IN_TEMPLATE_NAMES}" PARENT_SCOPE)
 	set(${__OUT_EXTERNAL_PROJECT_INFO} "${__IN_EXTERNAL_PROJECT_INFO}" PARENT_SCOPE)
@@ -203,7 +236,8 @@ macro(_parse_parameters __DEFINITIONS __OUT_ARGS __OUT_PARS __TARGETS_CMAKE_PATH
 				if(NOT "${${__OUT_PARS}_${__VAR_NAME}__CONTAINER}" STREQUAL "${__TMP_CONTAINER}" OR
 					NOT "${${__OUT_PARS}_${__VAR_NAME}__TYPE}" STREQUAL "${__TMP_TYPE}" OR
 					NOT "${${__OUT_ARGS}_${__VAR_NAME}}" STREQUAL "${__TMP_DEFAULT}")
-					message(FATAL_ERROR "Multiple definitions of the same variable/modifier (here: \"${__VAR_NAME}\") are not the same. One definition is a ${${__OUT_PARS}_${__VAR_NAME}__CONTAINER} of type ${${__OUT_PARS}_${__VAR_NAME}__TYPE} = \"${${__OUT_ARGS}_${__VAR_NAME}}\" and the other is a ${__TMP_CONTAINER} of type ${__TMP_TYPE} = \"${__TMP_DEFAULT}\". Modifiers and variables share the same namespace. Error encountered in ${__TARGETS_CMAKE_PATH}.")
+					_get_relative_path("${__TARGETS_CMAKE_PATH}" __NICE_PATH)
+					message(FATAL_ERROR "Multiple definitions of the same variable/modifier (here: \"${__VAR_NAME}\") are not the same. One definition is a ${${__OUT_PARS}_${__VAR_NAME}__CONTAINER} of type ${${__OUT_PARS}_${__VAR_NAME}__TYPE} = \"${${__OUT_ARGS}_${__VAR_NAME}}\" and the other is a ${__TMP_CONTAINER} of type ${__TMP_TYPE} = \"${__TMP_DEFAULT}\". Modifiers and variables share the same namespace. Error encountered in ${__NICE_PATH}.")
 				else()
 					set(__SKIP 1)
 				endif()
@@ -281,14 +315,14 @@ endfunction()
 # Iterates over all variables in __PARS, and combines the values taken from __ARGS with overrides taken as the same name, but with optional prefix "${__VALUES}_".
 function(_read_variables_from_cache __PARS __ARGS __VALUES __SOURCE __OUT_ARGS)
 	foreach(__VAR IN LISTS ${__PARS}__LIST)
-		if(DEFINED ${__VALUES}_${__VAR})
-			set(__EXT_VARNAME ${__VALUES}_${__VAR})
-		else()
-			set(__EXT_VARNAME ${__VAR})
-		endif()
+	   if("${__VALUES}" STREQUAL "")
+	      set(__EXT_VARNAME ${__VAR})
+	   else()
+   	   set(__EXT_VARNAME ${__VALUES}_${__VAR})
+	   endif()
 		if(NOT "${${__EXT_VARNAME}}" STREQUAL "")
 			set(${__OUT_ARGS}_${__VAR} "${${__EXT_VARNAME}}" PARENT_SCOPE)
-#			message(STATUS "${__PADDING}_read_variables_from_cache(): Setting ${__OUT_ARGS}__SRC_${__VAR}: ${__SOURCE}")
+#			message(STATUS "${__PADDING}_read_variables_from_cache(): ${__EXT_VARNAME}: ${${__EXT_VARNAME}} != 0, so setting ${__OUT_ARGS}__SRC_${__VAR}: ${__SOURCE}")
 			set(${__OUT_ARGS}__SRC_${__VAR} "${__SOURCE}" PARENT_SCOPE)
 		else()
 			set(${__OUT_ARGS}_${__VAR} "${${__ARGS}_${__VAR}}" PARENT_SCOPE)
@@ -433,7 +467,7 @@ function(_read_variables_from_args __PARS __ARGS __CALLING_FILE __TARGETS_CMAKE_
 		message(FATAL_ERROR "Undefined variables passed as arguments: ${__unparsed}. Solution: Either add support for arguments \"${__unparsed}\" in ${__TARGETS_CMAKE_PATH_REL}, or change the dependency arguments in ${__CALLING_FILE_REL}. ")
 	endif()
 	foreach(__OPTION IN LISTS __OPTIONS)
-		if(NOT __PARSED_${__OPTION})
+		if(__PARSED_${__OPTION})
 			set(__PARSED_${__OPTION})
 		endif()
 	endforeach()

@@ -110,10 +110,21 @@ if(NOT __BURAK_LOADED)
 	include(ExternalProject)
 
 	__prepare_template_list()
+	
+   define_property(TARGET PROPERTY TEMPLATE_DIR 
+      BRIEF_DOCS "Directory where the targets.cmake lives that defines this target"
+      FULL_DOCS "Directory where the targets.cmake lives that defines this target")
+
+	if(__NOT_SUPERBUILD)
+		message("    DECLARING  DEPENDENCIES  IN  PROJECT BUILD")
+	else()
+		if("${SUPERBUILD}" STREQUAL "AUTO")
+			message("    DECLARING  DEPENDENCIES  AND  DECIDING  WHETHER  TO  USE  SUPERBUILD")
+		else()
+			message("    DECLARING  DEPENDENCIES  IN  SUPERBUILD")
+		endif()
+	endif()
 	set_property(GLOBAL PROPERTY __BURAK_LOADED 1) #To prevent loading this file again
 endif()
 
-define_property(TARGET PROPERTY TEMPLATE_DIR 
-              BRIEF_DOCS "Directory where the targets.cmake lives that defines this target"
-              FULL_DOCS "Directory where the targets.cmake lives that defines this target")
 
