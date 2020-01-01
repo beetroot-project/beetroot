@@ -38,6 +38,7 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_ID_LIST)
+	_retrieve_instance_data(${__INSTANCE_ID} INSTALL_PATH __INSTALL_PATH)
 	_insert_names_from_dependencies("${__DEP_ID_LIST}" __ARGS)
 
 	get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
@@ -53,9 +54,9 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 #	apply_to_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 #	take_dependency_from_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 
+ 
 
-
-	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME})
+	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME} "${__INSTALL_PATH}")
 
 #	message(STATUS "_invoke_apply_dependency_to_target(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID} __NO_OP: ${__NO_OP}")
 	if(__NO_OP)

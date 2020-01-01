@@ -43,6 +43,7 @@
 # __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the instances that require us.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_FEATURES           - Serialized list of features that are incorporated in this featureset.
 # __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS            - Serialized values of all the modifiers' values
+# __FEATUREBASEDB_<FEATURESET_ID>_INSTALL_PATH         - Install path, valid only if the featurebase is external dependency.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_PATH               - Path to the file that describes the template.
 #                                                        For singleton targets this path is used to build FEATURESET_ID.
 # __FEATUREBASEDB_<FEATURESET_ID>_TARGET_BUILT         - Boolean indicating that this particular FEATUREBASE has been defined in CMake, 
@@ -123,6 +124,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_MODIFIERS              FEATUREBASEDB )
 	set(${__COLS}_F_TEMPLATE_NAMES       FEATUREBASEDB )
 	set(${__COLS}_F_PATH                 FEATUREBASEDB )
+	set(${__COLS}_INSTALL_PATH           FEATUREBASEDB )
 	set(${__COLS}_TARGET_BUILT           FEATUREBASEDB )
 	set(${__COLS}_F_TARGET_NAMES         FEATUREBASEDB )
 	set(${__COLS}_F_HASH_SOURCE          FEATUREBASEDB )

@@ -141,18 +141,22 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 	function(declare_dependencies DUMMY_VAR)
 		#nothing to declare
 	endfunction()
-	function(generate_targets DUMMY_VAR1 DUMMY_VAR2)
+	function(generate_targets TARGET_NAME TEMPLATE_NAME INSTALL_DIR)
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined
 	endfunction()
-	function(apply_dependency_to_target INSTANCE_NAME DEP_INSTANCE_NAME)
+	function(apply_dependency_to_target PARENT_NAME OUR_NAME INSTALL_DIR)
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined, only the default version was used
 #		message(STATUS "default apply_to_target(): calling with INSTANCE_NAME: ${INSTANCE_NAME} and DEP_INSTANCE_NAME: ${DEP_INSTANCE_NAME}")
+	endfunction()
+	function(build_version_string INSTALL_DIR IN_STRING)
+		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined
 	endfunction()
 	set(LINK_PARAMETERS)
 	set(BUILD_PARAMETERS)
 	set(BUILD_FEATURES)
 	set(ENUM_TEMPLATES)
 	set(ENUM_TARGETS)
+	set(FILE_OPTIONS)
 	set(DEFINE_EXTERNAL_PROJECT)
 	
 	_make_path_hash("${__TARGETS_CMAKE_PATH}" __PATH_HASH)
