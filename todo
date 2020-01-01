@@ -1,1 +1,11 @@
+TO_TEST Make sure, that user always sets "apply_dependency_to_target" for external targets. The function will be mandatory and must contain code that finds the installed (or not) libraries, usually using find_packages(). Function will be given an extra argument "INSTALL_DIR" if the target is external. 
+Incorporate new function "build_version_string" that normally exists in build_install_prefix_plugins into the targets.cmake. The function must return a proper version string of the dependency in order to properly prefix the external dependencies of external dependencies. The function is mandatory for every external dependency of external dependency.
 Add build_target_private and/or build_target_public that reflect the default linking with target_link_libraries(). 
+
+   missing_dependency(
+      DESCRIPTION "Boost libraries"
+      REQUIRED_BY ${BOOST_PARENT_NAME}
+      APT_PACKAGES ${APT}
+      SPACK_PACKAGES boost
+   )
+

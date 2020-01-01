@@ -40,7 +40,7 @@
 #                                                        If TARGET_FIXED target names are not generated, but taken from TEMPLATE_NAME.
 # __FEATUREBASEDB_<FEATURESET_ID>_F_TEMPLATE_NAMES     - Name of the template(s). Can be more than one for joint targets 
 #                                                        (external targets coming from the same template).
-# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the instances that require us.
+# __FEATUREBASEDB_<FEATURESET_ID>_DEP_INSTANCES        - List of all the instances that require us (i.e. list of our children).
 # __FEATUREBASEDB_<FEATURESET_ID>_F_FEATURES           - Serialized list of features that are incorporated in this featureset.
 # __FEATUREBASEDB_<FEATURESET_ID>_MODIFIERS            - Serialized values of all the modifiers' values
 # __FEATUREBASEDB_<FEATURESET_ID>_INSTALL_PATH         - Install path, valid only if the featurebase is external dependency.

@@ -18,8 +18,8 @@ set(DEFINE_EXTERNAL_PROJECT
 	ASSUME_INSTALLED
 	NAME Boost
 	COMPONENTS "filesystem;system;log;date_time;thread;chrono;atomic;program_options"
-#	APT_PACKAGES libboost-all-dev
-	APT_PACKAGES "libboost-filesystem-dev;libboost-system-dev;libboost-log-dev;libboost-date_time-dev;libboost-thread-dev;libboost-chrono-dev;libboost-atomic-dev;libboost-program_options-dev"
+	APT_PACKAGES libboost-all-dev
+#	APT_PACKAGES "libboost-filesystem-dev;libboost-system-dev;libboost-log-dev;libboost-date_time-dev;libboost-thread-dev;libboost-chrono-dev;libboost-atomic-dev;libboost-program_options-dev"
 	SPACK_PACKAGES boost
 )
 

@@ -21,6 +21,8 @@ function(_parse_external_info __EXTERNAL_INFO__REF __TARGETS_CMAKE_PATH __PROPER
 endfunction()
 
 #`_get_target_external(<TEMPLATE_NAME> <var_dictionary> <out_instance_name> <EXTERNAL_PROJECT_ARGS>)`
+# The function gets called only when there is EXTERNAL_PROJECT_INFO during the superbuild phase.
+# On superbuild phase it calls ExternalProject_Add, otherwise makes sure there is `apply_dependency_to_target` user function to call.
 
 #2. Jeśli etap SUPERBUILD - Wywołuje `ExternalProject_Add` dla nazwy targetu policzonej na `var_dictionary` i zwraca tą nazwę targetu w `out_instance_name`
 #3. Jeśli etap naszego projektu - wywołuje `find_packages`, tworzy alias dla importowanego targetu i zwraca nazwę `INSTANCE_NAME`.
@@ -145,7 +147,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			endif()
 		endif()
 	else()
-		
+		message(FATAL_ERROR "This code should not be reachable!")
 #		message(STATUS "_get_target_external(): 3 __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME} __INSTANCE_NAME: ${__INSTANCE_NAME} __TEMPLATE_NAME: ${__TEMPLATE_NAME} ${__INSTANCE_NAME}_DIR: ${${__INSTANCE_NAME}_DIR}")
 		if(__PARSED_INSTALL_PATH OR NOT __PARSED_ASSUME_INSTALLED)
 			set(${__EXTERNAL_BARE_NAME}_ROOT ${__INSTALL_DIR})
@@ -232,7 +234,7 @@ macro(_get_existing_targets __INSTALL_DIR_STEM __PATH_HASH)
 	endforeach()
 endmacro()
 
-#Function conjoures an install directory for the external project based on its modifiers, features and a list
+#Function makes a path to the install directory for the external project based on its modifiers, features and a list
 #of already installed versions, to avoid building project when a compatible version may already be installed
 function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_DEPENDS_ON __EXTERNAL_BARE_NAME __OVERRIDE_INSTALL_DIR __OUT_INSTALL_STEM __OUT_INSTALL_DIR __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
 
@@ -245,7 +247,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
-	name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
+	_name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
 #	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
 	
@@ -311,4 +313,29 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	set(${__OUT_INSTALL_DIR} "${__INSTALL_DIR}" PARENT_SCOPE)
 	set(${__OUT_FEATUREBASETMP} "${__FEATUREFILETMP}" PARENT_SCOPE)
 	set(${__OUT_REUSE_EXISTING} 0 PARENT_SCOPE)
+	_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} INSTALL_PATH "${__INSTALL_DIR}" FORCE)
+endfunction()
+
+#Function returns name based on version string of the external dependencies
+function(_name_external_project __COMPONENTS __BASE_NAME __OUT_NAME)
+	string(TOLOWER ${__BASE_NAME} __PART1)
+	list(REMOVE_DUPLICATES __COMPONENTS)
+	list(SORT __COMPONENTS)
+	set(__PART2 )
+	foreach(__COMPONENT IN LISTS __COMPONENTS)
+		string(TOLOWER "${__COMPONENT}" __COMPONENT_SMALL)
+		string(TOUPPER "${__COMPONENT}" __COMPONENT_LARGE)
+		set(__COMPONENT_PLUGIN "${SUPERBUILD_ROOT}/cmake/build_install_prefix_plugins/${__COMPONENT_SMALL}.cmake")
+		include(${__COMPONENT_PLUGIN} OPTIONAL RESULT_VARIABLE __COMPONENT_STATUS)
+		if("${__COMPONENT_STATUS}" STREQUAL "NOTFOUND")
+			set(__COMPONENT_PLUGIN "${SUPERBUILD_ROOT}/cmake/beetroot/build_install_prefix_plugins/${__COMPONENT_SMALL}.cmake")
+			include(${__COMPONENT_PLUGIN} OPTIONAL RESULT_VARIABLE __COMPONENT_STATUS)
+			if("${__COMPONENT_STATUS}" STREQUAL "NOTFOUND")
+				message(FATAL_ERROR "Component plugin ${__COMPONENT_SMALL}.cmake was not found in ${SUPERBUILD_ROOT}/cmake/build_install_prefix_plugins/${__COMPONENT_SMALL}.cmake directory. It was required by the ${__BASE_NAME} external project definition.")
+			endif()
+		endif()
+		set(__PART2 "${__PART2}-${${__COMPONENT_LARGE}_VERSION_STRING}")
+	endforeach()
+	string(TOLOWER "${__PART2}" __PART2)
+	set(${__OUT_NAME} "${__PART1}${__PART2}" PARENT_SCOPE)
 endfunction()

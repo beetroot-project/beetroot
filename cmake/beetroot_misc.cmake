@@ -1,5 +1,47 @@
+function(_find_install_dir __INSTANCE_ID __OUT_INSTALL_DIR)
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __EXTERNAL_INFO)
+	if("${__EXTERNAL_INFO}" STREQUAL "")
+	   set(${__OUT_INSTALL_DIR} "" PARENT_SCOPE)
+	endif()
+   _parse_all_external_info(__EXTERNAL_INFO __PARSED)
+   _retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH) 
+   get_filename_component(__TEMPLATE_DIR ${__TARGETS_CMAKE_PATH} DIRECTORY)
+   if(NOT __PARSED_NAME)
+      get_filename_component(__EXTERNAL_BARE_NAME ${__TEMPLATE_DIR} NAME_WE)
+   else()
+      set(__EXTERNAL_BARE_NAME "${__PARSED_NAME}")
+   endif()   	   
+   _workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}"  "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
+   set(${__OUT_INSTALL_DIR} "${__INSTALL_DIR}" PARENT_SCOPE)
+endfunction()
 
-function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID __OUT_FUNCTION_EXISTS)
+function(_make_build_version_string __INSTANCE_ID __OUT_FUNCTION_EXISTS __OUT_VERSION_STRING)
+   _find_install_dir(${__INSTANCE_ID} __INSTALL_PATH)
+	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
+
+	_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
+	
+	get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
+	set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
+
+	unset(__NO_OP)
+   set(__IN_STRING "")
+	build_version_string("${__INSTALL_PATH}" __IN_STRING)
+	
+	if(__NO_OP)
+		set(${__OUT_FUNCTION_EXISTS} 0 PARENT_SCOPE)
+	   set(${__OUT_VERSION_STRING} "" PARENT_SCOPE)
+	else()
+	   if("${__IN_STRING}" STREQUAL "")
+	      _get_relative_path("${__TARGETS_CMAKE_PATH}" __NICE_PATH)
+	      message(FATAL_ERROR "Beetroot error: function build_version_string(OUT_STRING INSTALL_PATH) defined in ${__NICE_PATH} did not return string. Possible cause: did you put the version string in the parent's scope? Make sure the function ends with `set(${OUT_STRING} \"${MY_VERSION_STRING}\" PARENT_SCOPE)` where `OUT_STRING` is the name of the first function argument and MY_VERSION_STRING is the name of the variable where the version string is put.")
+	   endif()
+	   set(${__OUT_VERSION_STRING} "${__IN_STRING}" PARENT_SCOPE)
+		set(${__OUT_FUNCTION_EXISTS} 1 PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID __INSTALL_DIR __OUT_FUNCTION_EXISTS)
 #	message(STATUS "_invoke_apply_dependency_to_target() __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID}")
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH)
 	_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
@@ -38,7 +80,6 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __DEP_ID_LIST)
-	_retrieve_instance_data(${__INSTANCE_ID} INSTALL_PATH __INSTALL_PATH)
 	_insert_names_from_dependencies("${__DEP_ID_LIST}" __ARGS)
 
 	get_filename_component(__TEMPLATE_DIR "${__TARGETS_CMAKE_PATH}" DIRECTORY)
@@ -54,9 +95,9 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 #	apply_to_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 #	take_dependency_from_target(${__DEPENDEE_INSTANCE_ID} ${__INSTANCE_NAME})
 
- 
 
-	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME} "${__INSTALL_PATH}")
+
+	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME})
 
 #	message(STATUS "_invoke_apply_dependency_to_target(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID} __NO_OP: ${__NO_OP}")
 	if(__NO_OP)
