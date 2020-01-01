@@ -14,6 +14,8 @@ set(DEFINE_EXTERNAL_PROJECT
 	SOURCE_PATH "${SUPERBUILD_ROOT}/cmake-tests/external_projects/lib1"
 )
 
+set(FILE_OPTIONS DONT_LINK_TO_DEPENDEE)
+
 function(apply_dependency_to_target DEPENDEE WE INSTALL_PATH)
    include("${INSTALL_PATH}/cmake/_EXTERNAL_LIB1-targets.cmake")
    target_link_libraries(${DEPENDEE} PRIVATE ${WE})

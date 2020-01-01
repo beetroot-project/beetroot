@@ -195,10 +195,10 @@ function(_external_prepare_feature_file __FILENAME __FEATUREBASE_ID __EXTERNAL_I
 	file(WRITE "${__FILENAME}" "set(__${__EXTERNAL_ID}_SERIALIZED_MODIFIERS__LIST ${${__MODIFIERS__REF}__LIST})\n")
 #	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_MODIFIERS_HASH ${__FEATUREBASE_ID})\n")
 	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_SERIALIZED_FEATURES__LIST ${${__FEATURES__REF}__LIST})\n")
-	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_INSTALL_DIR ${__INSTALL_DIR})\n")
-	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_BUILD_DIR ${__INSTALL_DIR})\n")
+	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_INSTALL_DIR \"${__INSTALL_DIR}\")\n")
+	file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_BUILD_DIR \"${__INSTALL_DIR}\")\n")
 	if(NOT "${__EXTERNAL_ID_SOURCE}" STREQUAL "")
-		file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_HASH_SOURCE ${__EXTERNAL_ID_SOURCE})\n")
+		file(APPEND "${__FILENAME}" "set(__${__EXTERNAL_ID}_HASH_SOURCE \"${__EXTERNAL_ID_SOURCE}\")\n")
 	endif()
 	file(APPEND "${__FILENAME}" "list(APPEND __${__FEATUREBASE_ID}__LIST ${__EXTERNAL_ID})\n")
 endfunction()
@@ -247,9 +247,12 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
+#	message(WARNING "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME}")
 	_name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
+#	message(STATUS "_name_external_project(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 #	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
+#	message(STATUS "_name_external_project(): INSTALL_STEM: ${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}")
 	
 	# Generate hash of the external project based on the required modifiers and features
 	_make_external_project_id(${__INSTANCE_ID} __EXTERNAL_ID __EXTERNAL_ID_SOURCE)
@@ -288,6 +291,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 				if("${__OUT_RELATION}" STREQUAL "0" OR "${__OUT_RELATION}" STREQUAL "2") # If installed project
 				# is compatible, then use it and exit this function
 					set(${__OUT_INSTALL_DIR} "${__${__INSTALLED_EXTERNAL}_INSTALL_DIR}" PARENT_SCOPE)
+         		message(STATUS "_workout_install_dir_for_external(): EXISTING __INSTANCE_ID: ${__INSTANCE_ID} ${__${__INSTALLED_EXTERNAL}_INSTALL_DIR}")
 					set(${__OUT_FEATUREBASETMP} "" PARENT_SCOPE)
 					set(${__OUT_FEATURES} "${__${__INSTALLED_EXTERNAL}_SERIALIZED_FEATURES__LIST}" PARENT_SCOPE)
 					set(${__OUT_REUSE_EXISTING} 1 PARENT_SCOPE)
@@ -299,7 +303,8 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 		# We could not find an existing project so we set the install dir ourselves - we append __EXTERNAL_ID to the installation 
 		# directory the same way as we did for __BUILD_DIR
 		set(__INSTALL_DIR "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
-#		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
+		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
+		message(STATUS "_workout_install_dir_for_external(): BEETROOT_EXTERNAL_INSTALL_DIR: ${BEETROOT_EXTERNAL_INSTALL_DIR}, __EXTERNAL_NAME: ${__EXTERNAL_NAME}  __EXTERNAL_ID: ${__EXTERNAL_ID}")
 	endif()
 	
 	#Prepare the feature file, so other calls to the external project could find us
@@ -323,6 +328,7 @@ function(_name_external_project __COMPONENTS __BASE_NAME __OUT_NAME)
 	list(SORT __COMPONENTS)
 	set(__PART2 )
 	foreach(__COMPONENT IN LISTS __COMPONENTS)
+	   message(STATUS "_name_external_project(): __COMPONENT: ${__COMPONENT}")
 		string(TOLOWER "${__COMPONENT}" __COMPONENT_SMALL)
 		string(TOUPPER "${__COMPONENT}" __COMPONENT_LARGE)
 		set(__COMPONENT_PLUGIN "${SUPERBUILD_ROOT}/cmake/build_install_prefix_plugins/${__COMPONENT_SMALL}.cmake")

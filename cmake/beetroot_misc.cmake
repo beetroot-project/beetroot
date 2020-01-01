@@ -97,7 +97,7 @@ function(_invoke_apply_dependency_to_target __DEPENDEE_INSTANCE_ID __INSTANCE_ID
 
 
 
-	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME})
+	apply_dependency_to_target("${__DEP_INSTANCE_NAME}" ${__INSTANCE_NAME} "${__INSTALL_DIR}")
 
 #	message(STATUS "_invoke_apply_dependency_to_target(): __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH} __DEPENDEE_INSTANCE_ID: ${__DEPENDEE_INSTANCE_ID} __INSTANCE_ID: ${__INSTANCE_ID} __NO_OP: ${__NO_OP}")
 	if(__NO_OP)
