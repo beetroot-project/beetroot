@@ -1,7 +1,7 @@
 set(ENUM_TEMPLATES LIB1_CLIENT)
 
 function(declare_dependencies TEMPLATE_NAME)
-   build_target(_external_lib1)
+   build_target(_external_lib1 EXTRA_FUN)
 endfunction()
 
 function(generate_targets TARGET_NAME TEMPLATE_NAME)

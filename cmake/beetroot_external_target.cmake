@@ -54,18 +54,8 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	endif()
 	
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH) 
-	get_filename_component(__TEMPLATE_DIR ${__TARGETS_CMAKE_PATH} DIRECTORY)
-	if(NOT __PARSED_NAME)
-		get_filename_component(__EXTERNAL_BARE_NAME ${__TEMPLATE_DIR} NAME_WE)
-	else()
-		set(__EXTERNAL_BARE_NAME "${__PARSED_NAME}")
-	endif()
-	
-	if(__PARSED_INSTALL_PATH)
-		get_filename_component(__OVERRIDE_INSTALL_DIR "${__PARSED_INSTALL_PATH}" REALPATH BASE_DIR "${SUPERBUILD_ROOT}")
-	endif()
-	
-	_workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}"  "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
+		
+	_workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
 #	message(STATUS "_get_target_external(): __BUILD_DIR: ${__BUILD_DIR} __FEATUREFILETMP: ${__FEATUREFILETMP} __INSTALL_DIR: ${__INSTALL_DIR} __INSTALL_DIR_STEM: ${__INSTALL_DIR_STEM}")
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 
@@ -80,7 +70,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 		_retrieve_file_data(${__PATH_HASH} INSTALL_DIR __TMP_INSTALL_DIR)
 		if(NOT "${__TMP_INSTALL_DIR}" STREQUAL "" )
 			if(NOT "${__TMP_INSTALL_DIR}" STREQUAL "${__INSTALL_DIR}")
-				message(FATAL_ERROR "Hash of the installation path of the external project ${__EXTERNAL_BARE_NAME} has changed from old ${__TMP_INSTALL_DIR} to ${__INSTALL_DIR}. This may be likely because you may have changed the set of parameters of this external project. If that is the case, simply remove path ${__INSTALL_DIR} and ${__BUILD_DIR}.")
+				message(FATAL_ERROR "Hash of the installation path of the external project has changed from old ${__TMP_INSTALL_DIR} to ${__INSTALL_DIR}. This may be likely because you may have changed the set of parameters of this external project. If that is the case, simply remove path ${__INSTALL_DIR} and ${__BUILD_DIR}.")
 			endif()
 		endif()
 		_set_property_to_db(FILEDB ${__PATH_HASH} INSTALL_DIR ${__INSTALL_DIR})
@@ -236,8 +226,11 @@ endmacro()
 
 #Function makes a path to the install directory for the external project based on its modifiers, features and a list
 #of already installed versions, to avoid building project when a compatible version may already be installed
-function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_DEPENDS_ON __EXTERNAL_BARE_NAME __OVERRIDE_INSTALL_DIR __OUT_INSTALL_STEM __OUT_INSTALL_DIR __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
+function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR __OUT_INSTALL_STEM __OUT_INSTALL_DIR __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
 
+	if(__OVERRIDE_INSTALL_DIR)
+		get_filename_component(__OVERRIDE_INSTALL_DIR "${__OVERRIDE_INSTALL_DIR}" REALPATH BASE_DIR "${SUPERBUILD_ROOT}")
+	endif()
 	_retrieve_instance_data(${__INSTANCE_ID} MODIFIERS __SERIALIZED_MODIFIERS__LIST)
 	set(${__OUT_MODIFIERS} "${__SERIALIZED_MODIFIERS__LIST}" PARENT_SCOPE)
 
@@ -248,7 +241,7 @@ function(_workout_install_dir_for_external __INSTANCE_ID __WHAT_COMPONENTS_NAME_
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 #	message(WARNING "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME}")
-	_name_external_project("${__WHAT_COMPONENTS_NAME_DEPENDS_ON}" "${__EXTERNAL_BARE_NAME}" __EXTERNAL_NAME)
+	_name_external_project(${__INSTANCE_ID} __SIMPLE_NAME __EXTERNAL_NAME)
 #	message(STATUS "_name_external_project(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 #	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
@@ -345,3 +338,55 @@ function(_name_external_project __COMPONENTS __BASE_NAME __OUT_NAME)
 	string(TOLOWER "${__PART2}" __PART2)
 	set(${__OUT_NAME} "${__PART1}${__PART2}" PARENT_SCOPE)
 endfunction()
+
+#Function returns name based on version string of the external dependencies
+function(_name_external_project __INSTANCE_ID __OUT_WHOLE_NAME __OUT_SIMPLE_NAME)
+   _find_base_name(${__INSTANCE_ID} __BASE_NAME)
+	_retrieve_instance_data(${__INSTANCE_ID} I_CHILDREN __DEPENDENCIES)
+   
+   if("${__BASE_NAME}" IN_LIST __ALL_DEPENDENCIES)
+      nice_list_output(LIST __ALL_DEPENDENCIES OUTVAR __NICE_LIST)
+      message(FATAL_ERROR "Beetroot error: Circular dependencies encountered among external projects: ${__NICE_LIST}")
+   endif()
+   list(APPEND __ALL_DEPENDENCIES ${__BASE_NAME}) #To make sure there are no circular dependencies
+   
+   set(__EXTERNAL_DEPENDENCIES "")
+   foreach(__I_DEPENDENCY IN LISTS __DEPENDENCIES)
+   	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __DEP_EXTERNAL_INFO)
+   	if(NOT "${__DEP_EXTERNAL_INFO}" STREQUAL "")
+   	   #__I_DEPENDENCY is external dependency. We need to prefix us with it.
+         _name_external_project(${__I_DEPENDENCY} __WHOLE_NAME __DEP_BASE_NAME)
+         list(APPEND __EXTERNAL_DEPENDENCIES ${__DEP_BASE_NAME})
+   	endif()
+   endforeach()
+   
+   
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
+	if("${__FEATUREBASE_ID}" STREQUAL "")
+	   message(FATAL_ERROR "External dependency ${__INSTANCE_ID} is a promise!")
+   endif()
+   _find_base_name(${__INSTANCE_ID} __BASE_NAME)
+   _make_build_version_string(${__INSTANCE_ID} __VERSION_EXISTS __VERSION_STRING)
+   if(NOT __VERSION_EXISTS)
+      _get_nice_instance_name(${__INSTANCE_ID} __NICE_INSTANCE_NAME)
+      message(FATAL_ERROR "Beetroot error: file defining external target ${__NICE_INSTANCE_NAME} does not define its build_version_string() function. Each external dependency should define that in order to avoid stale versions when updating.")
+   endif()
+   set(__BASE_NAME ${__BASE_NAME}_${__FEATUREBASE_ID})
+   if(NOT "${__VERSION_STRING}" STREQUAL "")
+      set(__BASE_NAME "${__PART1}_${__VERSION_STRING}")
+   endif()
+   set(${__OUT_SIMPLE_NAME} "${__BASE_NAME}" PARENT_SCOPE)
+   
+   if("${__EXTERNAL_DEPENDENCIES}" STREQUAL "")
+      set(${__OUT_WHOLE_NAME} "${__BASE_NAME}" PARENT_SCOPE)
+   else()
+      list(SORT __EXTERNAL_DEPENDENCIES)
+      set(__PART2 "")      
+	   foreach(__COMPONENT IN LISTS __EXTERNAL_DEPENDENCIES)
+	      message(STATUS "_name_external_project(): __COMPONENT: ${__COMPONENT}")
+		   set(__PART2 "${__PART2}-${__COMPONENT}")
+	   endforeach()
+      set(${__OUT_WHOLE_NAME} "${__BASE_NAME}-${__PART2}" PARENT_SCOPE)
+   endif()
+endfunction()
+
