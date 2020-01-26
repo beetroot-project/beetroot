@@ -10,9 +10,13 @@ set(BUILD_FEATURES
 )
 
 set(DEFINE_EXTERNAL_PROJECT 
-	NAME "External lib1"
+#	NAME "External lib1"
 	SOURCE_PATH "${SUPERBUILD_ROOT}/cmake-tests/external_projects/lib1"
 )
+
+function(build_version_string OUT_STRING)
+   set(${OUT_STRING} "1.0" PARENT_SCOPE)
+endfunction()
 
 set(FILE_OPTIONS DONT_LINK_TO_DEPENDEE)
 

@@ -356,6 +356,7 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		return()
 	endif()
 	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
+	_retrieve_instance_data(${__INSTANCE_ID} INSTALL_PATH __INSTALL_PATH)
 	_retrieve_instance_data(${__INSTANCE_ID} GENERATE_TARGETS_INCLUDE_LINKPARS __GENERATE_TARGETS_INCLUDE_LINKPARS)
 	
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
@@ -435,8 +436,13 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 
 #	message(STATUS "${__PADDING}_get_target_internal() Going to call generate targets for ${__TEMPLATE_NAME} from ${__TARGETS_CMAKE_PATH} ${__INSTANCE_NAME} with instance name set as «${__INSTANCE_NAME}» ")
 	set(__NO_OP 0)
+	
+	if("${__TEMPLATE_NAME}" STREQUAL "")
+	   message(FATAL_ERROR "Assert error: TEMPLATE_NAME is empty")
+	endif()
+	
 
-	generate_targets(${__INSTANCE_NAME} ${__TEMPLATE_NAME})
+	generate_targets("${__INSTANCE_NAME}" "${__TEMPLATE_NAME}" "${__INSTALL_PATH}")
 	
 	_retrieve_instance_data(${__INSTANCE_ID} NO_TARGETS __NO_TARGETS )
 #	message(STATUS "${__PADDING}_get_target_internal(): __INSTANCE_ID: ${__INSTANCE_ID} __NO_TARGETS: ${__NO_TARGETS}")

@@ -148,7 +148,7 @@ function(_read_targets_file __TARGETS_CMAKE_PATH __SKIP_RECURRENCE __OUT_READ_PR
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined, only the default version was used
 #		message(STATUS "default apply_to_target(): calling with INSTANCE_NAME: ${INSTANCE_NAME} and DEP_INSTANCE_NAME: ${DEP_INSTANCE_NAME}")
 	endfunction()
-	function(build_version_string INSTALL_DIR IN_STRING)
+	function(build_version_string IN_STRING)
 		set(__NO_OP 1 PARENT_SCOPE) #To signal the caller, that the function in fact was not defined
 	endfunction()
 	set(LINK_PARAMETERS)

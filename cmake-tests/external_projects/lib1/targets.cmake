@@ -8,6 +8,10 @@ set(BUILD_FEATURES
    EXTRA_FUN   OPTION BOOL 0
 )
 
+#function(build_version_string OUT_STRING)
+#   
+#endfunction()
+
 function(declare_dependencies TEMPLATE_NAME)
 
 endfunction()
