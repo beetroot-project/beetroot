@@ -91,7 +91,7 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			
 			
 			_retrieve_instance_data(${__INSTANCE_ID} F_FEATURES __SERIALIZED_FEATURES)
-			message(STATUS "_get_target_external(): 1 __INSTANCE_NAME: ${__INSTANCE_NAME} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
+#			message(STATUS "_get_target_external(): 1 __INSTANCE_NAME: ${__INSTANCE_NAME} __FEATUREBASE_ID: ${__FEATUREBASE_ID} __SERIALIZED_FEATURES: ${__SERIALIZED_FEATURES}")
 			set(__ARGS__LIST_FEATURES "${__ARGS__LIST}")
 			_retrieve_instance_args(${__INSTANCE_ID} MODIFIERS __ARGS)
 			set(__ARGS__LIST_MODIFIERS "${__ARGS__LIST}")
@@ -243,7 +243,8 @@ function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR 
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 #	message(WARNING "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME}")
-	_name_external_project(${__INSTANCE_ID} __SIMPLE_NAME __EXTERNAL_NAME)
+	_name_external_project(${__INSTANCE_ID} __EXTERNAL_NAME)
+#	message("__EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 #	message(STATUS "_name_external_project(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 #	message(STATUS "_workout_install_dir_for_external(): entry for __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON} __EXTERNAL_NAME: ${__EXTERNAL_NAME}")
 	set(${__OUT_INSTALL_STEM} "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}" PARENT_SCOPE)
@@ -298,8 +299,8 @@ function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR 
 		# We could not find an existing project so we set the install dir ourselves - we append __EXTERNAL_ID to the installation 
 		# directory the same way as we did for __BUILD_DIR
 		set(__INSTALL_DIR "${BEETROOT_EXTERNAL_INSTALL_DIR}/${__EXTERNAL_NAME}/${__EXTERNAL_ID}")
-		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
-		message(STATUS "_workout_install_dir_for_external(): BEETROOT_EXTERNAL_INSTALL_DIR: ${BEETROOT_EXTERNAL_INSTALL_DIR}, __EXTERNAL_NAME: ${__EXTERNAL_NAME}  __EXTERNAL_ID: ${__EXTERNAL_ID}")
+#		message(STATUS "_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __INSTALL_DIR: ${__INSTALL_DIR}")
+#		message(STATUS "_workout_install_dir_for_external(): BEETROOT_EXTERNAL_INSTALL_DIR: ${BEETROOT_EXTERNAL_INSTALL_DIR}, __EXTERNAL_NAME: ${__EXTERNAL_NAME}  __EXTERNAL_ID: ${__EXTERNAL_ID}")
 	endif()
 	
 	#Prepare the feature file, so other calls to the external project could find us
@@ -348,10 +349,10 @@ function(_name_external_project __INSTANCE_ID __OUT_NAME)
    
    list(SORT __TMP_DEP)
    set(__OUT ${__TMP_WHOLE_NAME})
-   foreach(__DEP_STR IN_LISTS(__TMP_DEP))
+   foreach(__DEP_STR IN_LISTS("${__TMP_DEP}"))
       set(__OUT "${__OUT}-${__DEP_STR}")
    endforeach()
-   set(__OUT "${__TMP_WHOLE_NAME}" PARENT_SCOPE)
+   set(${__OUT_NAME} "${__TMP_WHOLE_NAME}" PARENT_SCOPE)
 endfunction()
 
 #Function returns name based on version string of the external dependencies.
@@ -392,10 +393,11 @@ function(_name_external_project_int __INSTANCE_ID __OUT_WHOLE_NAME __OUT_DEPENDE
       _get_nice_instance_name(${__INSTANCE_ID} __NICE_INSTANCE_NAME)
       message(FATAL_ERROR "Beetroot error: file defining external ${__NICE_INSTANCE_NAME} does not define its build_version_string() function. Each external dependency should define that in order to avoid stale versions when updating.")
    endif()
-   set(__BASE_NAME ${__BASE_NAME}_${__FEATUREBASE_ID})
+#   set(__BASE_NAME "${__BASE_NAME}_${__FEATUREBASE_ID}")
+
    if(NOT "${__VERSION_STRING}" STREQUAL "")
-      set(__BASE_NAME "${__PART1}_${__VERSION_STRING}")
+      set(__BASE_NAME "${__BASE_NAME}_${__VERSION_STRING}")
    endif()
-   set(${__OUT_SIMPLE_NAME} "${__BASE_NAME}" PARENT_SCOPE)
+   set(${__OUT_WHOLE_NAME} "${__BASE_NAME}" PARENT_SCOPE)
 endfunction()
 
