@@ -24,10 +24,6 @@ endfunction()
 # The function gets called only when there is EXTERNAL_PROJECT_INFO during the superbuild phase.
 # On superbuild phase it calls ExternalProject_Add, otherwise makes sure there is `apply_dependency_to_target` user function to call.
 
-#2. Jeśli etap SUPERBUILD - Wywołuje `ExternalProject_Add` dla nazwy targetu policzonej na `var_dictionary` i zwraca tą nazwę targetu w `out_instance_name`
-#3. Jeśli etap naszego projektu - wywołuje `find_packages`, tworzy alias dla importowanego targetu i zwraca nazwę `INSTANCE_NAME`.
-
-# Pass empty __HASH if the external project does not support multiple instances (because the targets names are fixed)
 # __DEP_TARGETS contains a list of other external projects this project depends on
 function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 #	message(STATUS "_get_target_external(): first entry __INSTANCE_ID: ${__INSTANCE_ID}, because it depends on ${__DEP_TARGETS}")
@@ -193,7 +189,7 @@ function(_external_prepare_feature_file __FILENAME __FEATUREBASE_ID __EXTERNAL_I
 	file(APPEND "${__FILENAME}" "list(APPEND __${__FEATUREBASE_ID}__LIST ${__EXTERNAL_ID})\n")
 endfunction()
 
-# loads all installed version of the external dependency with the given prefix __INSTALL_DIR_STEM.
+# loads all installed versions of the external dependency with the given prefix __INSTALL_DIR_STEM.
 # After invoking this macro, a new elements will be added to lists __<featurebase_id>__LIST for each
 # found installed version of the external dependency that contain its EXTERNAL_ID.
 # User then can query the features of that dependency by inspecting __<EXTERNAL_ID>_[SERIALIZED_FEATURES__LIST; SERIALIZED_MODIFIERS__LIST; INSTALL_DIR; BUILD_DIR; HASH_SOURCE]
