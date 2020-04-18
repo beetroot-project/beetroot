@@ -1,4 +1,4 @@
-set(ENUM_TARGETS MPI::MPI_FORTRAN MPI::MPI_CXX)
+set(ENUM_TARGETS OpenMP::OpenMP_FORTRAN OpenMP::OpenMP_CXX)
 
 set(FILE_OPTIONS
 	NICE_NAME "MPI library"
@@ -6,8 +6,12 @@ set(FILE_OPTIONS
 
 set(DEFINE_EXTERNAL_PROJECT 
 	ASSUME_INSTALLED
-	NAME MPI
+	NAME OpenMP
 	APT_PACKAGES mpi-default-dev
 	SPACK_PACKAGES openmpi
 )
+
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
+   find_package(${EP_NAME}) 
+endfunction()
 

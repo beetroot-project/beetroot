@@ -356,7 +356,23 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 		return()
 	endif()
 	_retrieve_instance_data(${__INSTANCE_ID} I_TEMPLATE_NAME __TEMPLATE_NAME)
-	_retrieve_instance_data(${__INSTANCE_ID} INSTALL_PATH __INSTALL_PATH)
+
+	_retrieve_instance_data(${__INSTANCE_ID} EXTERNAL_INFO __HAS_EXTERNAL_PROJECT__LIST)
+	if("${__HAS_EXTERNAL_PROJECT__LIST}" STREQUAL "")
+	   set(__HAS_EXTERNAL_PROJECT 0)
+	   set(__INSTALL_DIR "")
+	else()
+#	   message(STATUS "${__PADDING}_get_target_internal(): __HAS_EXTERNAL_PROJECT__LIST: ${__HAS_EXTERNAL_PROJECT__LIST}")
+   	_parse_all_external_info(__HAS_EXTERNAL_PROJECT __PARSED)
+#	   message(STATUS "${__PADDING}_get_target_internal(): __PARSED_NAME: ${__PARSED_NAME}")
+	   set(__HAS_EXTERNAL_PROJECT 1)
+      _workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
+      _parse_all_external_info(__HAS_EXTERNAL_PROJECT "EP")
+#	   message(STATUS "${__PADDING}_get_target_internal(): __HAS_EXTERNAL_PROJECT__LIST: ${__HAS_EXTERNAL_PROJECT__LIST}")
+#	   message(STATUS "${__PADDING}_get_target_internal(): EP_NAME: ${EP_NAME}")
+	endif()
+
+	
 	_retrieve_instance_data(${__INSTANCE_ID} GENERATE_TARGETS_INCLUDE_LINKPARS __GENERATE_TARGETS_INCLUDE_LINKPARS)
 	
 	_make_instance_name(${__INSTANCE_ID} __INSTANCE_NAME)
@@ -441,8 +457,8 @@ function(_get_target_internal __INSTANCE_ID __OUT_FUNCTION_EXISTS)
 	   message(FATAL_ERROR "Assert error: TEMPLATE_NAME is empty")
 	endif()
 	
-
-	generate_targets("${__INSTANCE_NAME}" "${__TEMPLATE_NAME}" "${__INSTALL_PATH}")
+#   message(STATUS "${__PADDING}_get_target_internal(): 2 EP_NAME: ${EP_NAME}")
+	generate_targets("${__INSTANCE_NAME}" "${__TEMPLATE_NAME}" "${__INSTALL_DIR}")
 	
 	_retrieve_instance_data(${__INSTANCE_ID} NO_TARGETS __NO_TARGETS )
 #	message(STATUS "${__PADDING}_get_target_internal(): __INSTANCE_ID: ${__INSTANCE_ID} __NO_TARGETS: ${__NO_TARGETS}")

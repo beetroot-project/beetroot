@@ -25,3 +25,7 @@ set(DEFINE_EXTERNAL_PROJECT
 	SPACK_PACKAGES "${SPACK}"
 )
 
+function(build_version_string OUT_STRING)
+   find_package(Python COMPONENTS Interpreter)
+   set(${OUT_STRING} "${Python_VERSION}" PARENT_SCOPE)
+endfunction()

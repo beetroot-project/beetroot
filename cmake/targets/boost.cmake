@@ -11,6 +11,7 @@ set(ENUM_TARGETS Boost::boost Boost::filesystem Boost::system Boost::log Boost::
 
 set(FILE_OPTIONS
 	NICE_NAME "Boost libraries version ${BOOST_VERSION}"
+   LINK_TO_DEPENDEE
 )
 
 set(DEFINE_EXTERNAL_PROJECT 
@@ -28,3 +29,17 @@ function(apply_dependency_to_target DEPENDEE_TARGET_NAME TARGET_NAME)
 	target_compile_definitions(${DEPENDEE_TARGET_NAME} ${KEYWORD} "BOOST_MPL_LIMIT_VECTOR_SIZE=${FUSION_MAX_VECTOR_SIZE}")
 endfunction()
 
+function(generate_targets TARGET_NAME TEMPLATE_NAME)
+#   message(FATAL_ERROR "find_package(${EP_NAME} REQUIRED COMPONENTS ${EP_COMPONENTS})")
+   
+   find_package(${EP_NAME} 
+   REQUIRED
+   COMPONENTS ${EP_COMPONENTS}
+   ) # EP_NAME=Boost, EP_COMPONENTS=filesystem;system;log;date_time;thread;chrono;atomic;program_options
+
+endfunction()
+
+function(build_version_string OUT_STRING)
+   find_package(Boost COMPONENTS "${_COMPONENTS}")
+   set(${OUT_STRING} "${Boost_LIB_VERSION}" PARENT_SCOPE)
+endfunction()
