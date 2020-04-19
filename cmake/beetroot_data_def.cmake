@@ -63,6 +63,7 @@
 # __FILEDB_<PATH_HASH>_PARS                - Serialized list of all parameters' definitions. 
 # __FILEDB_<PATH_HASH>_DEFAULTS            - Serialized list of all parameters' actual default values.
 # __FILEDB_<PATH_HASH>_EXTERNAL_INFO       - Serialized external project info
+# __FILEDB_<PATH_HASH>_BUILD_VERSION       - Cached result of calling build_version_string() user function
 # __FILEDB_<PATH_HASH>_TARGETS_REQUIRED    - True means that we require this instance to generate a CMake target
 # __FILEDB_<PATH_HASH>_LANGUAGES           - List of the languages required
 # __FILEDB_<PATH_HASH>_ASSUME_INSTALLED    - Option relevant only if file describes external project. If true, it will be assumed that the project is already built
@@ -141,6 +142,7 @@ macro(_get_db_columns __COLS)
 	set(${__COLS}_PARS                                            FILEDB )
 	set(${__COLS}_DEFAULTS                                        FILEDB )
 	set(${__COLS}_EXTERNAL_INFO                                   FILEDB )
+	set(${__COLS}_BUILD_VERSION                                   FILEDB )
 	set(${__COLS}_TARGETS_REQUIRED                                FILEDB )
 	set(${__COLS}_LANGUAGES                                       FILEDB )
 	set(${__COLS}_ASSUME_INSTALLED                                FILEDB )

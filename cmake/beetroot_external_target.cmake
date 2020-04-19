@@ -54,7 +54,10 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 	
 	_retrieve_instance_data(${__INSTANCE_ID} PATH __TARGETS_CMAKE_PATH) 
 		
-	_workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
+	_workout_install_dir_for_external(${__INSTANCE_ID} "${__PARSED_INSTALL_PATH}" __INSTALL_DIR __INSTALL_DIR_STEM __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
+	if("${__INSTALL_DIR_STEM}" STREQUAL "")
+	   message(FATAL_ERROR "We need to cache those data")
+	endif()
 #	message(STATUS "_get_target_external(): __BUILD_DIR: ${__BUILD_DIR} __FEATUREFILETMP: ${__FEATUREFILETMP} __INSTALL_DIR: ${__INSTALL_DIR} __INSTALL_DIR_STEM: ${__INSTALL_DIR_STEM}")
 	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 
@@ -225,8 +228,17 @@ endmacro()
 
 #Function makes a path to the install directory for the external project based on its modifiers, features and a list
 #of already installed versions, to avoid building project when a compatible version may already be installed
-function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR __OUT_INSTALL_STEM __OUT_INSTALL_DIR __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
-
+function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR __OUT_INSTALL_DIR __OUT_INSTALL_STEM __OUT_BUILD_DIR __OUT_FEATUREBASETMP __OUT_FEATURES __OUT_MODIFIERS __OUT_EXTERNAL_ID __OUT_REUSE_EXISTING)
+	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
+   _retrieve_featurebase_data(${__FEATUREBASE_ID} INSTALL_PATH __INSTALL_DIR)
+   if(NOT "${__INSTALL_DIR}" STREQUAL "")
+      set(${__OUT_INSTALL_DIR} "${__INSTALL_DIR}" PARENT_SCOPE)
+      set(${__OUT_INSTALL_STEM} "" PARENT_SCOPE)
+#	   set(${__OUT_FEATUREBASETMP} "${__FEATUREFILETMP}" PARENT_SCOPE)
+#	   set(${__OUT_REUSE_EXISTING} 0 PARENT_SCOPE)
+#	   _set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} INSTALL_PATH "${__INSTALL_DIR}" FORCE)      
+	   return()
+   endif()
 #   message(WARNING "${__PADDING}_workout_install_dir_for_external for ${__INSTANCE_ID}")
 
 	if(__OVERRIDE_INSTALL_DIR)
@@ -238,7 +250,6 @@ function(_workout_install_dir_for_external __INSTANCE_ID __OVERRIDE_INSTALL_DIR 
 	# Get the stem of the installation dir - a folder with all the system-dependend prefixes that
 	#   define the version of all the manually typed dependencies
 	_retrieve_instance_data(${__INSTANCE_ID} F_PATH __TARGETS_CMAKE_PATH)
-	_retrieve_instance_data(${__INSTANCE_ID} FEATUREBASE __FEATUREBASE_ID)
 	_make_path_hash(${__TARGETS_CMAKE_PATH} __PATH_HASH) 
 #	message(STATUS "${__PADDING}_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __WHAT_COMPONENTS_NAME_DEPENDS_ON: ${__WHAT_COMPONENTS_NAME_DEPENDS_ON}")
 #	message(WARNING "${__PADDING}_workout_install_dir_for_external(): __INSTANCE_ID: ${__INSTANCE_ID} __EXTERNAL_BARE_NAME: ${__EXTERNAL_BARE_NAME}")
@@ -388,7 +399,9 @@ function(_name_external_project_int __INSTANCE_ID __OUT_WHOLE_NAME __OUT_DEPENDE
    set(${__OUT_DEPENDENCIES} "${__EXTERNAL_DEPENDENCIES}" PARENT_SCOPE)
    
    _find_base_name(${__INSTANCE_ID} __BASE_NAME)
-   _make_build_version_string(${__INSTANCE_ID} __VERSION_EXISTS __VERSION_STRING)
+   _retrieve_instance_data(${__INSTANCE_ID} T_PATH __TARGETS_CMAKE_PATH)
+   _make_path_hash("${__TARGETS_CMAKE_PATH}" __FILE_HASH)
+   _make_build_version_string(${__FILE_HASH} __VERSION_EXISTS __VERSION_STRING)
    if(NOT __VERSION_EXISTS)
       _get_nice_instance_name(${__INSTANCE_ID} __NICE_INSTANCE_NAME)
       message(FATAL_ERROR "Beetroot error: file defining external ${__NICE_INSTANCE_NAME} does not define its build_version_string() function. Each external dependency should define that in order to avoid stale versions when updating.")

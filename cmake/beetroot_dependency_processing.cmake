@@ -291,11 +291,10 @@ function(_link_to_target __DEPENDEE_INSTANCE_ID __OUR_INSTANCE_ID __OUT_FUNCTION
    	   set(__INSTALL_DIR "")
    	else()
 #   	   message(STATUS "${__PADDING}_link_to_target(): __HAS_EXTERNAL_PROJECT__LIST: ${__HAS_EXTERNAL_PROJECT__LIST}")
-	   	_parse_all_external_info(__HAS_EXTERNAL_PROJECT __PARSED)
+         _parse_all_external_info(__HAS_EXTERNAL_PROJECT "EP")
  #  	   message(STATUS "${__PADDING}_link_to_target(): __PARSED_NAME: ${__PARSED_NAME}")
    	   set(__HAS_EXTERNAL_PROJECT 1)
-	      _workout_install_dir_for_external(${__OUR_INSTANCE_ID} "${__PARSED_INSTALL_PATH}" __INSTALL_DIR_STEM __INSTALL_DIR __BUILD_DIR __FEATUREFILETMP __FEATURES __MODIFIERS __EXTERNAL_ID __REUSED_EXISTING)
-         _parse_all_external_info(__HAS_EXTERNAL_PROJECT "EP")
+	      _workout_install_dir_for_external(${__OUR_INSTANCE_ID} "${EP_INSTALL_PATH}" __INSTALL_DIR "__1" "__2" "__3" "__4" "__5" "__6" "__7")
    	endif()
 #	   message(STATUS "${__PADDING}_link_to_target(): __INSTALL_DIR: ${__INSTALL_DIR}")
 
