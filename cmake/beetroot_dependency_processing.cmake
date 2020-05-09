@@ -79,6 +79,8 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	# is the featurebase has not yet been defined, so it is the first context in which this instance is encountered.
 	# In that case we must a do much more work, since featurebase contains all the information except how to link
 	
+	_make_path_hash("${__TARGETS_CMAKE_PATH}" __FILE_HASH)
+	
 #	if(__FEATUREBASE_ID)
 #		message(STATUS "${__PADDING}_discover_dependencies(): __FEATUREBASE_ID: ${__FEATUREBASE_ID} for __INSTANCE_ID: ${__INSTANCE_ID}")
 #		_retrieve_instance_data(${__INSTANCE_ID} DEP_INSTANCES __FEATUREBASE_DEFINED )
@@ -103,13 +105,20 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		message(FATAL_ERROR "Cyclic dependency graph encountered. ${__OUT}")
 	endif()
 
-	_put_dependencies_into_stack("${__INSTANCE_ID}")
+   set(__FO_NAME)
+   _parse_all_file_options(${__FILE_OPTIONS__REF} __FO)
+   if(__FO_NAME)
+      set(__NAME "${__FO_NAME}")
+   else()
+      set(__NAME "${__TEMPLATE_NAME}")
+   endif()
+	_put_dependencies_into_stack("${__INSTANCE_ID}" "${__NAME}")
 	if(NOT __FEATUREBASE_ID) # i.e. this instance still does not have its featurebase
 		set(__LIST ${${__PARS}__LIST_MODIFIERS})
 		list(APPEND __LIST ${${__PARS}__LIST_FEATURES})
 		list(APPEND __LIST ${${__PARS}__LIST_LINKPARS} )
 
-		message(STATUS "${__PADDING}Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
+#		message(STATUS "${__PADDING}Discovering dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID})...")
 #		message(STATUS "${__PADDING}_discover_dependencies(): ${__ARGS}_HALO_SIZE: ${${__ARGS}_HALO_SIZE}")
 		_read_functions_from_targets_file("${__TARGETS_CMAKE_PATH}")
 #		message(WARNING "_discover_dependencies(): list of variables: ${__LIST}")
@@ -126,19 +135,35 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		
 		set(CMAKE_CURRENT_SOURCE_DIR "${__TEMPLATE_DIR}")
 		set(__PARENT_ALL_VARIABLES ${${__ARGS}__LIST}) #Used by all entry functions like build_target or get_existing_target that define our dependencies to blank all our variables before executing _their_ declare_dependencies()
+		
 
 #		message(STATUS "${__PADDING}_discover_dependencies(): __TEMPLATE_NAME ${__TEMPLATE_NAME} got __INSTANCE_ID: ${__INSTANCE_ID}. HALO_SIZE: ${HALO_SIZE}")
+   	_set_property_to_db(FILEDB     ${__FILE_HASH} FILE_OPTIONS       "${${__FILE_OPTIONS__REF}__LIST}")
+   	_set_property_to_db(FILEDB     ${__FILE_HASH} EXTERNAL_INFO      "${${__EXTERNAL_PROJECT_INFO__REF}__LIST}")
 
-
+      
+#		message(STATUS "${__PADDING}_discover_dependencies(): __FILE_HASH: ${__FILE_HASH} __TARGETS_CMAKE_PATH: ${__TARGETS_CMAKE_PATH}")
+      _populate_implicit_variables_for_file(${__FILE_HASH})
+		_get_prev_dependencies_from_stack(__DEPENDENCY_OF_CURRENTLY_PROCESSED_TARGET __NICE_NAME_OF_CURRENTLY_PROCESSED_TARGET)
+#   	message(STATUS "${__PADDING}_discover_dependencies(): __DEPENDENCY_OF_CURRENTLY_PROCESSED_TARGET: ${__DEPENDENCY_OF_CURRENTLY_PROCESSED_TARGET}")
 		declare_dependencies(${__TEMPLATE_NAME}) #May call get_target() which will call _discover_dependencies() recursively
 		
 		set_property(GLOBAL PROPERTY __BURAK_CALLEE_PATH "${__OLD_CALEE_PATH}")
 		_clear_variables(__PARENT_ALL_VARIABLES)
 		_get_dependencies_from_stack(__DEP_INSTANCE_IDS)
+		_get_value_from_stack(NICE_NAME __DEP_NICE_NAMES)
+#   	message(STATUS "${__PADDING}_discover_dependencies(): __DEP_INSTANCE_IDS: ${__DEP_INSTANCE_IDS}")
 		
 		_get_value_from_stack(NAME_HINT __TARGET_NAME_HINT)
 #   	message(STATUS "${__PADDING}_discover_dependencies(): Storing non-virtual __INSTANCE_ID: ${__INSTANCE_ID} with __TARGET_NAME_HINT: ${__TARGET_NAME_HINT}")
+      
 #		message(STATUS "${__PADDING}_discover_dependencies(): Discovered following dependencies for ${__TEMPLATE_NAME} (${__INSTANCE_ID}): ${__DEP_INSTANCE_IDS}")
+      if("${__DEP_NICE_NAMES}" STREQUAL "")
+		   message(STATUS "${__PADDING}Discovered no dependencies for ${__TEMPLATE_NAME}")
+		else()
+		   nice_list_output(OUTVAR __NICE_LIST LIST ${__DEP_NICE_NAMES})
+   		message(STATUS "${__PADDING}Discovered following dependencies for ${__TEMPLATE_NAME}: ${__NICE_LIST}")
+		endif()
 		_ascend_dependencies_stack()
 
 	endif()
@@ -157,6 +182,7 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 	# Now we know our dependencies and we can finally and properly save our instance. 
 	# (or just confirm what we know in case we were called by rediscover_dependencies)..
 	
+#	message(STATUS "${__PADDING}_discover_dependencies(): __INSTANCE_ID: ${__INSTANCE_ID} __FILE_OPTIONS__REF ${__FILE_OPTIONS__REF}__LIST ${${__FILE_OPTIONS__REF}__LIST}")
 	_store_nonvirtual_instance_data(
 		 ${__INSTANCE_ID} 
 		 ${__ARGS} 
@@ -164,10 +190,10 @@ function(_discover_dependencies __INSTANCE_ID __TEMPLATE_NAME __TARGETS_CMAKE_PA
 		 ${__TEMPLATE_NAME} 
 		"${__TARGETS_CMAKE_PATH}" 
 		 ${__IS_TARGET_FIXED}  
-		 ${__EXTERNAL_PROJECT_INFO__REF} 
+		 ${__EXTERNAL_PROJECT_INFO__REF} #This one is already stored into storage, just before calling declare_dependencies(). We may remove this argument in future
 		 ${__TARGET_REQUIRED} 
 		"${__TARGET_NAME_HINT}"
-		 ${__FILE_OPTIONS__REF} 
+		 ${__FILE_OPTIONS__REF} #This one is already stored into storage, just before calling declare_dependencies(). We may remove this argument in future
 		"${__ALL_TEMPLATE_NAMES}" __FILE_HASH __FEATUREBASE_ID)
 	
 	#... and update the link with the children (i.e. our dependencies)
@@ -301,7 +327,7 @@ function(_link_to_target __DEPENDEE_INSTANCE_ID __OUR_INSTANCE_ID __OUT_FUNCTION
 		_invoke_apply_dependency_to_target(${__DEPENDEE_INSTANCE_ID} ${__OUR_INSTANCE_ID} "${__INSTALL_DIR}" __FUNCTION_EXISTS)
 #		if(NOT __FUNCTION_EXISTS AND __HAS_EXTERNAL_PROJECT)
 #			_retrieve_instance_data(${__OUR_INSTANCE_ID} PATH __CMAKE_TARGETS_PATH)
-#			_get_nice_instance_name_with_deps(__OUR_INSTANCE_ID __NICE_INSTANCE_NAME)
+#			__PARENT_ALL_VARIABLES_get_nice_instance_name_with_deps(__OUR_INSTANCE_ID __NICE_INSTANCE_NAME)
 #			message(FATAL_ERROR "Beetroot error: External project ${${__NICE_INSTANCE_NAME}} defined in ${__CMAKE_TARGETS_PATH} does not have function apply_dependency_to_target() defined. External projects must define that function.")
 #		endif()
 #	else()

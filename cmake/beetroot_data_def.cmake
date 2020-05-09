@@ -55,7 +55,7 @@
 #
 # __FILEDB_<PATH_HASH>_PATH                - Path to the file that defines this template
 # __FILEDB_<PATH_HASH>_SINGLETON_TARGETS   - Boolean. TRUE means that all parameters to individual targets concern whole file (i.e. all the other targets). It implies TARGET_FIXED.
-# __FILEDB_<PATH_HASH>_TARGET_FIXED        - Boolean. True means that there is only on target name for this template.
+# __FILEDB_<PATH_HASH>_TARGET_FIXED        - Boolean. True means that there is only one target name for this template.
 # __FILEDB_<PATH_HASH>_NO_TARGETS          - Boolean. TRUE means that this file does not produce targets: user must define apply_to_target() and must not define generate_targets().
 # __FILEDB_<PATH_HASH>_G_INSTANCES         - List of all instance ids that are built using this file. 
 # __FILEDB_<PATH_HASH>_G_FEATUREBASES      - List of all featurebases that are built using this file. If SINGLETON_TARGETS it will be exactly one FEATUREBASE.

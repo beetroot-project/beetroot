@@ -97,6 +97,7 @@ if(NOT __BURAK_LOADED)
 	include(${__PREFIX}/set_operations.cmake)
 	include(${__PREFIX}/prepare_arguments_to_pass.cmake)
 	include(${__PREFIX}/missing_dependency.cmake)
+	include(${__PREFIX}/beetroot_missing_languages.cmake)	
 	include(${__PREFIX}/beetroot_debug.cmake)	
 	include(${__PREFIX}/beetroot_dump.cmake)	
 
