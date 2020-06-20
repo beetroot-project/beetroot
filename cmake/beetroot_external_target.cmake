@@ -108,7 +108,19 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			endif()
 			_retrieve_instance_pars(${__INSTANCE_ID} __PARS)
 			_make_cmake_args(__PARS __ARGS "${__ARGS__LIST}" __CMAKE_ARGS)
+			message(STATUS "ExternalProject_Add(\"${__INSTANCE_NAME_FIXED}\" 
+				PREFIX ${__PARSED_SOURCE_PATH}
+				${__DEP_STR}
+				SOURCE_DIR ${__PARSED_SOURCE_PATH}
+				TMP_DIR ${__BUILD_DIR}/tmp
+				STAMP_DIR ${__BUILD_DIR}/timestamps
+				DOWNLOAD_DIR ${BEETROOT_BUILD_DIR}/download
+				BINARY_DIR ${__BUILD_DIR}
+				INSTALL_DIR ${__INSTALL_DIR}
+				CMAKE_ARGS ${__CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${__INSTALL_DIR}
+			)")
 			message(STATUS "External project ${__INSTANCE_NAME_FIXED} will be compiled with parameters: ${__CMAKE_ARGS}")
+
 			ExternalProject_Add("${__INSTANCE_NAME_FIXED}" 
 				PREFIX ${__PARSED_SOURCE_PATH}
 				${__DEP_STR}
@@ -132,10 +144,11 @@ function(_get_target_external __INSTANCE_ID __DEP_TARGETS)
 			endif()
 #			message(STATUS "_get_target_external(): 2 Setting external project ${__INSTANCE_NAME_FIXED} with the following arguments: ${__CMAKE_ARGS}")
 			_set_property_to_db(FEATUREBASEDB ${__FEATUREBASE_ID} TARGET_BUILT 1)
+   		_add_property_to_db(GLOBAL ALL EXTERNAL_TARGETS "${__INSTANCE_NAME}") 
 		else()
-		   if(__PARSED_ASSUME_INSTALLED)
-	   		_add_property_to_db(GLOBAL ALL EXTERNAL_TARGETS "${__INSTANCE_NAME}") 
-	   	endif()
+#		   if(__PARSED_ASSUME_INSTALLED)
+#	   		_add_property_to_db(GLOBAL ALL EXTERNAL_TARGETS "${__INSTANCE_NAME}") 
+#	   	endif()
 
 			if(__REUSED_EXISTING)
 				message(STATUS "External dependency ${__INSTANCE_NAME} (${__FEATUREBASE_ID}) is already compiled in subdirectory ${__EXTERNAL_ID} with compatible arguments ${__FEATURES}")
